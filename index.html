@@ -2320,7 +2320,11 @@ function filterBothNews(forcedQuery = null) {
     }
     
     filteredNewsData     = allNewsData.filter(n => newsMatches(n.text, n.ticker, n.date));
-    filteredInsightsData = allInsightsData.filter(n => newsMatches(n.text, n.ticker, n.tag));
+    // Insights: match ticker field only — not text or tag
+    filteredInsightsData = allInsightsData.filter(n => {
+      const tick = String(n.ticker || '').toLowerCase();
+      return orGroups.some(tokens => tokens.every(tok => tick.startsWith(tok) || tick.includes(tok)));
+    });
   }
   
   currentNewsLimit = NEWS_CHUNK;
@@ -2522,8 +2526,8 @@ function filterPaneSearch(pane) {
     } else {
       const toks = tokenize(q);
       filteredInsightsData = allInsightsData.filter(n => {
-        const words = tokenize(n.text + ' ' + (n.ticker||'') + ' ' + (n.tag||''));
-        return toks.every(tok => words.some(w => w.startsWith(tok) || w.includes(tok)));
+        const tick = String(n.ticker || '').toLowerCase();
+        return toks.every(tok => tick.startsWith(tok) || tick.includes(tok));
       });
     }
     currentInsightsLimit = NEWS_CHUNK;
@@ -3371,17 +3375,23 @@ window.resetAllAppFilters = function() {
       const orQuery = buildOrQuery(tickerArr);
       const orGroups = orQuery.toLowerCase().split('|').map(g => tokenize(g)).filter(g => g.length);
 
-      function newsMatches(text, ticker, extra) {
-        const words = tokenize(text + ' ' + (ticker || '') + ' ' + (extra || ''));
-        return orGroups.some(tokens =>
-          tokens.every(tok => words.some(w => w.startsWith(tok) || w.includes(tok)))
-        );
-      }
-
-      filteredInsightsData = allInsightsData.filter(n => newsMatches(n.text, n.ticker, n.tag));
+      // Insights: match ticker only (exact ticker set)
+      const tickerSet = new Set(tickerArr);
+      filteredInsightsData = allInsightsData.filter(n => {
+        const nTicker = String(n.ticker || '').trim().toUpperCase();
+        return tickerSet.has(nTicker);
+      });
       currentInsightsLimit = NEWS_CHUNK;
       renderInsights();
 
+      // News: match ticker | company name (full OR engine)
+      const newsOrGroups = orGroups; // already built with ticker | coName
+      function newsMatches(text, ticker, extra) {
+        const words = tokenize(text + ' ' + (ticker || '') + ' ' + (extra || ''));
+        return newsOrGroups.some(tokens =>
+          tokens.every(tok => words.some(w => w.startsWith(tok) || w.includes(tok)))
+        );
+      }
       filteredNewsData = allNewsData.filter(n => newsMatches(n.text, n.ticker, n.date));
       currentNewsLimit = NEWS_CHUNK;
       renderGeneralNews();
