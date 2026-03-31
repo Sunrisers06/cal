@@ -3349,21 +3349,40 @@ window.resetAllAppFilters = function() {
     window._filterNewsByFHTickers = _filterNewsByFHTickers;
 
     function _fhFilterNews(tickerArr) {
-      // Filter insights
-      filteredInsightsData = allInsightsData.filter(n => {
-        const nTicker = String(n.ticker || '').toUpperCase();
-        const nText   = (n.text || '').toUpperCase();
-        return tickerArr.some(t => nTicker === t || nText.includes(t));
-      });
+      // Build a map of ticker → company name from allData for richer matching
+      const tickerToCoName = {};
+      if (typeof allData !== 'undefined') {
+        allData.forEach(r => {
+          const t = String(r._ticker || '').toUpperCase();
+          if (t) tickerToCoName[t] = String(r._coName || '').toLowerCase();
+        });
+      }
+
+      // For each ticker, also get its cleaned company name tokens
+      // Match logic: "TICKER | Company Name" — same as onCardClick filterBothNews
+      function buildOrQuery(tickers) {
+        return tickers.map(t => {
+          const coName = tickerToCoName[t] || '';
+          return coName ? `${t} | ${coName}` : t;
+        }).join(' | ');
+      }
+
+      // Use the same tokenized OR engine as filterBothNews for consistency
+      const orQuery = buildOrQuery(tickerArr);
+      const orGroups = orQuery.toLowerCase().split('|').map(g => tokenize(g)).filter(g => g.length);
+
+      function newsMatches(text, ticker, extra) {
+        const words = tokenize(text + ' ' + (ticker || '') + ' ' + (extra || ''));
+        return orGroups.some(tokens =>
+          tokens.every(tok => words.some(w => w.startsWith(tok) || w.includes(tok)))
+        );
+      }
+
+      filteredInsightsData = allInsightsData.filter(n => newsMatches(n.text, n.ticker, n.tag));
       currentInsightsLimit = NEWS_CHUNK;
       renderInsights();
 
-      // Filter news
-      filteredNewsData = allNewsData.filter(n => {
-        const nText = (n.text || '').toUpperCase();
-        const nTicker = String(n.ticker || '').toUpperCase();
-        return tickerArr.some(t => nTicker === t || nText.includes(t));
-      });
+      filteredNewsData = allNewsData.filter(n => newsMatches(n.text, n.ticker, n.date));
       currentNewsLimit = NEWS_CHUNK;
       renderGeneralNews();
     }
