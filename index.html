@@ -2357,11 +2357,14 @@ return `
     _pop.style.left = left + 'px';
   }
 
-  function _hide() {
-    if (!_pop) return;
-    _pop.style.display = 'none';
-    _popTicker = null;
-    _popBtn = null;
+function _hide() {
+    const p = document.getElementById('peer-popup');
+    if (p) {
+      p.classList.remove('peer-visible');
+      p.style.display = 'none'; /* CRITICAL FIX: overrides inline flex */
+    }
+    _pinned = false;
+    _closeTimer = null;
   }
 
   /* ── public API ── */
@@ -4286,11 +4289,11 @@ window.resetAllAppFilters = function() {
 <!-- Superstar name tooltip — lives on body so overflow:hidden on cards can't clip it -->
 
 <!-- ══ PEER COMPARISON POPUP ══ -->
-<div id="peer-popup">
-  <div id="peer-popup-header" title="Drag to move">
+<div id="peer-popup" onmouseenter="cancelPeerClose()" onmouseleave="schedulePeerClose()">
+  <div id="peer-popup-header" title="Drag to move" style="cursor: grab;">
     <div id="peer-popup-title-wrap">
-      <span id="peer-popup-title">Peers</span>
-      <span id="peer-popup-count"></span>
+      <span id="peer-popup-title">◈ Industry</span>
+      <span id="peer-popup-count">0 co.</span>
     </div>
     <span id="peer-popup-close" onclick="closePeerPopup()">✕</span>
   </div>
@@ -4344,7 +4347,7 @@ window.resetAllAppFilters = function() {
 
 <script>
 /* ══════════════════════════════════════════════════════
-   PEER COMPARISON OCTAGON ENGINE  v2
+   PEER COMPARISON OCTAGON ENGINE v3 (BULLETPROOF)
 ══════════════════════════════════════════════════════ */
 (function() {
   'use strict';
@@ -4361,110 +4364,91 @@ window.resetAllAppFilters = function() {
   const COLORS   = ['#3b82f6','#10b981','#f97316','#f43f5e','#eab308','#ec4899','#a78bfa','#f472b6'];
   const SELF_CLR = '#22d3ee';
 
-  let _pop = null, _closeTimer = null, _pinned = false;
   let _currentTicker = null, _currentInd = null, _currentParam = 'mcap';
   let _peers = [];
+  
+  // Global states for hover logic
+  window._peerCloseTimer = null;
+  window._peerPinned = false;
 
-  /* ── DOM helpers ── */
-  /* ── DOM helpers ── */
-  function pop() {
-    if (!_pop) {
-      _pop = document.getElementById('peer-popup');
-      /* Pin on click inside popup so it stays even without mouse */
-      _pop.addEventListener('mousedown', function(e) {
-        if (!e.target.closest('#peer-popup-close') && !e.target.closest('.peer-name')) {
-          _pinned = true;
-        }
-      });
-      /* Add mouse events to handle robust closing */
-      _pop.addEventListener('mouseenter', function() {
-        _cancelClose();
-      });
-      _pop.addEventListener('mouseleave', function() {
-        if (!_pinned) window.schedulePeerClose();
-      });
-      _initDrag(_pop);
-    }
-    return _pop;
-  }
-
-  /* ── Auto-close logic ── */
-  function _cancelClose() {
-    if (_closeTimer) { clearTimeout(_closeTimer); _closeTimer = null; }
-  }
-  function _hide() {
+  /* ── Bulletproof Global Close Functions ── */
+  window.closePeerPopup = function() {
     const p = document.getElementById('peer-popup');
-    if (p) p.classList.remove('peer-visible');
-    _pinned = false;
-    _closeTimer = null;
-  }
-
-  /* Single mousemove on document — if mouse is outside both popup AND any ticker-tag, close */
-  document.addEventListener('mousemove', function(e) {
-    const p = document.getElementById('peer-popup');
-    if (!p || !p.classList.contains('peer-visible') || _pinned) return;
-    const overPopup = p.contains(e.target) || p === e.target;
-    const overTag   = e.target.classList && e.target.classList.contains('ticker-tag');
-    if (overPopup || overTag) {
-      _cancelClose();
-    } else {
-      if (!_closeTimer) {
-        _closeTimer = setTimeout(_hide, 400);
-      }
+    if (p) {
+      p.style.display = 'none'; // Force hide inline
+      p.classList.remove('peer-visible');
     }
-  }, { passive: true });
+    window.cancelPeerClose();
+    window._peerPinned = false;
+  };
 
-  /* Click anywhere outside popup → close immediately */
-  document.addEventListener('mousedown', function(e) {
-    const p = document.getElementById('peer-popup');
-    if (p && p.classList.contains('peer-visible') && !p.contains(e.target)) {
-      _pinned = false;
-      _hide();
-    }
-  }, true);
-
-  window.closePeerPopup    = _hide;
   window.schedulePeerClose = function() {
-    if (!_pinned && !_closeTimer) {
-      _closeTimer = setTimeout(_hide, 400);
+    if (!window._peerPinned) {
+      window.cancelPeerClose();
+      window._peerCloseTimer = setTimeout(window.closePeerPopup, 300);
     }
   };
 
-  /* ── Drag logic ── */
-  function _initDrag(el) {
-    const hdr = document.getElementById('peer-popup-header');
-    if (!hdr) return;
-    let ox = 0, oy = 0, sx = 0, sy = 0, dragging = false;
+  window.cancelPeerClose = function() {
+    if (window._peerCloseTimer) {
+      clearTimeout(window._peerCloseTimer);
+      window._peerCloseTimer = null;
+    }
+  };
 
+  /* ── Drag logic & Pinning ── */
+  function _initDrag() {
+    const el = document.getElementById('peer-popup');
+    const hdr = document.getElementById('peer-popup-header');
+    if (!hdr || !el) return;
+    
+    // Pin if clicked inside (unless clicking close)
+    el.addEventListener('mousedown', function(e) {
+      if (!e.target.closest('#peer-popup-close') && !e.target.closest('.peer-name')) {
+        window._peerPinned = true;
+      }
+    });
+
+    let ox = 0, oy = 0, sx = 0, sy = 0, dragging = false;
     hdr.addEventListener('mousedown', function(e) {
       if (e.target.closest('#peer-popup-close')) return;
       e.preventDefault();
       dragging = true;
-      _pinned  = true;
+      window._peerPinned = true;
       const rect = el.getBoundingClientRect();
       ox = rect.left; oy = rect.top;
       sx = e.clientX; sy = e.clientY;
       hdr.style.cursor = 'grabbing';
     });
+    
     document.addEventListener('mousemove', function(e) {
       if (!dragging) return;
       const dx = e.clientX - sx, dy = e.clientY - sy;
       let nx = ox + dx, ny = oy + dy;
-      /* clamp inside viewport */
       nx = Math.max(0, Math.min(nx, window.innerWidth  - el.offsetWidth));
       ny = Math.max(0, Math.min(ny, window.innerHeight - el.offsetHeight));
       el.style.left = nx + 'px';
       el.style.top  = ny + 'px';
     });
+    
     document.addEventListener('mouseup', function() {
       if (dragging) { dragging = false; hdr.style.cursor = 'grab'; }
     });
   }
 
+  /* ── Click Outside to Close ── */
+  document.addEventListener('mousedown', function(e) {
+    const p = document.getElementById('peer-popup');
+    if (p && p.style.display !== 'none' && !p.contains(e.target)) {
+      window._peerPinned = false;
+      window.closePeerPopup();
+    }
+  }, true);
+
   /* ── Public: show popup ── */
   window.showPeerChart = function(event, ticker, industry) {
-    _cancelClose();
-    _pinned = false;
+    window.cancelPeerClose();
+    window._peerPinned = false;
     event.stopPropagation();
 
     if (!window._peerAllData || !window._peerAllData.length) return;
@@ -4473,9 +4457,9 @@ window.resetAllAppFilters = function() {
     _currentInd    = industry;
     _peers         = window._peerAllData.filter(r => r._ind === industry);
 
-    const p = pop();
+    const p = document.getElementById('peer-popup');
+    if (!p) return;
 
-    /* Short name — trim common suffixes, max 22 chars */
     const shortInd = industry.replace(/\s*(Industry|Sector|Group|Segment)$/i,'').slice(0,22);
     const totalCount = _peers.length;
     document.getElementById('peer-popup-title').textContent = '◈ ' + shortInd;
@@ -4484,10 +4468,12 @@ window.resetAllAppFilters = function() {
     refreshParam(_currentParam);
     _wirePills(p);
     updateActivePill(p, _currentParam);
+    _initDrag();
 
-    /* Position near tag */
     const rect = event.currentTarget.getBoundingClientRect();
     p.style.display = 'flex';
+    p.classList.add('peer-visible');
+    
     const popW = p.offsetWidth || 340, popH = p.offsetHeight || 460;
     let left = rect.left, top = rect.bottom + 8;
     if (left + popW > window.innerWidth  - 8) left = window.innerWidth  - popW - 8;
@@ -4496,7 +4482,6 @@ window.resetAllAppFilters = function() {
     if (top  < 8) top  = 8;
     p.style.left = left + 'px';
     p.style.top  = top  + 'px';
-    p.classList.add('peer-visible');
   };
 
   /* ── Pill wiring ── */
@@ -4507,15 +4492,14 @@ window.resetAllAppFilters = function() {
     p.querySelectorAll('.peer-param-pill').forEach(pill => {
       pill.addEventListener('click', function(e) {
         e.stopPropagation();
-        _pinned = true;
+        window._peerPinned = true;
         _currentParam = this.dataset.param;
         updateActivePill(p, _currentParam);
         refreshParam(_currentParam);
       });
       pill.addEventListener('mouseenter', function() {
-        const hp = this.dataset.param;
-        updateActivePill(p, hp);
-        refreshParam(hp);
+        updateActivePill(p, this.dataset.param);
+        refreshParam(this.dataset.param);
       });
       pill.addEventListener('mouseleave', function() {
         updateActivePill(p, _currentParam);
@@ -4530,7 +4514,7 @@ window.resetAllAppFilters = function() {
     });
   }
 
-  /* ── Data ── */
+  /* ── Data & Drawing ── */
   function refreshParam(param) {
     const pDef = PARAMS[param];
     if (!pDef || !_peers.length) return;
@@ -4547,7 +4531,6 @@ window.resetAllAppFilters = function() {
     drawList(list, vals, maxV, pDef, selfRow?._ticker);
   }
 
-  /* ── Octagon ── */
   function drawOctagon(list, vals, maxV, selfTicker) {
     const svg = document.getElementById('peer-octa-svg');
     if (!svg) return;
@@ -4567,16 +4550,13 @@ window.resetAllAppFilters = function() {
       const rp = ringPoints(frac);
       const poly = rp.map(p => p[0].toFixed(2)+','+p[1].toFixed(2)).join(' ');
       const outer = frac === 1.0;
-      html += `<polygon points="${poly}" fill="none"
-        stroke="${outer?'rgba(34,211,238,0.22)':'rgba(255,255,255,0.06)'}"
-        stroke-width="${outer?1.2:0.8}"/>`;
+      html += `<polygon points="${poly}" fill="none" stroke="${outer?'rgba(34,211,238,0.22)':'rgba(255,255,255,0.06)'}" stroke-width="${outer?1.2:0.8}"/>`;
     });
 
     const outerPts = ringPoints(1.0);
     for (let i = 0; i < n; i++) {
       const [x2,y2] = outerPts[i];
-      html += `<line x1="${cx}" y1="${cy}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}"
-        stroke="rgba(255,255,255,0.09)" stroke-width="0.8"/>`;
+      html += `<line x1="${cx}" y1="${cy}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}" stroke="rgba(255,255,255,0.09)" stroke-width="0.8"/>`;
       const ang    = (2*Math.PI*i/n) - Math.PI/2;
       const lx     = cx + (R+14)*Math.cos(ang);
       const ly     = cy + (R+14)*Math.sin(ang);
@@ -4584,10 +4564,7 @@ window.resetAllAppFilters = function() {
       const isSelf = list[i] && list[i]._ticker === selfTicker;
       const cosA   = Math.cos(ang);
       const anchor = cosA > 0.15 ? 'start' : cosA < -0.15 ? 'end' : 'middle';
-      html += `<text x="${lx.toFixed(2)}" y="${ly.toFixed(2)}"
-        text-anchor="${anchor}" dominant-baseline="middle"
-        font-family="Lexend,sans-serif" font-size="7" font-weight="${isSelf?700:500}"
-        fill="${isSelf?'#22d3ee':'rgba(255,255,255,0.40)'}">${tck}</text>`;
+      html += `<text x="${lx.toFixed(2)}" y="${ly.toFixed(2)}" text-anchor="${anchor}" dominant-baseline="middle" font-family="Lexend,sans-serif" font-size="7" font-weight="${isSelf?700:500}" fill="${isSelf?'#22d3ee':'rgba(255,255,255,0.40)'}">${tck}</text>`;
     }
 
     const pts = list.map((r,i) => {
@@ -4598,24 +4575,19 @@ window.resetAllAppFilters = function() {
     });
 
     if (pts.length > 1) {
-      html += `<polygon points="${pts.map(p=>p.x.toFixed(2)+','+p.y.toFixed(2)).join(' ')}"
-        fill="rgba(34,211,238,0.10)" stroke="rgba(34,211,238,0.65)"
-        stroke-width="1.5" stroke-linejoin="round"/>`;
+      html += `<polygon points="${pts.map(p=>p.x.toFixed(2)+','+p.y.toFixed(2)).join(' ')}" fill="rgba(34,211,238,0.10)" stroke="rgba(34,211,238,0.65)" stroke-width="1.5" stroke-linejoin="round"/>`;
     }
 
     pts.forEach((p,i) => {
       const isSelf = p.r._ticker === selfTicker;
       const clr    = isSelf ? SELF_CLR : COLORS[i % COLORS.length];
-      if (isSelf) html += `<circle cx="${p.x.toFixed(2)}" cy="${p.y.toFixed(2)}" r="${10}"
-        fill="${clr}" opacity="0.18"/>`;
-      html += `<circle cx="${p.x.toFixed(2)}" cy="${p.y.toFixed(2)}" r="${isSelf?6.5:4.5}"
-        fill="${clr}" stroke="#13131a" stroke-width="1.5"/>`;
+      if (isSelf) html += `<circle cx="${p.x.toFixed(2)}" cy="${p.y.toFixed(2)}" r="${10}" fill="${clr}" opacity="0.18"/>`;
+      html += `<circle cx="${p.x.toFixed(2)}" cy="${p.y.toFixed(2)}" r="${isSelf?6.5:4.5}" fill="${clr}" stroke="#13131a" stroke-width="1.5"/>`;
     });
 
     svg.innerHTML = html;
   }
 
-  /* ── List ── */
   function drawList(list, vals, maxV, pDef, selfTicker) {
     const container = document.getElementById('peer-list');
     if (!container) return;
@@ -4631,17 +4603,13 @@ window.resetAllAppFilters = function() {
       return `<div class="peer-item">
         <span class="peer-rank">${rank+1}</span>
         <span class="peer-color-dot" style="background:${clr}"></span>
-        <span class="peer-name${isSelf?' self':''}"
-          title="Click to filter: ${item.r._coName}"
-          onclick="(function(e){e.stopPropagation();_peerFilterByTicker('${ticker}');})(event)"
-        >${name}${isSelf?' ★':''}</span>
+        <span class="peer-name${isSelf?' self':''}" title="Click to filter: ${item.r._coName}" onclick="(function(e){e.stopPropagation();_peerFilterByTicker('${ticker}');})(event)">${name}${isSelf?' ★':''}</span>
         <div class="peer-bar-wrap"><div class="peer-bar-fill" style="width:${barPct.toFixed(1)}%;background:${clr}"></div></div>
         <span class="peer-val">${pDef.fmt(item.v)}</span>
       </div>`;
     }).join('');
   }
 
-  /* ── Filter cards to single company on name click ── */
   window._peerFilterByTicker = function(ticker) {
     const inp = document.getElementById('search-input');
     if (!inp) return;
@@ -4649,7 +4617,7 @@ window.resetAllAppFilters = function() {
     const clrBtn = document.getElementById('clear-search-btn');
     if (clrBtn) clrBtn.style.display = 'flex';
     if (typeof doFilter === 'function') doFilter();
-    _hide();
+    window.closePeerPopup();
   };
 
 })();
