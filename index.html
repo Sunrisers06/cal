@@ -2288,7 +2288,7 @@ return `
         </div>
       </div>
       <div class="inline-scores">
-        ${r._mcap?`<div class="iscore w-wide ${getChipColor('Market Cap',r._mcap)}"><span class="iscore-label">Mcap</span><span class="iscore-val">${fmtMcap(r._mcap)}</span></div>`:''}
+        ${r._mcap?`<div class="iscore w-wide ${getChipColor('Market Cap',r._mcap)}" onmouseenter="showPeerChart(event,'${r._ticker}','${r._ind}')" onmouseleave="schedulePeerClose()" style="cursor:pointer;" title="View Peer Comparison"><span class="iscore-label">Mcap</span><span class="iscore-val">${fmtMcap(r._mcap)}</span></div>`:''}
         ${r['Trendlyne Durability Score']?`<div class="iscore ${getChipColor('Durability',r['Trendlyne Durability Score'])}"><span class="iscore-label">Dur.</span><span class="iscore-val">${fmtWhole(r['Trendlyne Durability Score'])}</span></div>`:''}
         ${r['EPS Rank']?`<div class="iscore ${getChipColor('EPS Rank',r['EPS Rank'])}"><span class="iscore-label">EPS R</span><span class="iscore-val">${fmtWhole(r['EPS Rank'])}</span></div>`:''}
         ${r['Master Score']?`<div class="iscore ${getChipColor('Master Score',r['Master Score'])}"><span class="iscore-label">MS</span><span class="iscore-val">${r['Master Score']}</span></div>`:''}
