@@ -186,59 +186,50 @@ body::before {
 #csp-hover-popup {
   position: fixed; z-index: 299999; pointer-events: auto;
   width: min(360px, 94vw);
-  background: #13131a;
-  border: 1px solid rgba(34,211,238,0.30);
-  border-radius: 14px;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.80), 0 0 0 1px rgba(34,211,238,0.08);
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.10);
+  border-radius: 10px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.10);
   display: none; flex-direction: column;
   overflow: hidden;
   transition: opacity 0.12s ease;
   max-height: 90vh;
-  font-family: 'Lexend', sans-serif;
-  animation: fadeUp 0.15s ease;
 }
 #csp-hover-popup.csp-visible { display: flex; }
 
 #csph-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 9px 12px 7px;
-  border-bottom: 1px solid rgba(255,255,255,0.07);
-  background: rgba(34,211,238,0.06); flex-shrink: 0;
-  user-select: none; gap: 6px; cursor: default;
+  padding: 7px 10px 6px;
+  border-bottom: 1px solid rgba(0,0,0,0.07);
+  background: #f8f9fa; flex-shrink: 0;
+  user-select: none; gap: 6px;
 }
-#csph-title { display: flex; align-items: center; gap: 6px; font-family: 'Lexend',sans-serif; min-width: 0; overflow: hidden; }
-#csph-ticker {
-  font-size: 10.5px; font-weight: 700; color: #22d3ee;
-  background: rgba(34,211,238,0.12); border: 1px solid rgba(34,211,238,0.30);
-  padding: 2px 8px; border-radius: 4px; white-space: nowrap; flex-shrink: 0;
-}
-#csph-name {
-  font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.45);
-  max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
+#csph-title { display: flex; align-items: center; gap: 5px; font-family: 'Lexend',sans-serif; }
+#csph-ticker { font-size: 10.5px; font-weight: 700; color: #0369a1; background: rgba(3,105,161,0.08); border: 1px solid rgba(3,105,161,0.20); padding: 2px 7px; border-radius: 4px; }
+#csph-name   { font-size: 9px; font-weight: 600; color: #6b7280; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Close button for touch devices */
 #csph-close-btn {
   display: none;
   background: none; border: none; cursor: pointer;
-  color: rgba(255,255,255,0.35); font-size: 15px; line-height: 1;
+  color: #6b7280; font-size: 16px; line-height: 1;
   padding: 2px 4px; border-radius: 4px;
   transition: background 0.15s, color 0.15s; flex-shrink: 0;
 }
-#csph-close-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+#csph-close-btn:hover { background: rgba(0,0,0,0.08); color: #374151; }
 
 #csph-body {
   flex: 1; position: relative; display: flex; flex-direction: column;
-  background: #13131a; min-height: 0;
+  background: #ffffff; min-height: 0;
 }
 #csph-loading {
   display: flex; align-items: center; justify-content: center;
   flex-direction: column; gap: 7px; height: 200px;
-  color: rgba(255,255,255,0.35); font-size: 11px; font-family: 'Lexend',sans-serif;
+  color: #9ca3af; font-size: 11px; font-family: 'Lexend',sans-serif;
 }
 .csph-spinner {
-  width: 18px; height: 18px; border: 2px solid rgba(34,211,238,0.15);
-  border-top-color: #22d3ee; border-radius: 50%;
+  width: 18px; height: 18px; border: 2px solid rgba(0,0,0,0.08);
+  border-top-color: #3b82f6; border-radius: 50%;
   animation: csphSpin 0.65s linear infinite;
 }
 @keyframes csphSpin { to { transform: rotate(360deg); } }
@@ -251,15 +242,14 @@ body::before {
 }
 .csph-period-pill {
   font-size: 8.5px; font-family: 'Lexend', sans-serif; font-weight: 700;
-  padding: 3px 9px; border-radius: 20px; cursor: pointer;
-  border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.04);
-  color: rgba(255,255,255,0.35); transition: all 0.15s; letter-spacing: 0.04em; user-select: none;
-  white-space: nowrap;
+  padding: 2px 8px; border-radius: 10px; cursor: pointer;
+  border: 1px solid rgba(0,0,0,0.15); background: rgba(0,0,0,0.05);
+  color: #6b7280; transition: all 0.15s; letter-spacing: 0.04em; user-select: none;
 }
-.csph-period-pill:hover { border-color: rgba(34,211,238,0.5); color: #22d3ee; background: rgba(34,211,238,0.08); }
+.csph-period-pill:hover { background: rgba(30,110,255,0.1); border-color: rgba(30,110,255,0.35); color: #1e6eff; }
 .csph-period-pill.active {
-  background: rgba(34,211,238,0.15); border-color: #22d3ee;
-  color: #22d3ee; box-shadow: 0 0 8px rgba(34,211,238,0.25);
+  background: #1e6eff; border-color: #1e6eff;
+  color: #fff; box-shadow: 0 0 6px rgba(30,110,255,0.35);
 }
 
 /* Mobile: fixed smaller size — must be visibly smaller than desktop 360px */
@@ -16773,10 +16763,8 @@ window.resetAllAppFilters = function() {
     const toX = i => PP.l + (i + 0.5) * (pW / n);
     const bW  = Math.max(1.2, pW / n * 0.55);
 
-    // Background — dark like peer popup
-    pc.fillStyle = '#0f0f14'; pc.fillRect(0, 0, W, PH);
-
-    // ── Subtle vertical band for weekend/empty gaps (optional feel) ──
+    // Background — original white
+    pc.fillStyle = '#ffffff'; pc.fillRect(0, 0, W, PH);
 
     // ── Horizontal dashed grid lines with RIGHT-aligned price labels ──
     const nGridLines = 5;
@@ -16785,19 +16773,19 @@ window.resetAllAppFilters = function() {
       const frac = g / nGridLines;
       const val  = pMax - frac * pR;
       const y    = PP.t + pH * frac;
-      // Dashed grid line — white low opacity
-      pc.strokeStyle = 'rgba(255,255,255,0.07)';
+      // Dashed grid line
+      pc.strokeStyle = 'rgba(0,0,0,0.08)';
       pc.lineWidth = 0.6;
       pc.setLineDash([3, 4]);
       pc.beginPath(); pc.moveTo(PP.l, y); pc.lineTo(W - PP.r, y); pc.stroke();
       pc.setLineDash([]);
-      // Price label — muted white right-aligned
-      pc.fillStyle = 'rgba(255,255,255,0.45)';
+      // Price label — full black bold, right-aligned flush to right edge
+      pc.fillStyle = '#000000';
       pc.fillText(fmtP(val), W - 2, y);
     }
 
-    // ── Candles: vivid green bull, vivid red bear (MarketSmith dark palette) ──
-    const BULL_COL = '#00e676';   // vivid green
+    // ── Candles: vivid blue bull, vivid magenta/pink bear ──
+    const BULL_COL = '#1e6eff';   // vivid blue
     const BEAR_COL = '#ff2d78';   // vivid magenta-pink
 
     raw.forEach((r, i) => {
@@ -16830,8 +16818,8 @@ window.resetAllAppFilters = function() {
       st ? pc.lineTo(x, y) : (pc.moveTo(x, y), st = true);
     }); pc.stroke();
 
-    // MA40: muted white/gray line (was black)
-    pc.strokeStyle = 'rgba(255,255,255,0.30)'; pc.lineWidth = 1.2; pc.setLineDash([]);
+    // MA40: black line
+    pc.strokeStyle = '#111111'; pc.lineWidth = 1.2; pc.setLineDash([]);
     pc.beginPath(); st = false;
     raw.forEach((r, i) => {
       if (!r.ma40) return;
@@ -16839,25 +16827,25 @@ window.resetAllAppFilters = function() {
       st ? pc.lineTo(x, y) : (pc.moveTo(x, y), st = true);
     }); pc.stroke();
 
-    // ── Last close: dashed cyan horizontal line + price tag ──
+    // ── Last close: dashed horizontal line + price tag ──
     const lc = raw[n-1].close;
     const yLc = toY(lc);
-    pc.strokeStyle = 'rgba(34,211,238,0.50)'; pc.lineWidth = 0.8; pc.setLineDash([2, 3]);
+    pc.strokeStyle = 'rgba(30,110,255,0.45)'; pc.lineWidth = 0.8; pc.setLineDash([2, 3]);
     pc.beginPath(); pc.moveTo(PP.l, yLc); pc.lineTo(W - PP.r, yLc); pc.stroke();
     pc.setLineDash([]);
-    // Price tag box — cyan
+    // Price tag box — right-aligned flush to right edge
     const tagTxt = fmtP(lc);
     pc.font = 'bold 8px "Lexend",monospace';
     const tagW = pc.measureText(tagTxt).width + 8;
-    pc.fillStyle = '#22d3ee'; pc.fillRect(W - tagW - 1, yLc - 5, tagW, 10);
-    pc.fillStyle = '#0f0f14'; pc.textAlign = 'right'; pc.textBaseline = 'middle';
+    pc.fillStyle = '#1e6eff'; pc.fillRect(W - tagW - 1, yLc - 5, tagW, 10);
+    pc.fillStyle = '#fff'; pc.textAlign = 'right'; pc.textBaseline = 'middle';
     pc.fillText(tagTxt, W - 3, yLc);
 
-    // ── Subtle separator line at bottom of price chart ──
-    pc.strokeStyle = 'rgba(255,255,255,0.08)'; pc.lineWidth = 0.8; pc.setLineDash([]);
+    // ── Black thin separator line at bottom of price chart ──
+    pc.strokeStyle = 'rgba(0,0,0,0.35)'; pc.lineWidth = 0.8; pc.setLineDash([]);
     pc.beginPath(); pc.moveTo(0, PH - 1); pc.lineTo(W, PH - 1); pc.stroke();
 
-    // ── Date labels at bottom — muted white ──
+    // ── Date labels at bottom — all black, last one right-aligned ──
     pc.textBaseline = 'top';
     const step = Math.max(1, Math.floor(n / 4));
 
@@ -16875,12 +16863,12 @@ window.resetAllAppFilters = function() {
 
       if (isLast) {
         pc.font = 'bold 8.5px "Lexend",monospace';
-        pc.fillStyle = 'rgba(255,255,255,0.55)';
+        pc.fillStyle = '#000000';
         pc.textAlign = 'right';
         pc.fillText(label, W - PP.r, PH - PP.b + 4);
       } else {
         pc.font = 'bold 7.5px "Lexend",monospace';
-        pc.fillStyle = 'rgba(255,255,255,0.35)';
+        pc.fillStyle = '#000000';
         pc.textAlign = 'center';
         pc.fillText(label, toX(i), PH - PP.b + 4);
       }
@@ -16895,39 +16883,39 @@ window.resetAllAppFilters = function() {
     let maxV = 1;
     for (const r of raw) if (r.vol > maxV) maxV = r.vol;
 
-    vc.fillStyle = '#0f0f14'; vc.fillRect(0, 0, W, VH);
+    vc.fillStyle = '#ffffff'; vc.fillRect(0, 0, W, VH);
 
-    // ── Subtle separator line at top of volume panel ──
-    vc.strokeStyle = 'rgba(255,255,255,0.08)'; vc.lineWidth = 0.8;
+    // ── Black thin separator line at top of volume panel ──
+    vc.strokeStyle = 'rgba(0,0,0,0.35)'; vc.lineWidth = 0.8;
     vc.beginPath(); vc.moveTo(0, 0); vc.lineTo(W, 0); vc.stroke();
 
-    // Volume bars — green bull, red bear
+    // Volume bars — vivid blue bull, vivid magenta bear
     raw.forEach((r, i) => {
       const x  = VP.l + (i + 0.5) * (vW2 / n);
       const bh = Math.max(1, (r.vol / maxV) * vH2);
       const bull = r.close >= r.open;
-      vc.fillStyle = bull ? '#00e676' : '#ff2d78';
-      vc.globalAlpha = 0.65;
+      vc.fillStyle = bull ? '#1e6eff' : '#ff2d78';
+      vc.globalAlpha = 0.75;
       vc.fillRect(x - bW/2, VP.t + vH2 - bh, bW, bh);
       vc.globalAlpha = 1;
     });
 
-    // Volume right-side labels — muted white
-    vc.font = 'bold 7.5px "Lexend",monospace'; vc.fillStyle = 'rgba(255,255,255,0.35)';
+    // Volume right-side labels — full black bold, right-aligned
+    vc.font = 'bold 7.5px "Lexend",monospace'; vc.fillStyle = '#000000';
     vc.textAlign = 'right'; vc.textBaseline = 'middle';
     vc.fillText(fmtV(maxV),       W - 2, VP.t + 4);
     vc.fillText(fmtV(maxV * 0.5), W - 2, VP.t + vH2 * 0.5);
 
-    // "PERIOD" badge bottom-right of volume panel — dark theme
+    // "PERIOD" badge bottom-right of volume panel
     const badgeTxt = _currentPeriod.toUpperCase();
     vc.font = 'bold 7px "Lexend",monospace';
     const bw = vc.measureText(badgeTxt).width + 6;
     const bx = W - bw - 2, by = VH - VP.b;
-    vc.fillStyle = 'rgba(34,211,238,0.10)';
+    vc.fillStyle = 'rgba(0,0,0,0.06)';
     vc.fillRect(bx, by, bw, 10);
-    vc.strokeStyle = 'rgba(34,211,238,0.25)'; vc.lineWidth = 0.5;
+    vc.strokeStyle = 'rgba(0,0,0,0.15)'; vc.lineWidth = 0.5;
     vc.strokeRect(bx, by, bw, 10);
-    vc.fillStyle = '#22d3ee'; vc.textAlign = 'center'; vc.textBaseline = 'middle';
+    vc.fillStyle = '#000000'; vc.textAlign = 'center'; vc.textBaseline = 'middle';
     vc.fillText(badgeTxt, bx + bw/2, by + 5);
   }
 
