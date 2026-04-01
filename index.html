@@ -203,7 +203,9 @@ body::before {
   border-bottom: 1px solid rgba(0,0,0,0.07);
   background: #f8f9fa; flex-shrink: 0;
   user-select: none; gap: 6px;
+  cursor: grab; touch-action: none;
 }
+#csph-header:active { cursor: grabbing; }
 #csph-title { display: flex; align-items: center; gap: 5px; font-family: 'Lexend',sans-serif; }
 #csph-ticker { font-size: 10.5px; font-weight: 700; color: #0369a1; background: rgba(3,105,161,0.08); border: 1px solid rgba(3,105,161,0.20); padding: 2px 7px; border-radius: 4px; }
 #csph-name   { font-size: 9px; font-weight: 600; color: #6b7280; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -274,10 +276,10 @@ body::before {
     max-height: 88vh !important;
     overflow-y: auto !important;
     border-radius: 16px !important;
-    /* True CSS centering — JS left/top are overridden below */
-    left: 50% !important;
-    top: 50% !important;
-    transform: translate(-50%, -50%) !important;
+    /* No !important on left/top/transform — JS drag must be able to override these */
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
   }
   #peer-octa-wrap { padding: 8px 6px 2px !important; }
   #peer-octa-svg  { width: 200px !important; height: 200px !important; }
@@ -1571,7 +1573,7 @@ select.fi option { background: var(--surface); color: var(--text); }
   background: rgba(34,211,238,0.06);
   flex-shrink: 0;
 }
-#peer-popup-header { cursor: grab; user-select: none; }
+#peer-popup-header { cursor: grab; user-select: none; touch-action: none; }
 #peer-popup-header:active { cursor: grabbing; }
 #peer-popup-title-wrap { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; }
 #peer-popup-title {
@@ -15041,6 +15043,12 @@ function clearMainSearch() {
   if (wrap) wrap.classList.remove('mob-expanded');
   // Re-filter without touching any other filters
   doFilter();
+  // If peer popup was open, rebuild it with the restored (full) filter set
+  const peerPopup = document.getElementById('peer-popup');
+  if (peerPopup && peerPopup.style.display !== 'none' && typeof window._peerRebuildPeers === 'function') {
+    window._peerRebuildPeers();
+    window._peerPinned = true; // keep it open
+  }
 }
 
 /* ══════════════════════════════════════════════════════
@@ -16517,7 +16525,7 @@ window.resetAllAppFilters = function() {
       <span class="csph-period-pill" data-period="1y" onclick="setCandlePeriod('1y',this)">1Y</span>
       <span class="csph-period-pill" data-period="2y" onclick="setCandlePeriod('2y',this)">2Y</span>
     </div>
-    <button id="csph-close-btn" onclick="document.getElementById('csp-hover-popup').classList.remove('csp-visible')" title="Close">✕</button>
+    <button id="csph-close-btn" data-nodrag onclick="document.getElementById('csp-hover-popup').classList.remove('csp-visible')" title="Close">✕</button>
   </div>
 
   <div id="csph-body">
@@ -16718,23 +16726,25 @@ window.resetAllAppFilters = function() {
     const PH_est = pop.offsetHeight || 290;
     const GAP = 6;
 
-    // Both mobile and desktop: position near the trigger button
-    let left = rect.left;
-    let top  = rect.bottom + GAP;
+    let left, top;
 
-    // Clamp horizontal — keep within viewport
-    if (left + PW > vw - 6) left = vw - PW - 6;
-    if (left < 6) left = 6;
-
-    // Flip above if popup would overflow bottom
-    if (top + PH_est > vh - 6 && rect.top - PH_est - GAP > 0) {
-      top = rect.top - PH_est - GAP;
+    if (vw <= 600) {
+      // Mobile: always center
+      left = Math.max(6, Math.round((vw - PW) / 2));
+      top  = Math.max(6, Math.round((vh - PH_est) / 2));
+    } else {
+      // Desktop: position near the trigger button
+      left = rect.left;
+      top  = rect.bottom + GAP;
+      if (left + PW > vw - 6) left = vw - PW - 6;
+      if (left < 6) left = 6;
+      if (top + PH_est > vh - 6 && rect.top - PH_est - GAP > 0) top = rect.top - PH_est - GAP;
+      if (top < 6) top = 6;
     }
-    // Final vertical clamp
-    if (top < 6) top = 6;
 
-    pop.style.left = left + 'px';
-    pop.style.top  = top  + 'px';
+    pop.style.left      = left + 'px';
+    pop.style.top       = top  + 'px';
+    pop.style.transform = 'none';
   }
 
   /* ─── Draw chart — MarketSmith-style (matches screenshot) ─── */
@@ -17051,6 +17061,21 @@ window.resetAllAppFilters = function() {
     prefetch(); // Already loaded — fire instantly
   }
 
+  /* ── Wire candlestick popup drag (mouse + touch, desktop + mobile) ── */
+  (function wireCspDrag() {
+    function init() {
+      const el  = document.getElementById('csp-hover-popup');
+      const hdr = document.getElementById('csph-header');
+      if (!el || !hdr || el._dragWired) return;
+      el._dragWired = true;
+      if (typeof window._makeDraggable === 'function') {
+        window._makeDraggable(el, hdr);
+      }
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+  })();
+
 })();
 </script>
                 <script></script>
@@ -17207,7 +17232,7 @@ window.resetAllAppFilters = function() {
       <span id="peer-popup-title">◈ Real Estate Dvlpmt/Ops</span>
       <span id="peer-popup-count">132 co.</span>
     </div>
-    <span id="peer-popup-close" onclick="closePeerPopup()">✕</span>
+    <span id="peer-popup-close" data-nodrag onclick="closePeerPopup()">✕</span>
   </div>
   <div id="peer-params">
     <span class="peer-param-pill active" data-param="mcap">Mkt Cap</span>
@@ -17307,6 +17332,83 @@ window.resetAllAppFilters = function() {
 
 <script>
 /* ══════════════════════════════════════════════════════
+   SHARED DRAG UTILITY — works on both mouse and touch,
+   desktop and mobile. Call once per popup element.
+   _makeDraggable(popupEl, handleEl, onDragStartCb)
+══════════════════════════════════════════════════════ */
+window._makeDraggable = function(el, hdr, onDragStart) {
+  if (!el || !hdr) return;
+  hdr.style.cursor     = 'grab';
+  hdr.style.touchAction = 'none'; // tell browser: this element owns the touch, no scroll
+
+  // Capture the element's true rendered top-left (works even with CSS translate)
+  // and lock in explicit left/top so transform no longer applies.
+  function _anchorAndMove(nx, ny) {
+    const maxX = window.innerWidth  - el.offsetWidth;
+    const maxY = window.innerHeight - el.offsetHeight;
+    el.style.transform = 'none';
+    el.style.left = Math.max(0, Math.min(nx, maxX)) + 'px';
+    el.style.top  = Math.max(0, Math.min(ny, maxY)) + 'px';
+  }
+
+  /* ── MOUSE ── */
+  let ox = 0, oy = 0, sx = 0, sy = 0, mDragging = false;
+
+  hdr.addEventListener('mousedown', function(e) {
+    if (e.target.closest('[data-nodrag]')) return;
+    e.preventDefault();
+    mDragging = true;
+    if (onDragStart) onDragStart();
+    const r = el.getBoundingClientRect();
+    ox = r.left; oy = r.top; sx = e.clientX; sy = e.clientY;
+    hdr.style.cursor = 'grabbing';
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (!mDragging) return;
+    _anchorAndMove(ox + e.clientX - sx, oy + e.clientY - sy);
+  });
+
+  document.addEventListener('mouseup', function() {
+    if (mDragging) { mDragging = false; hdr.style.cursor = 'grab'; }
+  });
+
+  /* ── TOUCH ── */
+  let tDragging = false, tId = null, tOx = 0, tOy = 0, tSx = 0, tSy = 0;
+
+  hdr.addEventListener('touchstart', function(e) {
+    if (e.target.closest('[data-nodrag]')) return;
+    if (e.touches.length !== 1) return;
+    e.stopPropagation(); // prevent card click / page scroll stealing the touch
+    const t = e.touches[0];
+    tDragging = true; tId = t.identifier;
+    if (onDragStart) onDragStart();
+    // getBoundingClientRect accounts for CSS translate — gives true screen coords
+    const r = el.getBoundingClientRect();
+    tOx = r.left; tOy = r.top; tSx = t.clientX; tSy = t.clientY;
+  }, { passive: false }); // passive:false so stopPropagation works and we can preventDefault later
+
+  document.addEventListener('touchmove', function(e) {
+    if (!tDragging) return;
+    let touch = null;
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === tId) { touch = e.changedTouches[i]; break; }
+    }
+    if (!touch) return;
+    e.preventDefault(); // block page scroll while dragging
+    _anchorAndMove(tOx + touch.clientX - tSx, tOy + touch.clientY - tSy);
+  }, { passive: false });
+
+  document.addEventListener('touchend', function(e) {
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === tId) { tDragging = false; tId = null; break; }
+    }
+  }, { passive: true });
+};
+</script>
+
+<script>
+/* ══════════════════════════════════════════════════════
    PEER COMPARISON OCTAGON ENGINE v3 (BULLETPROOF)
 ══════════════════════════════════════════════════════ */
 (function() {
@@ -17337,8 +17439,10 @@ window.resetAllAppFilters = function() {
     if (p) {
       p.style.display = 'none';
       p.classList.remove('peer-visible');
-      // Clear drag-set position on mobile so CSS translate(-50%,-50%) takes effect on next open
-      if (window.innerWidth <= 600) { p.style.left = ''; p.style.top = ''; }
+      // Reset inline position/transform so CSS centering takes effect on next open
+      p.style.left = '';
+      p.style.top  = '';
+      p.style.transform = '';
     }
     window.cancelPeerClose();
     window._peerPinned = false;
@@ -17361,7 +17465,7 @@ window.resetAllAppFilters = function() {
   /* ── Drag logic & Pinning (mouse + touch) ── */
   let _dragInit = false;
   function _initDrag() {
-    if (_dragInit) return; // wire once only
+    if (_dragInit) return;
     _dragInit = true;
     const el  = document.getElementById('peer-popup');
     const hdr = document.getElementById('peer-popup-header');
@@ -17375,76 +17479,19 @@ window.resetAllAppFilters = function() {
       }
     }, { passive: true });
 
-    // Also pin on touch inside
     el.addEventListener('touchstart', function(e) {
       if (!e.target.closest('#peer-popup-close') && !e.target.closest('.peer-name')) {
         window._peerPinned = true;
       }
     }, { passive: true });
 
-    let ox = 0, oy = 0, sx = 0, sy = 0, dragging = false;
-
-    /* ── MOUSE drag ── */
-    hdr.addEventListener('mousedown', function(e) {
-      if (e.target.closest('#peer-popup-close')) return;
-      e.preventDefault();
-      dragging = true;
-      window._peerPinned = true;
-      const r = el.getBoundingClientRect();
-      ox = r.left; oy = r.top; sx = e.clientX; sy = e.clientY;
-      hdr.style.cursor = 'grabbing';
-    });
-    document.addEventListener('mousemove', function(e) {
-      if (!dragging) return;
-      _moveTo(ox + e.clientX - sx, oy + e.clientY - sy);
-    });
-    document.addEventListener('mouseup', function() {
-      if (dragging) { dragging = false; hdr.style.cursor = 'grab'; }
-    });
-
-    /* ── TOUCH drag (hold & move) ── */
-    let touchDragging = false, touchId = null;
-    hdr.addEventListener('touchstart', function(e) {
-      if (e.target.closest('#peer-popup-close')) return;
-      if (e.touches.length !== 1) return;
-      const t = e.touches[0];
-      touchDragging = true; touchId = t.identifier;
-      window._peerPinned = true;
-      const r = el.getBoundingClientRect();
-      ox = r.left; oy = r.top; sx = t.clientX; sy = t.clientY;
-      // Don't preventDefault here — allow scroll fallback on non-header touches
-    }, { passive: true });
-
-    document.addEventListener('touchmove', function(e) {
-      if (!touchDragging) return;
-      let touch = null;
-      for (let i = 0; i < e.changedTouches.length; i++) {
-        if (e.changedTouches[i].identifier === touchId) { touch = e.changedTouches[i]; break; }
-      }
-      if (!touch) return;
-      e.preventDefault(); // prevent page scroll while dragging popup
-      _moveTo(ox + touch.clientX - sx, oy + touch.clientY - sy);
-    }, { passive: false });
-
-    document.addEventListener('touchend', function(e) {
-      for (let i = 0; i < e.changedTouches.length; i++) {
-        if (e.changedTouches[i].identifier === touchId) { touchDragging = false; touchId = null; break; }
-      }
-    }, { passive: true });
-
-    function _moveTo(nx, ny) {
-      const maxX = window.innerWidth  - el.offsetWidth;
-      const maxY = window.innerHeight - el.offsetHeight;
-      el.style.left = Math.max(0, Math.min(nx, maxX)) + 'px';
-      el.style.top  = Math.max(0, Math.min(ny, maxY)) + 'px';
-    }
+    window._makeDraggable(el, hdr, function() { window._peerPinned = true; });
   }
 
   /* ── Click Outside to Close ── */
   document.addEventListener('mousedown', function(e) {
     const p = document.getElementById('peer-popup');
-    if (p && p.style.display !== 'none' && !p.contains(e.target)) {
-      window._peerPinned = false;
+    if (p && p.style.display !== 'none' && !p.contains(e.target) && !window._peerPinned) {
       window.closePeerPopup();
     }
   }, true);
@@ -17459,6 +17506,9 @@ window.resetAllAppFilters = function() {
 
     _currentTicker = ticker;
     _currentInd    = industry;
+    // Save context so we can restore it when search is cleared
+    window._lastPeerTicker   = ticker;
+    window._lastPeerIndustry = industry;
 
     // Use the live JS filter state — currentFilteredData is the array doFilter() just built.
     // This correctly respects index filter (Nifty50 etc), search, mcap, all dropdowns.
@@ -17493,12 +17543,14 @@ window.resetAllAppFilters = function() {
       const popW = p.offsetWidth || 340, popH = p.offsetHeight || 480;
       const left = Math.max(8, Math.round((window.innerWidth  - popW) / 2));
       const top  = Math.max(8, Math.round((window.innerHeight - popH) / 2));
-      p.style.left = left + 'px';
-      p.style.top  = top  + 'px';
+      p.style.left      = left + 'px';
+      p.style.top       = top  + 'px';
+      p.style.transform = 'none';
     } else {
-      // Clear any previously JS-set position so CSS transform takes full control
-      p.style.left = '';
-      p.style.top  = '';
+      // Clear any drag-set inline styles so CSS left:50%/top:50%/translate(-50%,-50%) takes full control
+      p.style.left      = '';
+      p.style.top       = '';
+      p.style.transform = '';
     }
   };
 
@@ -17552,6 +17604,24 @@ window.resetAllAppFilters = function() {
 
   // Expose refresh callback for count change buttons
   window._peerRefreshCurrent = function() { refreshParam(_currentParam); };
+
+  // Expose rebuild: re-compute _peers from current filtered set then redraw
+  window._peerRebuildPeers = function() {
+    if (!_currentTicker || !_currentInd) return;
+    const allIndustry = window._peerAllData ? window._peerAllData.filter(r => r._ind === _currentInd) : [];
+    const filteredSet = window.currentFilteredData;
+    if (filteredSet && filteredSet.length > 0) {
+      const visibleTickers = new Set(filteredSet.map(r => String(r._ticker)));
+      visibleTickers.add(_currentTicker);
+      _peers = allIndustry.filter(r => visibleTickers.has(String(r._ticker)));
+    } else {
+      _peers = allIndustry;
+    }
+    const shortInd = _currentInd.replace(/\s*(Industry|Sector|Group|Segment)$/i,'').slice(0,22);
+    document.getElementById('peer-popup-title').textContent = '◈ ' + shortInd;
+    document.getElementById('peer-popup-count').textContent  = _peers.length + ' co.';
+    refreshParam(_currentParam);
+  };
 
   function drawOctagon(list, vals, maxV, selfTicker) {
     const svg = document.getElementById('peer-octa-svg');
@@ -17638,8 +17708,11 @@ window.resetAllAppFilters = function() {
     inp.value = ticker;
     const clrBtn = document.getElementById('clear-search-btn');
     if (clrBtn) clrBtn.style.display = 'flex';
+    // Keep popup open and pinned — user closes manually with ✕
+    window._peerPinned = true;
     if (typeof doFilter === 'function') doFilter();
-    window.closePeerPopup();
+    // After filter, refresh the peer chart so it reflects the new filtered set
+    if (typeof window._peerRefreshCurrent === 'function') window._peerRefreshCurrent();
   };
 
 })();
