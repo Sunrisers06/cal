@@ -944,7 +944,7 @@ select.fi option { background: var(--surface); color: var(--text); }
   transition: width 0.55s cubic-bezier(0.4,0,0.2,1);
   position: absolute; left: 0; top: 0;
 }
-/* Current quarter — vivid green */
+/* Current quarter — vivid */
 .hf-cur-pos {
   background: linear-gradient(90deg, #059669, #10b981 55%, #34d399);
   box-shadow: 0 0 10px rgba(16,185,129,0.55), inset 0 1px 0 rgba(255,255,255,0.15);
@@ -953,12 +953,13 @@ select.fi option { background: var(--surface); color: var(--text); }
   background: linear-gradient(90deg, #9f1239, #f43f5e 60%, #fb7185);
   box-shadow: 0 0 8px rgba(244,63,94,0.5);
 }
-/* Previous quarter — medium green */
-.hf-prev-pos { background: rgba(16,185,129,0.42); border: 1px solid rgba(16,185,129,0.35); }
-.hf-prev-neg { background: rgba(244,63,94,0.36); border: 1px solid rgba(244,63,94,0.26); }
-/* YoY quarter — visible but clearly secondary green */
-.hf-yoy-pos { background: rgba(16,185,129,0.26); border: 1px solid rgba(16,185,129,0.22); }
-.hf-yoy-neg { background: rgba(244,63,94,0.22); border: 1px solid rgba(244,63,94,0.16); }
+
+/* Previous quarter — full opacity, solid colors */
+.hf-prev-pos { background: linear-gradient(90deg, #047857, #059669); box-shadow: 0 0 6px rgba(16,185,129,0.3); }
+.hf-prev-neg { background: linear-gradient(90deg, #9f1239, #e11d48); box-shadow: 0 0 6px rgba(244,63,94,0.3); }
+/* YoY quarter — full opacity, slightly muted shade */
+.hf-yoy-pos { background: linear-gradient(90deg, #065f46, #047857); box-shadow: 0 0 4px rgba(16,185,129,0.2); }
+.hf-yoy-neg { background: linear-gradient(90deg, #7f1d1d, #9f1239); box-shadow: 0 0 4px rgba(244,63,94,0.2); }
 
 .h-bar-val {
   font-size: 8px; font-family: 'Lexend', sans-serif; font-weight: 700;
@@ -967,10 +968,10 @@ select.fi option { background: var(--surface); color: var(--text); }
 }
 .hv-cur-pos { color: #34d399; text-shadow: 0 0 8px rgba(52,211,153,0.5); }
 .hv-cur-neg { color: var(--pop-red); text-shadow: 0 0 6px rgba(244,63,94,0.4); }
-.hv-prev-pos { color: rgba(16,185,129,0.85); }
-.hv-prev-neg { color: rgba(244,63,94,0.80); }
-.hv-yoy-pos  { color: rgba(16,185,129,0.65); }
-.hv-yoy-neg  { color: rgba(244,63,94,0.60); }
+.hv-prev-pos { color: #6ee7b7; }
+.hv-prev-neg { color: #fca5a5; }
+.hv-yoy-pos  { color: #a7f3d0; }
+.hv-yoy-neg  { color: #fecaca; }
 
 /* ══════════════════════════════
    DESKTOP CARD BUTTON LAYOUT (> 1024px)
@@ -1288,7 +1289,12 @@ select.fi option { background: var(--surface); color: var(--text); }
 .ticker-tag { 
   font-size: 9px; font-family: 'Lexend', sans-serif; font-weight: 500; 
   color: #ffffff; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.2); 
-  padding: 1px 6px; border-radius: 3px; flex-shrink: 0; letter-spacing: 0.04em; 
+  padding: 1px 6px; border-radius: 3px; flex-shrink: 0; letter-spacing: 0.04em;
+  cursor: pointer; transition: all 0.2s;
+}
+.ticker-tag:hover {
+  background: rgba(34,211,238,0.12); border-color: rgba(34,211,238,0.45);
+  color: #22d3ee; box-shadow: 0 0 6px rgba(34,211,238,0.2);
 }
 .industry-tag { 
   font-size: 9px; font-family: 'Lexend', sans-serif; font-weight: 400; 
@@ -1462,6 +1468,115 @@ select.fi option { background: var(--surface); color: var(--text); }
 .fh-filter-btn:hover { background: var(--surface2); border-color: var(--text3); color: var(--text); }
 #fav-filter-btn.fh-active  { background: rgba(251,191,36,0.15); border-color: rgba(251,191,36,0.6); color: #fbbf24; box-shadow: 0 0 8px rgba(251,191,36,0.25); }
 #hold-filter-btn.fh-active { background: rgba(34,211,238,0.15); border-color: rgba(34,211,238,0.6); color: #22d3ee; box-shadow: 0 0 8px rgba(34,211,238,0.25); }
+
+
+/* ══════════════════════════════════════════════════════
+   PEER COMPARISON OCTAGON POPUP
+══════════════════════════════════════════════════════ */
+#peer-popup {
+  position: fixed; z-index: 199999; pointer-events: auto;
+  width: 340px;
+  background: #13131a;
+  border: 1px solid rgba(34,211,238,0.30);
+  border-radius: 14px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.80), 0 0 0 1px rgba(34,211,238,0.08);
+  display: none; flex-direction: column;
+  overflow: hidden;
+  font-family: 'Lexend', sans-serif;
+  animation: fadeUp 0.15s ease;
+}
+#peer-popup.peer-visible { display: flex; }
+#peer-popup-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 12px 7px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  background: rgba(34,211,238,0.06);
+  flex-shrink: 0;
+}
+#peer-popup-header { cursor: grab; user-select: none; }
+#peer-popup-header:active { cursor: grabbing; }
+#peer-popup-title-wrap { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; }
+#peer-popup-title {
+  font-size: 9.5px; font-weight: 700; color: #22d3ee;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 160px;
+}
+#peer-popup-count {
+  font-size: 8.5px; font-weight: 700; color: rgba(34,211,238,0.6);
+  background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.2);
+  padding: 1px 5px; border-radius: 8px; white-space: nowrap; flex-shrink: 0;
+}
+#peer-popup-close {
+  cursor: pointer; color: var(--text3); font-size: 13px;
+  width: 20px; height: 20px; display: flex; align-items: center;
+  justify-content: center; border-radius: 4px; flex-shrink: 0;
+  transition: all .15s;
+}
+#peer-popup-close:hover { color: var(--text); background: var(--surface3); }
+
+/* Parameter pills */
+#peer-params {
+  display: flex; gap: 4px; padding: 8px 12px 6px; flex-wrap: wrap;
+  background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.05);
+  flex-shrink: 0;
+}
+.peer-param-pill {
+  padding: 3px 9px; border-radius: 20px; font-size: 9px; font-weight: 700;
+  cursor: pointer; transition: all .15s; letter-spacing: 0.04em;
+  border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);
+  color: var(--text3); white-space: nowrap;
+}
+.peer-param-pill:hover { border-color: rgba(34,211,238,0.5); color: #22d3ee; background: rgba(34,211,238,0.08); }
+.peer-param-pill.active {
+  background: rgba(34,211,238,0.15); border-color: #22d3ee;
+  color: #22d3ee; box-shadow: 0 0 8px rgba(34,211,238,0.25);
+}
+
+/* Octagon chart area */
+#peer-octa-wrap {
+  padding: 10px 12px 4px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+#peer-octa-svg { width: 200px; height: 200px; overflow: visible; }
+
+/* Legend / ranked list */
+#peer-list {
+  padding: 4px 12px 10px; flex: 1; overflow-y: auto;
+  max-height: 200px;
+}
+.peer-item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.peer-item:last-child { border-bottom: none; }
+.peer-rank {
+  font-size: 8.5px; font-weight: 800; color: var(--text3);
+  width: 14px; flex-shrink: 0; text-align: center;
+}
+.peer-color-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+.peer-name {
+  font-size: 9.5px; font-weight: 600; color: var(--text2);
+  flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  cursor: pointer; transition: color 0.15s;
+}
+.peer-name:hover { color: #22d3ee; text-decoration: underline; }
+.peer-name.self { color: #22d3ee; }
+.peer-name.self:hover { color: #67e8f9; }
+.peer-val {
+  font-size: 9.5px; font-weight: 700; color: var(--text); flex-shrink: 0;
+}
+.peer-bar-wrap {
+  width: 60px; flex-shrink: 0; height: 5px;
+  background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden;
+}
+.peer-bar-fill {
+  height: 100%; border-radius: 3px;
+  transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+}
 
 /* ── Safe-area insets for notched phones ── */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
@@ -2165,7 +2280,7 @@ return `
         </div>
         <div class="co-sub">
           <div class="co-sub-left">
-            <span class="ticker-tag">${r._ticker}</span>
+            <span class="ticker-tag" onmouseenter="showPeerChart(event,'${r._ticker}','${r._ind}')" onmouseleave="schedulePeerClose()" style="cursor:pointer;">${r._ticker}</span>
             ${r._ind?`<span class="industry-tag" onclick="setIndustryFilter('${escHtml(r._ind)}', event)">${r._ind}</span>`:''}
             ${ssBadge}
             ${topRankBadge}
@@ -2673,8 +2788,8 @@ function doFilter() {
     if (!isNaN(minEps)  && (isNaN(r._eps)  || r._eps  < minEps))  return false;
     if (!isNaN(minStr)  && (isNaN(r._str)  || r._str  < minStr))  return false;
     if (!isNaN(minRoce) && (isNaN(r._roce) || r._roce < minRoce)) return false;
-    if (minMasterStr !== 'all') { const mi = grades.indexOf(minMasterStr), vi = grades.indexOf(r._master); if (vi === -1 || vi > mi) return false; }
-    if (minDemandStr !== 'all') { const mi = grades.indexOf(minDemandStr), vi = grades.indexOf(r._demand); if (vi === -1 || vi > mi) return false; }
+    if (minMasterStr !== 'all') { if (!r._master || r._master !== minMasterStr) return false; }
+    if (minDemandStr !== 'all') { if (!r._demand || r._demand !== minDemandStr) return false; }
     // Investor / SuperStar filter
     if (invQ !== 'all' && window.superStarMap) {
       const ssEntries = window.superStarMap[String(r._ticker).toUpperCase()] || [];
@@ -2942,6 +3057,7 @@ async function loadAll() {
     indexDataMap = processIndices(idx);
     
     allData = mergeAndPrecalc(ms, tl, res, tickerToName);
+    window._peerAllData = allData; // expose for peer comparison popup
     
     // Calculate returns from OHLCV close prices (OHLCV already injected above)
     calcOHLCVReturns();
@@ -3322,9 +3438,9 @@ window.resetAllAppFilters = function() {
         // Swap allData with filtered subset for this call
         const _filteredAllData = allData.filter(r => tickerSet.has(String(r._ticker || '').toUpperCase()));
         // Reassign allData temporarily
-        allData = _filteredAllData;
+        allData = _filteredAllData; window._peerAllData = allData;
         _prevDoFilter();
-        allData = _origAllData;
+        allData = _origAllData; window._peerAllData = allData;
         // Also filter news in sidebar with all F/H tickers as OR query
         _filterNewsByFHTickers(active);
       } else {
@@ -4168,6 +4284,30 @@ window.resetAllAppFilters = function() {
 </script>
 
 <!-- Superstar name tooltip — lives on body so overflow:hidden on cards can't clip it -->
+
+<!-- ══ PEER COMPARISON POPUP ══ -->
+<div id="peer-popup">
+  <div id="peer-popup-header" title="Drag to move">
+    <div id="peer-popup-title-wrap">
+      <span id="peer-popup-title">Peers</span>
+      <span id="peer-popup-count"></span>
+    </div>
+    <span id="peer-popup-close" onclick="closePeerPopup()">✕</span>
+  </div>
+  <div id="peer-params">
+    <span class="peer-param-pill active" data-param="mcap">Mkt Cap</span>
+    <span class="peer-param-pill" data-param="eps">EPS Rank</span>
+    <span class="peer-param-pill" data-param="rs">Rel Str</span>
+    <span class="peer-param-pill" data-param="dur">Durability</span>
+    <span class="peer-param-pill" data-param="val">Valuation</span>
+    <span class="peer-param-pill" data-param="roce">ROCE %</span>
+  </div>
+  <div id="peer-octa-wrap">
+    <svg id="peer-octa-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div id="peer-list"></div>
+</div>
+
 <div id="ss-tip" style="
   position:fixed;z-index:2147483647;pointer-events:none;
   display:none;
@@ -4201,6 +4341,320 @@ window.resetAllAppFilters = function() {
   }, true);
 })();
 </script>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   PEER COMPARISON OCTAGON ENGINE  v2
+══════════════════════════════════════════════════════ */
+(function() {
+  'use strict';
+
+  const PARAMS = {
+    mcap: { label:'Mkt Cap',    get: r => r._mcap,                                          fmt: v => { if(isNaN(v)||!v) return '—'; if(v>=100000) return (v/100000).toFixed(1)+'L'; if(v>=1000) return (v/1000).toFixed(1)+'K'; return Math.round(v)+''; } },
+    eps:  { label:'EPS Rank',   get: r => r._eps,                                           fmt: v => isNaN(v)?'—':Math.round(v)+'' },
+    rs:   { label:'Rel Str',    get: r => r._str,                                           fmt: v => isNaN(v)?'—':Math.round(v)+'' },
+    dur:  { label:'Durability', get: r => parseFloat(r['Trendlyne Durability Score'])||NaN, fmt: v => isNaN(v)?'—':Math.round(v)+'' },
+    val:  { label:'Valuation',  get: r => parseFloat(r['Trendlyne Valuation Score'])||NaN,  fmt: v => isNaN(v)?'—':Math.round(v)+'' },
+    roce: { label:'ROCE %',     get: r => r._roce,                                          fmt: v => isNaN(v)?'—':v.toFixed(1)+'%' }
+  };
+
+  const COLORS   = ['#3b82f6','#10b981','#f97316','#f43f5e','#eab308','#ec4899','#a78bfa','#f472b6'];
+  const SELF_CLR = '#22d3ee';
+
+  let _pop = null, _closeTimer = null, _pinned = false;
+  let _currentTicker = null, _currentInd = null, _currentParam = 'mcap';
+  let _peers = [];
+
+  /* ── DOM helpers ── */
+  /* ── DOM helpers ── */
+  function pop() {
+    if (!_pop) {
+      _pop = document.getElementById('peer-popup');
+      /* Pin on click inside popup so it stays even without mouse */
+      _pop.addEventListener('mousedown', function(e) {
+        if (!e.target.closest('#peer-popup-close') && !e.target.closest('.peer-name')) {
+          _pinned = true;
+        }
+      });
+      /* Add mouse events to handle robust closing */
+      _pop.addEventListener('mouseenter', function() {
+        _cancelClose();
+      });
+      _pop.addEventListener('mouseleave', function() {
+        if (!_pinned) window.schedulePeerClose();
+      });
+      _initDrag(_pop);
+    }
+    return _pop;
+  }
+
+  /* ── Auto-close logic ── */
+  function _cancelClose() {
+    if (_closeTimer) { clearTimeout(_closeTimer); _closeTimer = null; }
+  }
+  function _hide() {
+    const p = document.getElementById('peer-popup');
+    if (p) p.classList.remove('peer-visible');
+    _pinned = false;
+    _closeTimer = null;
+  }
+
+  /* Single mousemove on document — if mouse is outside both popup AND any ticker-tag, close */
+  document.addEventListener('mousemove', function(e) {
+    const p = document.getElementById('peer-popup');
+    if (!p || !p.classList.contains('peer-visible') || _pinned) return;
+    const overPopup = p.contains(e.target) || p === e.target;
+    const overTag   = e.target.classList && e.target.classList.contains('ticker-tag');
+    if (overPopup || overTag) {
+      _cancelClose();
+    } else {
+      if (!_closeTimer) {
+        _closeTimer = setTimeout(_hide, 400);
+      }
+    }
+  }, { passive: true });
+
+  /* Click anywhere outside popup → close immediately */
+  document.addEventListener('mousedown', function(e) {
+    const p = document.getElementById('peer-popup');
+    if (p && p.classList.contains('peer-visible') && !p.contains(e.target)) {
+      _pinned = false;
+      _hide();
+    }
+  }, true);
+
+  window.closePeerPopup    = _hide;
+  window.schedulePeerClose = function() {
+    if (!_pinned && !_closeTimer) {
+      _closeTimer = setTimeout(_hide, 400);
+    }
+  };
+
+  /* ── Drag logic ── */
+  function _initDrag(el) {
+    const hdr = document.getElementById('peer-popup-header');
+    if (!hdr) return;
+    let ox = 0, oy = 0, sx = 0, sy = 0, dragging = false;
+
+    hdr.addEventListener('mousedown', function(e) {
+      if (e.target.closest('#peer-popup-close')) return;
+      e.preventDefault();
+      dragging = true;
+      _pinned  = true;
+      const rect = el.getBoundingClientRect();
+      ox = rect.left; oy = rect.top;
+      sx = e.clientX; sy = e.clientY;
+      hdr.style.cursor = 'grabbing';
+    });
+    document.addEventListener('mousemove', function(e) {
+      if (!dragging) return;
+      const dx = e.clientX - sx, dy = e.clientY - sy;
+      let nx = ox + dx, ny = oy + dy;
+      /* clamp inside viewport */
+      nx = Math.max(0, Math.min(nx, window.innerWidth  - el.offsetWidth));
+      ny = Math.max(0, Math.min(ny, window.innerHeight - el.offsetHeight));
+      el.style.left = nx + 'px';
+      el.style.top  = ny + 'px';
+    });
+    document.addEventListener('mouseup', function() {
+      if (dragging) { dragging = false; hdr.style.cursor = 'grab'; }
+    });
+  }
+
+  /* ── Public: show popup ── */
+  window.showPeerChart = function(event, ticker, industry) {
+    _cancelClose();
+    _pinned = false;
+    event.stopPropagation();
+
+    if (!window._peerAllData || !window._peerAllData.length) return;
+
+    _currentTicker = ticker;
+    _currentInd    = industry;
+    _peers         = window._peerAllData.filter(r => r._ind === industry);
+
+    const p = pop();
+
+    /* Short name — trim common suffixes, max 22 chars */
+    const shortInd = industry.replace(/\s*(Industry|Sector|Group|Segment)$/i,'').slice(0,22);
+    const totalCount = _peers.length;
+    document.getElementById('peer-popup-title').textContent = '◈ ' + shortInd;
+    document.getElementById('peer-popup-count').textContent  = totalCount + ' co.';
+
+    refreshParam(_currentParam);
+    _wirePills(p);
+    updateActivePill(p, _currentParam);
+
+    /* Position near tag */
+    const rect = event.currentTarget.getBoundingClientRect();
+    p.style.display = 'flex';
+    const popW = p.offsetWidth || 340, popH = p.offsetHeight || 460;
+    let left = rect.left, top = rect.bottom + 8;
+    if (left + popW > window.innerWidth  - 8) left = window.innerWidth  - popW - 8;
+    if (left < 8) left = 8;
+    if (top  + popH > window.innerHeight - 8) top  = rect.top - popH - 8;
+    if (top  < 8) top  = 8;
+    p.style.left = left + 'px';
+    p.style.top  = top  + 'px';
+    p.classList.add('peer-visible');
+  };
+
+  /* ── Pill wiring ── */
+  let _pillsWired = false;
+  function _wirePills(p) {
+    if (_pillsWired) return;
+    _pillsWired = true;
+    p.querySelectorAll('.peer-param-pill').forEach(pill => {
+      pill.addEventListener('click', function(e) {
+        e.stopPropagation();
+        _pinned = true;
+        _currentParam = this.dataset.param;
+        updateActivePill(p, _currentParam);
+        refreshParam(_currentParam);
+      });
+      pill.addEventListener('mouseenter', function() {
+        const hp = this.dataset.param;
+        updateActivePill(p, hp);
+        refreshParam(hp);
+      });
+      pill.addEventListener('mouseleave', function() {
+        updateActivePill(p, _currentParam);
+        refreshParam(_currentParam);
+      });
+    });
+  }
+
+  function updateActivePill(p, param) {
+    p.querySelectorAll('.peer-param-pill').forEach(pl => {
+      pl.classList.toggle('active', pl.dataset.param === param);
+    });
+  }
+
+  /* ── Data ── */
+  function refreshParam(param) {
+    const pDef = PARAMS[param];
+    if (!pDef || !_peers.length) return;
+    const selfRow = _peers.find(r => r._ticker === _currentTicker);
+    const others  = _peers
+      .filter(r => r._ticker !== _currentTicker && !isNaN(pDef.get(r)) && pDef.get(r) > 0)
+      .sort((a,b) => pDef.get(b) - pDef.get(a))
+      .slice(0, 7);
+    const list = [...others];
+    if (selfRow) list.push(selfRow);
+    const vals = list.map(r => pDef.get(r) || 0);
+    const maxV = Math.max(...vals, 1);
+    drawOctagon(list, vals, maxV, selfRow?._ticker);
+    drawList(list, vals, maxV, pDef, selfRow?._ticker);
+  }
+
+  /* ── Octagon ── */
+  function drawOctagon(list, vals, maxV, selfTicker) {
+    const svg = document.getElementById('peer-octa-svg');
+    if (!svg) return;
+    const cx = 100, cy = 100, R = 78, rMin = 8;
+    const n   = Math.max(list.length, 3);
+
+    function ringPoints(frac) {
+      const rad = rMin + (R - rMin) * frac;
+      return Array.from({length: n}, (_, i) => {
+        const ang = (2 * Math.PI * i / n) - Math.PI / 2;
+        return [cx + rad * Math.cos(ang), cy + rad * Math.sin(ang)];
+      });
+    }
+
+    let html = '';
+    [0.25, 0.5, 0.75, 1.0].forEach(frac => {
+      const rp = ringPoints(frac);
+      const poly = rp.map(p => p[0].toFixed(2)+','+p[1].toFixed(2)).join(' ');
+      const outer = frac === 1.0;
+      html += `<polygon points="${poly}" fill="none"
+        stroke="${outer?'rgba(34,211,238,0.22)':'rgba(255,255,255,0.06)'}"
+        stroke-width="${outer?1.2:0.8}"/>`;
+    });
+
+    const outerPts = ringPoints(1.0);
+    for (let i = 0; i < n; i++) {
+      const [x2,y2] = outerPts[i];
+      html += `<line x1="${cx}" y1="${cy}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}"
+        stroke="rgba(255,255,255,0.09)" stroke-width="0.8"/>`;
+      const ang    = (2*Math.PI*i/n) - Math.PI/2;
+      const lx     = cx + (R+14)*Math.cos(ang);
+      const ly     = cy + (R+14)*Math.sin(ang);
+      const tck    = list[i] ? String(list[i]._ticker).slice(0,7) : '';
+      const isSelf = list[i] && list[i]._ticker === selfTicker;
+      const cosA   = Math.cos(ang);
+      const anchor = cosA > 0.15 ? 'start' : cosA < -0.15 ? 'end' : 'middle';
+      html += `<text x="${lx.toFixed(2)}" y="${ly.toFixed(2)}"
+        text-anchor="${anchor}" dominant-baseline="middle"
+        font-family="Lexend,sans-serif" font-size="7" font-weight="${isSelf?700:500}"
+        fill="${isSelf?'#22d3ee':'rgba(255,255,255,0.40)'}">${tck}</text>`;
+    }
+
+    const pts = list.map((r,i) => {
+      const ang  = (2*Math.PI*i/n) - Math.PI/2;
+      const frac = maxV > 0 ? Math.max(0.05, (vals[i]||0)/maxV) : 0.05;
+      const rad  = rMin + (R-rMin)*frac;
+      return { x: cx+rad*Math.cos(ang), y: cy+rad*Math.sin(ang), r, i };
+    });
+
+    if (pts.length > 1) {
+      html += `<polygon points="${pts.map(p=>p.x.toFixed(2)+','+p.y.toFixed(2)).join(' ')}"
+        fill="rgba(34,211,238,0.10)" stroke="rgba(34,211,238,0.65)"
+        stroke-width="1.5" stroke-linejoin="round"/>`;
+    }
+
+    pts.forEach((p,i) => {
+      const isSelf = p.r._ticker === selfTicker;
+      const clr    = isSelf ? SELF_CLR : COLORS[i % COLORS.length];
+      if (isSelf) html += `<circle cx="${p.x.toFixed(2)}" cy="${p.y.toFixed(2)}" r="${10}"
+        fill="${clr}" opacity="0.18"/>`;
+      html += `<circle cx="${p.x.toFixed(2)}" cy="${p.y.toFixed(2)}" r="${isSelf?6.5:4.5}"
+        fill="${clr}" stroke="#13131a" stroke-width="1.5"/>`;
+    });
+
+    svg.innerHTML = html;
+  }
+
+  /* ── List ── */
+  function drawList(list, vals, maxV, pDef, selfTicker) {
+    const container = document.getElementById('peer-list');
+    if (!container) return;
+    const indexed = list.map((r,i) => ({r, v:vals[i], i}))
+      .sort((a,b) => (b.v||0)-(a.v||0));
+
+    container.innerHTML = indexed.map((item, rank) => {
+      const isSelf = item.r._ticker === selfTicker;
+      const clr    = isSelf ? SELF_CLR : COLORS[item.i % COLORS.length];
+      const barPct = maxV > 0 ? Math.max(3, (item.v||0)/maxV*100) : 3;
+      const name   = String(item.r._coName || item.r._ticker).slice(0, 20);
+      const ticker = item.r._ticker;
+      return `<div class="peer-item">
+        <span class="peer-rank">${rank+1}</span>
+        <span class="peer-color-dot" style="background:${clr}"></span>
+        <span class="peer-name${isSelf?' self':''}"
+          title="Click to filter: ${item.r._coName}"
+          onclick="(function(e){e.stopPropagation();_peerFilterByTicker('${ticker}');})(event)"
+        >${name}${isSelf?' ★':''}</span>
+        <div class="peer-bar-wrap"><div class="peer-bar-fill" style="width:${barPct.toFixed(1)}%;background:${clr}"></div></div>
+        <span class="peer-val">${pDef.fmt(item.v)}</span>
+      </div>`;
+    }).join('');
+  }
+
+  /* ── Filter cards to single company on name click ── */
+  window._peerFilterByTicker = function(ticker) {
+    const inp = document.getElementById('search-input');
+    if (!inp) return;
+    inp.value = ticker;
+    const clrBtn = document.getElementById('clear-search-btn');
+    if (clrBtn) clrBtn.style.display = 'flex';
+    if (typeof doFilter === 'function') doFilter();
+    _hide();
+  };
+
+})();
+</script>
+
 <script>
 /* ══════════════════════════════════════════════════════
    BLOCK EDGE NATIVE PULL-TO-REFRESH
