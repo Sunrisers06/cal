@@ -15126,7 +15126,7 @@ return `
         </div>
       </div>
       <div class="inline-scores">
-        ${r._mcap?`<div class="iscore w-wide ${getChipColor('Market Cap',r._mcap)}" onmouseenter="showPeerChart(event,'${r._ticker}','${r._ind}')" onmouseleave="schedulePeerClose()" style="cursor:pointer;" title="View Peer Comparison"><span class="iscore-label">Mcap</span><span class="iscore-val">${fmtMcap(r._mcap)}</span></div>`:''}
+        ${r._mcap?`<div class="iscore w-wide ${getChipColor('Market Cap',r._mcap)}" onmouseenter="showPeerChart(event,'${r._ticker}','${r._ind}')" onmouseleave="schedulePeerClose()" onclick="event.stopPropagation();showPeerChart(event,'${r._ticker}','${r._ind}')" ontouchstart="event.stopPropagation();showPeerChart(event,'${r._ticker}','${r._ind}')" style="cursor:pointer;" title="View Peer Comparison"><span class="iscore-label">Mcap</span><span class="iscore-val">${fmtMcap(r._mcap)}</span></div>`:''}
         ${r['Trendlyne Durability Score']?`<div class="iscore ${getChipColor('Durability',r['Trendlyne Durability Score'])}"><span class="iscore-label">Dur.</span><span class="iscore-val">${fmtWhole(r['Trendlyne Durability Score'])}</span></div>`:''}
         ${r['EPS Rank']?`<div class="iscore ${getChipColor('EPS Rank',r['EPS Rank'])}"><span class="iscore-label">EPS R</span><span class="iscore-val">${fmtWhole(r['EPS Rank'])}</span></div>`:''}
         ${r['Master Score']?`<div class="iscore ${getChipColor('Master Score',r['Master Score'])}"><span class="iscore-label">MS</span><span class="iscore-val">${r['Master Score']}</span></div>`:''}
@@ -16463,6 +16463,7 @@ window.resetAllAppFilters = function() {
     <div id="csph-period-pills">
       <span class="csph-period-pill active" data-period="6m" onclick="setCandlePeriod('6m',this)">6M</span>
       <span class="csph-period-pill" data-period="1y" onclick="setCandlePeriod('1y',this)">1Y</span>
+      <span class="csph-period-pill" data-period="2y" onclick="setCandlePeriod('2y',this)">2Y</span>
     </div>
     <button id="csph-close-btn" onclick="document.getElementById('csp-hover-popup').classList.remove('csp-visible')" title="Close">✕</button>
   </div>
@@ -16704,7 +16705,7 @@ window.resetAllAppFilters = function() {
     const s10full = sma(closes, 10);
     const s40full = sma(closes, 40);
 
-    const months  = _currentPeriod === '1y' ? 12 : 6;
+    const months  = _currentPeriod === '2y' ? 24 : _currentPeriod === '1y' ? 12 : 6;
     const cutoff  = new Date(); cutoff.setMonth(cutoff.getMonth() - months);
     const cutTs   = cutoff.getTime();
     // Find first index inside window
@@ -17425,10 +17426,11 @@ window.resetAllAppFilters = function() {
     const pDef = PARAMS[param];
     if (!pDef || !_peers.length) return;
     const selfRow = _peers.find(r => r._ticker === _currentTicker);
+    const maxOthers = Math.max(2, (window._peerMaxCount || 8) - 1);
     const others  = _peers
       .filter(r => r._ticker !== _currentTicker && !isNaN(pDef.get(r)) && pDef.get(r) > 0)
       .sort((a,b) => pDef.get(b) - pDef.get(a))
-      .slice(0, 7);
+      .slice(0, maxOthers);
     const list = [...others];
     if (selfRow) list.push(selfRow);
     const vals = list.map(r => pDef.get(r) || 0);
@@ -17436,6 +17438,9 @@ window.resetAllAppFilters = function() {
     drawOctagon(list, vals, maxV, selfRow?._ticker);
     drawList(list, vals, maxV, pDef, selfRow?._ticker);
   }
+
+  // Expose refresh callback for count change buttons
+  window._peerRefreshCurrent = function() { refreshParam(_currentParam); };
 
   function drawOctagon(list, vals, maxV, selfTicker) {
     const svg = document.getElementById('peer-octa-svg');
@@ -17559,6 +17564,108 @@ window.resetAllAppFilters = function() {
     
 
                 <script>// Write JavaScript here</script>
+<script>
+/* ══════════════════════════════════════════════════════
+   PATCH 1: Make static Mcap boxes clickable on mobile
+   (Dynamic cards via buildCard already have onclick injected above)
+══════════════════════════════════════════════════════ */
+(function patchMcapBoxes() {
+  function applyPatch() {
+    // Find all Mcap iscore boxes that have showPeerChart in onmouseenter but no onclick
+    document.querySelectorAll('.iscore.w-wide[title="View Peer Comparison"]').forEach(function(el) {
+      if (el.getAttribute('data-peer-patched')) return;
+      el.setAttribute('data-peer-patched', '1');
+      // Extract ticker & industry from onmouseenter attribute
+      const me = el.getAttribute('onmouseenter') || '';
+      const m = me.match(/showPeerChart\(event\s*,\s*'([^']+)'\s*,\s*'([^']*)'\s*\)/);
+      if (!m) return;
+      const ticker = m[1], industry = m[2];
+      el.onclick = function(e) { e.stopPropagation(); showPeerChart(e, ticker, industry); };
+      el.ontouchstart = function(e) { e.stopPropagation(); showPeerChart(e, ticker, industry); };
+    });
+  }
+  // Run on load and after any dynamic renders
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyPatch);
+  } else {
+    applyPatch();
+  }
+  // Re-run after dynamic card renders via MutationObserver
+  const obs = new MutationObserver(function(muts) {
+    for (const m of muts) {
+      if (m.addedNodes.length) { applyPatch(); break; }
+    }
+  });
+  const cards = document.getElementById('cards');
+  if (cards) obs.observe(cards, { childList: true, subtree: true });
+  setTimeout(applyPatch, 1200);
+})();
+
+/* ══════════════════════════════════════════════════════
+   PATCH 2: Company count selector in peer popup
+   Default = 8 (7 others + self), user can increase
+══════════════════════════════════════════════════════ */
+(function patchPeerCount() {
+  // Inject the count control into the peer popup header after it's in the DOM
+  function injectCountControl() {
+    const header = document.getElementById('peer-popup-header');
+    if (!header || document.getElementById('peer-count-ctrl')) return;
+
+    const ctrl = document.createElement('div');
+    ctrl.id = 'peer-count-ctrl';
+    ctrl.style.cssText = 'display:flex;align-items:center;gap:4px;flex-shrink:0;';
+    ctrl.innerHTML = `
+      <span style="font-size:8px;color:rgba(34,211,238,0.6);font-weight:700;letter-spacing:0.04em;white-space:nowrap;">SHOW</span>
+      <button id="peer-count-dec" style="width:18px;height:18px;border-radius:4px;background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.25);color:#22d3ee;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;font-family:'Lexend',sans-serif;flex-shrink:0;">−</button>
+      <span id="peer-count-val" style="font-size:10px;font-weight:800;color:#22d3ee;min-width:16px;text-align:center;font-family:'Lexend',sans-serif;">8</span>
+      <button id="peer-count-inc" style="width:18px;height:18px;border-radius:4px;background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.25);color:#22d3ee;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;font-family:'Lexend',sans-serif;flex-shrink:0;">+</button>
+    `;
+
+    // Insert before close button
+    const closeBtn = document.getElementById('peer-popup-close');
+    if (closeBtn) header.insertBefore(ctrl, closeBtn);
+    else header.appendChild(ctrl);
+
+    const decBtn = document.getElementById('peer-count-dec');
+    const incBtn = document.getElementById('peer-count-inc');
+    const valEl  = document.getElementById('peer-count-val');
+
+    decBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const cur = window._peerMaxCount || 8;
+      if (cur <= 3) return;
+      window._peerMaxCount = cur - 1;
+      valEl.textContent = window._peerMaxCount;
+      if (typeof window._peerRefreshCurrent === 'function') window._peerRefreshCurrent();
+    });
+    incBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const cur = window._peerMaxCount || 8;
+      window._peerMaxCount = cur + 1;
+      valEl.textContent = window._peerMaxCount;
+      if (typeof window._peerRefreshCurrent === 'function') window._peerRefreshCurrent();
+    });
+  }
+
+  window._peerMaxCount = 8;
+
+  // Observe peer-popup appearing
+  const peerPopup = document.getElementById('peer-popup');
+  if (peerPopup) {
+    const obs = new MutationObserver(function() {
+      if (peerPopup.classList.contains('peer-visible') || peerPopup.style.display !== 'none') {
+        injectCountControl();
+        // Sync display value
+        const valEl = document.getElementById('peer-count-val');
+        if (valEl) valEl.textContent = window._peerMaxCount || 8;
+      }
+    });
+    obs.observe(peerPopup, { attributes: true, attributeFilter: ['class','style'] });
+    injectCountControl(); // try immediately too
+  }
+  setTimeout(injectCountControl, 800);
+})();
+</script>
             
         
     </body>
