@@ -185,7 +185,7 @@ body::before {
 /* ── Candlestick Hover Popup ── */
 #csp-hover-popup {
   position: fixed; z-index: 299999; pointer-events: auto;
-  width: min(360px, 94vw);
+  width: min(400px, 94vw);
   background: #ffffff;
   border: 1px solid rgba(0,0,0,0.10);
   border-radius: 10px;
@@ -255,8 +255,8 @@ body::before {
 /* Mobile: fixed smaller size — must be visibly smaller than desktop 360px */
 @media(max-width: 600px) {
   #csp-hover-popup { 
-    width: min(320px, 92vw) !important;
-    max-width: min(320px, 92vw) !important;
+    width: min(360px, 96vw) !important;
+    max-width: min(360px, 96vw) !important;
     border-radius: 12px;
   }
   #csph-close-btn { display: block; }
@@ -265,14 +265,34 @@ body::before {
   .csph-period-pill { font-size: 7.5px; padding: 2px 7px; }
 }
 
-/* Peer popup mobile */
+/* Peer popup mobile — full width, optimised touch layout */
 @media(max-width: 600px) {
   #peer-popup {
-    width: min(320px, 94vw) !important;
-    max-width: min(320px, 94vw) !important;
+    width: min(400px, 97vw) !important;
+    max-width: min(400px, 97vw) !important;
+    border-radius: 16px !important;
+    /* Centre on screen for easier reach */
+    left: 50% !important;
+    transform: translateX(-50%) !important;
   }
-  #peer-octa-svg { width: 170px !important; height: 170px !important; }
-  #peer-list { max-height: 160px !important; }
+  /* Reset transform after user drags (JS sets left/top directly) */
+  #peer-popup[style*="left"] {
+    transform: none !important;
+  }
+  #peer-octa-wrap { padding: 8px 6px 2px !important; }
+  #peer-octa-svg  { width: 210px !important; height: 210px !important; }
+  #peer-list      { max-height: 200px !important; padding: 4px 10px 10px !important; }
+  #peer-params    { padding: 6px 10px 5px !important; gap: 3px !important; }
+  .peer-param-pill { font-size: 8.5px !important; padding: 4px 8px !important; }
+  #peer-popup-header { padding: 10px 12px 8px !important; }
+  #peer-popup-title  { font-size: 10px !important; }
+  /* Bigger touch targets for peer name rows */
+  .peer-item { padding: 5px 0 !important; }
+  .peer-name  { font-size: 10px !important; }
+  .peer-val   { font-size: 10px !important; }
+  /* Count control bigger on mobile */
+  #peer-count-dec, #peer-count-inc { width: 24px !important; height: 24px !important; font-size: 14px !important; }
+  #peer-count-val { font-size: 12px !important; min-width: 20px !important; }
 }
 
 /* ══════════════════════════════
@@ -827,11 +847,23 @@ select.fi option { background: var(--surface); color: var(--text); }
 .last-upd  { font-size: 11px; color: var(--text3); }
 
 /* ══════════════════════════════
+   FLUID CARDS GRID
+══════════════════════════════ */
+#cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 480px), 1fr));
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  align-items: start;
+}
+
+/* ══════════════════════════════
    STOCK CARD & COLOR INDICATORS
 ══════════════════════════════ */
 .stock-card {
   background: var(--surface); border: 1px solid var(--border2); border-radius: 10px;
-  margin-bottom: 8px; overflow: hidden;
+  margin-bottom: 0; overflow: hidden;
   width: 100%; box-sizing: border-box; min-width: 0; height: auto;
   animation: fadeUp .4s ease both; transition: all .2s ease;
   position: relative; cursor: pointer;
@@ -891,16 +923,16 @@ select.fi option { background: var(--surface); color: var(--text); }
 ══════════════════════════════ */
 .inline-scores { 
   display: flex; align-items: center; justify-content: flex-end; 
-  gap: 4px; flex-shrink: 0; flex-wrap: wrap;
-  margin-left: auto;
+  gap: 3px; flex-shrink: 0; flex-wrap: nowrap;
+  margin-left: auto; overflow: hidden;
 }
 .iscore { 
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  border-radius: 5px; min-width: 36px; width: auto; height: auto; 
-  padding: 3px 7px; box-shadow: 0 1px 4px rgba(0,0,0,0.25); 
-  transition: transform .18s ease, box-shadow .18s ease; flex-shrink: 0;
+  border-radius: 5px; min-width: 32px; width: auto; height: auto; 
+  padding: 3px 5px; box-shadow: 0 1px 4px rgba(0,0,0,0.25); 
+  transition: transform .18s ease, box-shadow .18s ease; flex-shrink: 1;
 }
-.iscore.w-wide { min-width: 46px; width: auto; }
+.iscore.w-wide { min-width: 42px; width: auto; }
 .iscore:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.45); }
 .iscore-label { 
   font-size: 7.5px; color: rgba(255,255,255,0.85); text-transform: uppercase; 
@@ -1170,51 +1202,67 @@ select.fi option { background: var(--surface); color: var(--text); }
   /* Stock cards */
   .stock-card {
     width: 100%; box-sizing: border-box;
-    margin-bottom: 6px; border-radius: 8px; overflow: hidden;
+    margin-bottom: 0; border-radius: 8px; overflow: visible;
   }
+  /* Mobile name-slide: grid layout — left column = info, right column = action btns */
   .name-slide {
-    padding: 7px 90px 6px 13px !important; /* Space reserved on right for absolute buttons */
-    gap: 5px; box-sizing: border-box; width: 100%;
-    flex-direction: column; align-items: flex-start;
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    grid-template-rows: auto auto !important;
+    padding: 8px 10px 8px 13px !important;
+    gap: 6px 8px !important;
+    box-sizing: border-box; width: 100%;
+    align-items: start;
   }
-  
-  /* Move Investor and Chart to Top Right on mobile (Stacked) */
-  .card-action-btns { 
-    position: absolute !important;
-    top: 7px !important;
-    right: 8px !important;
-    flex-direction: column !important; /* Stacks them vertically */
-    align-items: stretch !important;   /* Makes them equal width for a clean look */
-    order: 0 !important;
-    margin: 0 !important;
-    gap: 6px !important;               /* Gives them breathing room */
+
+  /* co-stack fills left column, spans both rows' first column */
+  .co-stack {
+    grid-column: 1; grid-row: 1;
+    width: 100%; min-width: 0; box-sizing: border-box;
+    display: flex; flex-direction: column; gap: 4px;
   }
-  
-  .co-stack { width: 100%; min-width: 0; flex: 1 1 100%; box-sizing: border-box; }
+
+  /* inline-scores: full width below co-stack */
+  .inline-scores {
+    grid-column: 1; grid-row: 2;
+    justify-content: flex-start;
+    width: 100%; max-width: 100%; gap: 2px;
+    flex-wrap: nowrap; overflow: hidden;
+    margin-left: 0;
+  }
+
+  /* action btns: right column spanning both rows */
+  .card-action-btns {
+    grid-column: 2; grid-row: 1 / span 2;
+    position: static !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 5px !important;
+    z-index: 20; order: 0; margin: 0;
+    align-self: start;
+  }
+
   .co-name-row { width: 100%; min-width: 0; }
   .co-name { font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-  
+
   /* Company bottom sub-row */
   .co-sub { flex-direction: row; flex-wrap: nowrap; padding-left: 11px; width: 100%; align-items: center; }
   .co-sub-left { gap: 4px; flex-wrap: wrap; }
 
-  .card-action-btns .investor-link-btn, 
+  .card-action-btns .investor-link-btn,
   .card-action-btns .chart-c-btn {
-    padding: 10px 12px !important; /* Doubled vertical padding */
-    min-height: 36px !important;   /* Enforces a much taller touch target */
-    font-size: 11px !important;    /* Slightly larger text for readability */
+    padding: 8px 10px !important;
+    min-height: 32px !important;
+    font-size: 10px !important;
     justify-content: center;
     border-radius: 6px;
+    white-space: nowrap;
   }
 
-  .inline-scores {
-    justify-content: flex-start; padding-left: 0;
-    width: 100%; flex: 1 1 100%; max-width: 100%; gap: 3px;
-  }
-  .iscore { min-width: 34px; width: auto; padding: 2px 5px; flex-shrink: 0; border-radius: 4px; }
-  .iscore.w-wide { min-width: 42px; }
-  .iscore-label { font-size: 6.5px; }
-  .iscore-val { font-size: 12.5px; }
+  .iscore { min-width: 28px; width: auto; padding: 2px 4px; flex-shrink: 1; border-radius: 4px; }
+  .iscore.w-wide { min-width: 38px; }
+  .iscore-label { font-size: 6px; }
+  .iscore-val { font-size: 11.5px; }
 
   /* Metrics grid */
   .metrics-full {
@@ -1237,27 +1285,25 @@ select.fi option { background: var(--surface); color: var(--text); }
 
 @media(max-width: 480px) {
   .main-content { padding: 4px 4px 16px; }
-  .name-slide { padding: 6px 145px 5px 11px !important; gap: 5px; }
+  .name-slide { padding: 6px 8px 6px 11px !important; gap: 5px 6px !important; }
   .co-name { font-size: 12px; }
-  
-  .card-action-btns { top: 6px !important; right: 6px !important; }
-  
+
   .co-sub { padding-left: 9px; }
   .co-sub-left { gap: 3px; }
   .ticker-tag { font-size: 8px; padding: 1px 4px; }
   .industry-tag { font-size: 8px; padding: 1px 4px; }
-  
-  .card-action-btns .investor-link-btn, 
+
+  .card-action-btns .investor-link-btn,
   .card-action-btns .chart-c-btn {
-    padding: 8px 10px !important;  /* Doubled vertical padding */
-    min-height: 32px !important;   /* Solid touch target for small screens */
-    font-size: 10px !important;
+    padding: 7px 8px !important;
+    min-height: 28px !important;
+    font-size: 9.5px !important;
   }
 
-  .iscore { min-width: 30px; width: auto; padding: 2px 4px; }
-  .iscore.w-wide { min-width: 37px; }
-  .iscore-label { font-size: 6px; }
-  .iscore-val { font-size: 11.5px; }
+  .iscore { min-width: 24px; width: auto; padding: 2px 3px; flex-shrink: 1; }
+  .iscore.w-wide { min-width: 32px; }
+  .iscore-label { font-size: 5.5px; }
+  .iscore-val { font-size: 10.5px; }
   
   .metrics-full { padding: 2px; grid-template-columns: repeat(2, 1fr); }
   .metric-cell { padding: 4px 5px 5px; margin: 2px; }
@@ -15195,25 +15241,32 @@ return `
     _pop.style.left = left + 'px';
   }
 
-function _hide() {
-    const p = document.getElementById('peer-popup');
-    if (p) {
-      p.classList.remove('peer-visible');
-      p.style.display = 'none'; /* CRITICAL FIX: overrides inline flex */
+  function _hide() {
+    if (_pop) {
+      _pop.style.display = 'none';
     }
-    _pinned = false;
-    _closeTimer = null;
+    _popTicker = null;
+    _popBtn    = null;
+    if (_closeRaf) { cancelAnimationFrame(_closeRaf); _closeRaf = null; }
   }
 
   /* ── public API ── */
-  window.showInvestorPopup   = (e, t) => { e.stopPropagation(); _popTicker === t ? _hide() : _show(e.currentTarget, t); };
-  window.closeInvestorPopup  = ()      => { _hide(); };
+  window.showInvestorPopup  = (e, t) => {
+    e.stopPropagation();
+    if (_popTicker === t) { _hide(); return; }   // toggle off same badge
+    _show(e.currentTarget, t);
+  };
+  window.closeInvestorPopup = () => { _hide(); };
 
-  document.addEventListener('click', e => {
-    if (_pop && _pop.style.display !== 'none' &&
-        !_pop.contains(e.target) &&
-        !e.target.classList.contains('superstar-badge')) _hide();
-  }, true);
+  /* Close on outside click (desktop) or touch (mobile) */
+  function _outsideClose(e) {
+    if (!_pop || _pop.style.display === 'none') return;
+    if (_pop.contains(e.target)) return;
+    if (e.target.classList.contains('superstar-badge')) return;
+    _hide();
+  }
+  document.addEventListener('click',      _outsideClose, true);
+  document.addEventListener('touchstart', _outsideClose, { capture: true, passive: true });
 }
 
 function buildSummary(data) {
@@ -15674,6 +15727,7 @@ function doFilter() {
   if (globalBtn) globalBtn.style.display = isIndFiltered ? 'flex' : 'none';
 
   currentFilteredData = final;
+  window.currentFilteredData = final; // expose for peer filter
   currentRenderLimit  = RENDER_CHUNK;
   renderCards();
 }
@@ -16728,10 +16782,11 @@ window.resetAllAppFilters = function() {
     loadEl.style.display = 'none'; pCv.style.display = 'block'; vCv.style.display = 'block';
 
     const isMobile = window.innerWidth < 600;
-    // Mobile popup is fixed 280px wide; desktop popup is 360px wide
-    const W    = isMobile ? 280 : 360;
-    const PH   = isMobile ? 160 : 220;
-    const VH   = isMobile ? 44  : 60;
+    // Full popup width; price chart uses 16:9-ish ratio, volume ~1/5 of price height
+    const popupEl = document.getElementById('csp-hover-popup');
+    const W  = popupEl ? (popupEl.offsetWidth || (isMobile ? 300 : 380)) : (isMobile ? 300 : 380);
+    const PH = Math.round(W * 0.62);   // ~8:5 ratio — taller, more chart real-estate
+    const VH = Math.round(W * 0.14);   // volume panel ~14% of width
     const DPR  = Math.min(window.devicePixelRatio || 1, 2);
 
     pCv.style.width = W+'px'; pCv.style.height = PH+'px'; pCv.width = W*DPR; pCv.height = PH*DPR;
@@ -17303,44 +17358,86 @@ window.resetAllAppFilters = function() {
     }
   };
 
-  /* ── Drag logic & Pinning ── */
+  /* ── Drag logic & Pinning (mouse + touch) ── */
+  let _dragInit = false;
   function _initDrag() {
-    const el = document.getElementById('peer-popup');
+    if (_dragInit) return; // wire once only
+    _dragInit = true;
+    const el  = document.getElementById('peer-popup');
     const hdr = document.getElementById('peer-popup-header');
     if (!hdr || !el) return;
-    
-    // Pin if clicked inside (unless clicking close)
-    el.addEventListener('mousedown', function(e) {
+
+    // Pin on any interaction inside popup (except close btn / peer-name links)
+    el.addEventListener('pointerdown', function(e) {
+      if (!e.target.closest('#peer-popup-close') && !e.target.closest('.peer-name')
+          && !e.target.closest('#peer-count-dec') && !e.target.closest('#peer-count-inc')) {
+        window._peerPinned = true;
+      }
+    }, { passive: true });
+
+    // Also pin on touch inside
+    el.addEventListener('touchstart', function(e) {
       if (!e.target.closest('#peer-popup-close') && !e.target.closest('.peer-name')) {
         window._peerPinned = true;
       }
-    });
+    }, { passive: true });
 
     let ox = 0, oy = 0, sx = 0, sy = 0, dragging = false;
+
+    /* ── MOUSE drag ── */
     hdr.addEventListener('mousedown', function(e) {
       if (e.target.closest('#peer-popup-close')) return;
       e.preventDefault();
       dragging = true;
       window._peerPinned = true;
-      const rect = el.getBoundingClientRect();
-      ox = rect.left; oy = rect.top;
-      sx = e.clientX; sy = e.clientY;
+      const r = el.getBoundingClientRect();
+      ox = r.left; oy = r.top; sx = e.clientX; sy = e.clientY;
       hdr.style.cursor = 'grabbing';
     });
-    
     document.addEventListener('mousemove', function(e) {
       if (!dragging) return;
-      const dx = e.clientX - sx, dy = e.clientY - sy;
-      let nx = ox + dx, ny = oy + dy;
-      nx = Math.max(0, Math.min(nx, window.innerWidth  - el.offsetWidth));
-      ny = Math.max(0, Math.min(ny, window.innerHeight - el.offsetHeight));
-      el.style.left = nx + 'px';
-      el.style.top  = ny + 'px';
+      _moveTo(ox + e.clientX - sx, oy + e.clientY - sy);
     });
-    
     document.addEventListener('mouseup', function() {
       if (dragging) { dragging = false; hdr.style.cursor = 'grab'; }
     });
+
+    /* ── TOUCH drag (hold & move) ── */
+    let touchDragging = false, touchId = null;
+    hdr.addEventListener('touchstart', function(e) {
+      if (e.target.closest('#peer-popup-close')) return;
+      if (e.touches.length !== 1) return;
+      const t = e.touches[0];
+      touchDragging = true; touchId = t.identifier;
+      window._peerPinned = true;
+      const r = el.getBoundingClientRect();
+      ox = r.left; oy = r.top; sx = t.clientX; sy = t.clientY;
+      // Don't preventDefault here — allow scroll fallback on non-header touches
+    }, { passive: true });
+
+    document.addEventListener('touchmove', function(e) {
+      if (!touchDragging) return;
+      let touch = null;
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === touchId) { touch = e.changedTouches[i]; break; }
+      }
+      if (!touch) return;
+      e.preventDefault(); // prevent page scroll while dragging popup
+      _moveTo(ox + touch.clientX - sx, oy + touch.clientY - sy);
+    }, { passive: false });
+
+    document.addEventListener('touchend', function(e) {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === touchId) { touchDragging = false; touchId = null; break; }
+      }
+    }, { passive: true });
+
+    function _moveTo(nx, ny) {
+      const maxX = window.innerWidth  - el.offsetWidth;
+      const maxY = window.innerHeight - el.offsetHeight;
+      el.style.left = Math.max(0, Math.min(nx, maxX)) + 'px';
+      el.style.top  = Math.max(0, Math.min(ny, maxY)) + 'px';
+    }
   }
 
   /* ── Click Outside to Close ── */
@@ -17362,7 +17459,18 @@ window.resetAllAppFilters = function() {
 
     _currentTicker = ticker;
     _currentInd    = industry;
-    _peers         = window._peerAllData.filter(r => r._ind === industry);
+
+    // Use the live JS filter state — currentFilteredData is the array doFilter() just built.
+    // This correctly respects index filter (Nifty50 etc), search, mcap, all dropdowns.
+    const allIndustry = window._peerAllData.filter(r => r._ind === industry);
+    const filteredSet = window.currentFilteredData;
+    if (filteredSet && filteredSet.length > 0) {
+      const visibleTickers = new Set(filteredSet.map(r => String(r._ticker)));
+      visibleTickers.add(ticker); // always include self
+      _peers = allIndustry.filter(r => visibleTickers.has(String(r._ticker)));
+    } else {
+      _peers = allIndustry;
+    }
 
     const p = document.getElementById('peer-popup');
     if (!p) return;
@@ -17377,16 +17485,13 @@ window.resetAllAppFilters = function() {
     updateActivePill(p, _currentParam);
     _initDrag();
 
-    const rect = event.currentTarget.getBoundingClientRect();
     p.style.display = 'flex';
     p.classList.add('peer-visible');
     
-    const popW = p.offsetWidth || 340, popH = p.offsetHeight || 460;
-    let left = rect.left, top = rect.bottom + 8;
-    if (left + popW > window.innerWidth  - 8) left = window.innerWidth  - popW - 8;
-    if (left < 8) left = 8;
-    if (top  + popH > window.innerHeight - 8) top  = rect.top - popH - 8;
-    if (top  < 8) top  = 8;
+    // Always center on screen
+    const popW = p.offsetWidth || 340, popH = p.offsetHeight || 480;
+    const left = Math.max(8, Math.round((window.innerWidth  - popW) / 2));
+    const top  = Math.max(8, Math.round((window.innerHeight - popH) / 2));
     p.style.left = left + 'px';
     p.style.top  = top  + 'px';
   };
