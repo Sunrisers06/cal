@@ -889,6 +889,12 @@ select.fi option { background: var(--surface); color: var(--text); }
 .stock-card:hover { box-shadow: 0 12px 32px rgba(0,0,0,0.5); transform: translateY(-2px); z-index: 2; filter: brightness(1.1); will-change: transform; }
 .stock-card.news-selected { border-color: var(--purple); box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2); }
 
+/* Mobile: disable expensive hover effects that cause GPU jank */
+@media(max-width: 1024px) {
+  .stock-card:hover { box-shadow: none !important; transform: none !important; filter: none !important; will-change: auto !important; }
+  .stock-card { content-visibility: auto; contain-intrinsic-size: 0 180px; }
+}
+
 /* ══════════════════════════════
    FLUID COMPANY HEADER (.name-slide)
    Desktop: [action-btns] [co-stack: name/ticker/chart-status stacked] [inline-scores on right]
@@ -2192,6 +2198,10 @@ function scrollToTop() {
    GLOBAL SCRIPT VARIABLES & RESET (Fail-proof position)
 ══════════════════════════════════════════════════════ */
 const RENDER_CHUNK = 100;
+/* Mobile gets a smaller first paint + longer debounce for smoother typing */
+const IS_MOBILE = window.innerWidth <= 1024;
+const MOBILE_RENDER_CHUNK = 20;   // first paint: only 20 cards on mobile
+const MOBILE_DEBOUNCE = 280;      // longer debounce so keyboard settles
 const NEWS_CHUNK = 100;
 
 window.resetAllAppFilters = function() {
@@ -3135,7 +3145,7 @@ function onSearchInput() {
   document.getElementById('clear-search-btn').style.display = q ? 'flex' : 'none';
   if (q) { const w = document.getElementById('search-wrap'); if(w) w.classList.add('mob-expanded'); }
   clearTimeout(debTimer);
-  debTimer = setTimeout(doFilter, 180);
+  debTimer = setTimeout(doFilter, IS_MOBILE ? MOBILE_DEBOUNCE : 180);
 }
 
 function doFilter() {
@@ -3218,30 +3228,37 @@ function doFilter() {
     return nA === -Infinity ? 1 : (nB === -Infinity ? -1 : nA - nB);
   });
   
-  // Re-build summary tiles so counts update based on current subset
-  buildSummary(base);
-  
-  // Instantly push same query to News engine
-  filterBothNews(rawQ);
-
-  const isIndFiltered = indQ !== 'all';
-  const globalBtn = document.getElementById('global-clear-btn');
-  if (globalBtn) globalBtn.style.display = isIndFiltered ? 'flex' : 'none';
-
   currentFilteredData = final;
   window.currentFilteredData = final; // expose for peer filter
-  currentRenderLimit  = RENDER_CHUNK;
-  renderCards();
-}
+  currentRenderLimit = IS_MOBILE ? MOBILE_RENDER_CHUNK : RENDER_CHUNK;
 
-function renderCards() {
-  document.getElementById('cards').innerHTML = currentFilteredData.slice(0, currentRenderLimit).map((r, i) => buildCard(r, i)).join('');
-  updatePaginationUI();
+  if (IS_MOBILE) {
+    // Mobile: render cards first, then update summary+news in next frame
+    requestAnimationFrame(() => {
+      renderCards();
+      requestAnimationFrame(() => {
+        buildSummary(base);
+        filterBothNews(rawQ);
+        const gb = document.getElementById('global-clear-btn');
+        if (gb) gb.style.display = indQ !== 'all' ? 'flex' : 'none';
+      });
+    });
+  } else {
+    renderCards();
+    buildSummary(base);
+    filterBothNews(rawQ);
+    const gb = document.getElementById('global-clear-btn');
+    if (gb) gb.style.display = indQ !== 'all' ? 'flex' : 'none';
+  }
 }
 function loadMore() {
   const start = currentRenderLimit;
   currentRenderLimit += RENDER_CHUNK;
   document.getElementById('cards').insertAdjacentHTML('beforeend', currentFilteredData.slice(start, currentRenderLimit).map((r, i) => buildCard(r, i)).join(''));
+  updatePaginationUI();
+}
+function renderCards() {
+  document.getElementById('cards').innerHTML = currentFilteredData.slice(0, currentRenderLimit).map((r, i) => buildCard(r, i)).join('');
   updatePaginationUI();
 }
 function updatePaginationUI() {
