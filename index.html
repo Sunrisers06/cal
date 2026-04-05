@@ -891,30 +891,68 @@ select.fi option { background: var(--surface); color: var(--text); }
 
 /* ══════════════════════════════
    FLUID COMPANY HEADER (.name-slide)
+   Always a single row — no wrapping under any condition.
 ══════════════════════════════ */
 .name-slide {
   position: relative;
-  display: flex; justify-content: space-between; align-items: center; 
-  padding: 9px 12px 8px 16px;
-  gap: 10px;
+  display: flex; flex-direction: row; align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;          /* ← never wrap to a second line */
+  padding: 8px 10px 8px 12px;
+  gap: 8px;
   width: 100%; min-width: 0; box-sizing: border-box;
+  overflow: hidden;           /* clip rather than grow */
   border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.01);
 }
-.co-stack { display: flex; flex-direction: column; gap: 5px; flex: 1 1 0; min-width: 0; overflow: hidden; }
-.co-name-row { display: flex; align-items: center; gap: 7px; width: 100%; min-width: 0; }
+
+/* co-stack: single row — dot · name · tags all inline */
+.co-stack {
+  display: flex; flex-direction: row; align-items: center;
+  flex-wrap: nowrap;
+  gap: 6px;
+  flex: 1 1 0; min-width: 0; overflow: hidden;
+}
+
+/* co-name-row collapses into co-stack row */
+.co-name-row {
+  display: contents; /* children participate directly in co-stack flex row */
+}
+
 .final-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-.co-name { 
-  font-size: 13.5px; font-weight: 700; font-family: 'Lexend', sans-serif; color: var(--text); 
-  line-height: 1.25; letter-spacing: -0.01em; 
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; 
+
+.co-name {
+  font-size: 13.5px; font-weight: 700; font-family: 'Lexend', sans-serif; color: var(--text);
+  line-height: 1.25; letter-spacing: -0.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  min-width: 0; flex: 1 1 0;   /* grow but shrink before tags */
+  max-width: 38%;               /* cap so tags always stay visible */
 }
 .co-name a { color: var(--text); text-decoration: none; transition: color .2s; }
 .co-name a:hover { color: var(--blue); }
-.co-sub { display: flex; align-items: center; justify-content: space-between; padding-left: 16px; min-width: 0; }
-.co-sub-left { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
-/* Desktop: action buttons on left side, stacked vertically */
-.card-action-btns { 
-  display: flex; flex-direction: column; align-items: stretch; gap: 4px; 
+
+/* co-sub: inline tags row, sits beside co-name in the same flex row */
+.co-sub {
+  display: flex; flex-direction: row; align-items: center;
+  flex-wrap: nowrap; gap: 4px;
+  flex-shrink: 0; min-width: 0; padding-left: 0;
+  overflow: hidden;
+}
+.co-sub-left {
+  display: flex; align-items: center; gap: 4px;
+  flex-wrap: nowrap; flex-shrink: 0;
+}
+
+/* co-base-row: stage/status/type — shown inline after co-sub */
+.co-base-row {
+  display: flex; align-items: center; gap: 3px;
+  flex-wrap: nowrap; flex-shrink: 0;
+  padding-left: 0; margin-top: 0; /* reset column-mode indent */
+  overflow: hidden;
+}
+
+/* Action buttons: stacked vertically on the left, flex-shrink:0 */
+.card-action-btns {
+  display: flex; flex-direction: column; align-items: stretch; gap: 4px;
   flex-shrink: 0; z-index: 20; order: -1;
 }
 
@@ -924,7 +962,7 @@ select.fi option { background: var(--surface); color: var(--text); }
 .inline-scores { 
   display: flex; align-items: center; justify-content: flex-end; 
   gap: 3px; flex-shrink: 0; flex-wrap: nowrap;
-  margin-left: auto; overflow: hidden;
+  overflow: hidden;
 }
 .iscore { 
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -1044,18 +1082,7 @@ select.fi option { background: var(--surface); color: var(--text); }
    Investor + Chart stacked on LEFT
 ══════════════════════════════ */
 @media(min-width: 1025px) {
-  .name-slide {
-    flex-direction: row;
-    align-items: stretch;
-    padding: 8px 12px 8px 12px;
-    gap: 10px;
-  }
   .card-action-btns {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 4px;
-    flex-shrink: 0;
-    order: -1;
     position: static !important;
     justify-content: center;
   }
@@ -1068,10 +1095,6 @@ select.fi option { background: var(--surface); color: var(--text); }
     width: 100%;
     min-width: 60px;
     text-align: center;
-  }
-  .co-stack {
-    flex: 1;
-    min-width: 0;
   }
 }
 
@@ -1204,58 +1227,61 @@ select.fi option { background: var(--surface); color: var(--text); }
     width: 100%; box-sizing: border-box;
     margin-bottom: 0; border-radius: 8px; overflow: visible;
   }
-  /* Mobile name-slide: grid layout — left column = info, right column = action btns */
+  /* Mobile name-slide: always a single flex row — no grid, no wrapping */
   .name-slide {
-    display: grid !important;
-    grid-template-columns: 1fr auto !important;
-    grid-template-rows: auto auto !important;
-    padding: 8px 10px 8px 13px !important;
-    gap: 6px 8px !important;
-    box-sizing: border-box; width: 100%;
-    align-items: start;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    padding: 7px 9px 7px 11px !important;
+    gap: 6px !important;
+    box-sizing: border-box; width: 100%; overflow: hidden;
   }
 
-  /* co-stack fills left column, spans both rows' first column */
+  /* co-stack stays a single row */
   .co-stack {
-    grid-column: 1; grid-row: 1;
-    width: 100%; min-width: 0; box-sizing: border-box;
-    display: flex; flex-direction: column; gap: 4px;
+    display: flex !important; flex-direction: row !important;
+    align-items: center !important; flex-wrap: nowrap !important;
+    gap: 5px !important; flex: 1 1 0 !important; min-width: 0 !important;
+    overflow: hidden !important; grid-column: unset !important; grid-row: unset !important;
   }
 
-  /* inline-scores: full width below co-stack */
+  /* inline-scores: never go to a second row */
   .inline-scores {
-    grid-column: 1; grid-row: 2;
-    justify-content: flex-start;
-    width: 100%; max-width: 100%; gap: 2px;
-    flex-wrap: nowrap; overflow: hidden;
-    margin-left: 0;
+    display: flex !important; flex-direction: row !important;
+    flex-wrap: nowrap !important; flex-shrink: 0 !important;
+    justify-content: flex-end !important;
+    gap: 2px !important; overflow: hidden !important;
+    margin-left: 0 !important;
+    grid-column: unset !important; grid-row: unset !important;
+    max-width: 42% !important;    /* cap so company info always has room */
   }
 
-  /* action btns: right column spanning both rows */
+  /* action btns: right side, column-stacked, never wrap */
   .card-action-btns {
-    grid-column: 2; grid-row: 1 / span 2;
-    position: static !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 5px !important;
-    z-index: 20; order: 0; margin: 0;
-    align-self: start;
+    display: flex !important; flex-direction: column !important;
+    align-items: stretch !important; flex-wrap: nowrap !important;
+    gap: 4px !important; flex-shrink: 0 !important;
+    z-index: 20 !important; order: -1 !important; margin: 0 !important;
+    grid-column: unset !important; grid-row: unset !important;
   }
 
-  .co-name-row { width: 100%; min-width: 0; }
-  .co-name { font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .co-name { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 35%; }
 
-  /* Company bottom sub-row */
-  .co-sub { flex-direction: row; flex-wrap: nowrap; padding-left: 11px; width: 100%; align-items: center; }
-  .co-sub-left { gap: 4px; flex-wrap: wrap; }
+  /* co-sub tags stay inline, no wrap */
+  .co-sub { flex-wrap: nowrap !important; padding-left: 0 !important; gap: 3px !important; overflow: hidden !important; }
+  .co-sub-left { gap: 3px !important; flex-wrap: nowrap !important; overflow: hidden !important; }
+
+  /* co-base-row: inline, no wrap, no indent */
+  .co-base-row { flex-wrap: nowrap !important; padding-left: 0 !important; margin-top: 0 !important; overflow: hidden !important; }
 
   .card-action-btns .investor-link-btn,
   .card-action-btns .chart-c-btn {
-    padding: 8px 10px !important;
-    min-height: 32px !important;
-    font-size: 10px !important;
+    padding: 5px 8px !important;
+    min-height: 28px !important;
+    font-size: 9.5px !important;
     justify-content: center;
-    border-radius: 6px;
+    border-radius: 5px;
     white-space: nowrap;
   }
 
@@ -1285,13 +1311,14 @@ select.fi option { background: var(--surface); color: var(--text); }
 
 @media(max-width: 480px) {
   .main-content { padding: 4px 4px 16px; }
-  .name-slide { padding: 6px 8px 6px 11px !important; gap: 5px 6px !important; }
-  .co-name { font-size: 12px; }
+  .name-slide { padding: 5px 7px 5px 9px !important; gap: 4px !important; }
+  .co-name { font-size: 11.5px; max-width: 30%; }
 
-  .co-sub { padding-left: 9px; }
-  .co-sub-left { gap: 3px; }
-  .ticker-tag { font-size: 8px; padding: 1px 4px; }
-  .industry-tag { font-size: 8px; padding: 1px 4px; }
+  /* keep co-sub flat — no left-indent in single-row mode */
+  .co-sub { padding-left: 0 !important; }
+  .co-sub-left { gap: 2px; }
+  .ticker-tag { font-size: 7.5px; padding: 1px 3px; }
+  .industry-tag { font-size: 7.5px; padding: 1px 3px; max-width: 72px; }
 
   .card-action-btns .investor-link-btn,
   .card-action-btns .chart-c-btn {
@@ -1370,7 +1397,7 @@ select.fi option { background: var(--surface); color: var(--text); }
   font-size: 9px; font-family: 'Lexend', sans-serif; font-weight: 500; 
   color: #ffffff; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.2); 
   padding: 1px 6px; border-radius: 3px; flex-shrink: 0; letter-spacing: 0.04em;
-  cursor: pointer; transition: all 0.2s;
+  cursor: pointer; transition: all 0.2s; white-space: nowrap;
 }
 .ticker-tag:hover {
   background: rgba(34,211,238,0.12); border-color: rgba(34,211,238,0.45);
@@ -1381,6 +1408,8 @@ select.fi option { background: var(--surface); color: var(--text); }
   color: #d4d4d8; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); 
   padding: 1px 6px; border-radius: 3px; letter-spacing: 0.02em; 
   cursor: pointer; transition: all 0.2s;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 120px; flex-shrink: 1;
 }
 
 /* Thinner load more */
@@ -1665,8 +1694,9 @@ select.fi option { background: var(--surface); color: var(--text); }
 
 /* ── Base Matrix tags (Stage / Status / Type) ── */
 .co-base-row {
-  display: flex; align-items: center; gap: 3px; flex-wrap: wrap;
-  padding-left: 16px; margin-top: 2px;
+  display: flex; align-items: center; gap: 3px; flex-wrap: nowrap;
+  flex-shrink: 0; overflow: hidden;
+  padding-left: 0; margin-top: 0; /* sits inline in single-row co-stack */
 }
 .base-tag {
   font-size: 8px; font-family: 'Lexend', sans-serif; font-weight: 700;
@@ -1677,7 +1707,7 @@ select.fi option { background: var(--surface); color: var(--text); }
 .base-status { color: #a78bfa; background: rgba(167,139,250,0.10); border: 1px solid rgba(167,139,250,0.28); }
 .base-type   { color: #fbbf24; background: rgba(251,191,36,0.10);  border: 1px solid rgba(251,191,36,0.28); }
 @media(max-width:480px) {
-  .co-base-row { padding-left: 9px; gap: 2px; }
+  .co-base-row { gap: 2px; }
   .base-tag { font-size: 7px; padding: 1px 4px; }
 }
 
@@ -1778,7 +1808,7 @@ select.fi option { background: var(--surface); color: var(--text); }
   .h-bar-row        { height: 20px; gap: 7px; }
 
   /* ── Base matrix tags ── */
-  .co-base-row      { gap: 5px; padding-left: 22px; margin-top: 4px; }
+  .co-base-row      { gap: 5px; padding-left: 0; margin-top: 0; }
   .base-tag         { font-size: 11px; padding: 2px 8px; border-radius: 4px; }
 
   /* ── News sidebar ── */
