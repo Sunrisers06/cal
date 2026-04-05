@@ -1825,6 +1825,7 @@ select.fi option { background: var(--surface); color: var(--text); }
       <select id="qtr-filter" class="fi w110" onchange="doFilter()"><option value="all">All Quarters</option></select>
       <select id="ind-filter" class="fi w130" onchange="doFilter()"><option value="all">All Industries</option></select>
       <input type="number" id="min-eps" class="fi w90" placeholder="Min EPS" oninput="onSearchInput()">
+      <input type="number" id="min-smr" class="fi w90" placeholder="Min SMR" oninput="onSearchInput()">
       <input type="number" id="min-str" class="fi w90" placeholder="Min Str" oninput="onSearchInput()">
       <input type="number" id="min-roce" class="fi w90" placeholder="Min ROCE%" oninput="onSearchInput()">
       <select id="min-master" class="fi w110" onchange="doFilter()"><option value="all">Master Rank</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option></select>
@@ -1951,7 +1952,7 @@ window.resetAllAppFilters = function() {
     if(el) el.value = 'all';
   });
   
-  ['min-mcap','min-eps','min-str','min-roce'].forEach(id => {
+  ['min-mcap','min-eps','min-smr','min-str','min-roce'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.value = '';
   });
@@ -2890,6 +2891,7 @@ function doFilter() {
   const indQ    = document.getElementById('ind-filter').value;
   const minMcap = parseFloat(document.getElementById('min-mcap').value);
   const minEps  = parseFloat(document.getElementById('min-eps').value);
+  const minSmr  = parseFloat(document.getElementById('min-smr').value);
   const minStr  = parseFloat(document.getElementById('min-str').value);
   const minRoce = parseFloat(document.getElementById('min-roce').value);
   const minMasterStr = document.getElementById('min-master').value;
@@ -2916,6 +2918,7 @@ function doFilter() {
     if (indQ !== 'all' && r._ind !== indQ) return false;
     if (!isNaN(minMcap) && (isNaN(r._mcap) || r._mcap < minMcap)) return false;
     if (!isNaN(minEps)  && (isNaN(r._eps)  || r._eps  < minEps))  return false;
+    if (!isNaN(minSmr)  && (isNaN(r._smr)  || r._smr  < minSmr))  return false;
     if (!isNaN(minStr)  && (isNaN(r._str)  || r._str  < minStr))  return false;
     if (!isNaN(minRoce) && (isNaN(r._roce) || r._roce < minRoce)) return false;
     if (minMasterStr !== 'all') { if (!r._master || r._master !== minMasterStr) return false; }
@@ -3066,6 +3069,7 @@ function mergeAndPrecalc(ms, tl, res, namesMap) {
         
         merged._mcap      = parseFloat(merged['M.Cap (Cr)'] || merged['MCap_(Cr)'] || merged['MCap (Cr)']) || NaN;
         merged._eps       = parseFloat(merged['EPS Rank']);
+        merged._smr       = parseFloat(merged['SMR_Strength']);
         merged._str       = parseFloat(merged['Price Strength']);
         merged._roce      = parseFloat(merged['ROCE Annual %']);
         
@@ -3420,6 +3424,7 @@ doFilter = function() {
   const indQ    = document.getElementById('ind-filter').value;
   const minMcap = parseFloat(document.getElementById('min-mcap').value);
   const minEps  = parseFloat(document.getElementById('min-eps').value);
+  const minSmr  = parseFloat(document.getElementById('min-smr').value);
   const minStr  = parseFloat(document.getElementById('min-str').value);
   const minRoce = parseFloat(document.getElementById('min-roce').value);
   const minMasterStr = document.getElementById('min-master').value;
@@ -3444,6 +3449,7 @@ doFilter = function() {
     if (indQ !== 'all' && r._ind !== indQ) return false;
     if (!isNaN(minMcap) && (isNaN(r._mcap) || r._mcap < minMcap)) return false;
     if (!isNaN(minEps)  && (isNaN(r._eps)  || r._eps  < minEps))  return false;
+    if (!isNaN(minSmr)  && (isNaN(r._smr)  || r._smr  < minSmr))  return false;
     if (!isNaN(minStr)  && (isNaN(r._str)  || r._str  < minStr))  return false;
     if (!isNaN(minRoce) && (isNaN(r._roce) || r._roce < minRoce)) return false;
     if (minMasterStr !== 'all') { const mi = grades.indexOf(minMasterStr), vi = grades.indexOf(r._master); if (vi === -1 || vi > mi) return false; }
