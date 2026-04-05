@@ -905,6 +905,11 @@ select.fi option { background: var(--surface); color: var(--text); }
   border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.01);
 }
 
+/* name-slide-top-row: on desktop, transparent passthrough — acts like a normal flex row */
+.name-slide-top-row {
+  display: contents; /* children participate directly in name-slide flex row */
+}
+
 /* co-stack: DESKTOP — vertical column: name row, then ticker row, then chart status */
 .co-stack {
   display: flex; flex-direction: column;
@@ -1226,18 +1231,28 @@ select.fi option { background: var(--surface); color: var(--text); }
     width: 100%; box-sizing: border-box;
     margin-bottom: 0; border-radius: 8px; overflow: visible;
   }
-  /* Mobile name-slide: row layout — [action-btns] [co-stack column] [inline-scores] */
+
+  /* Mobile name-slide: column layout — top row has [action-btns][co-stack], scorecard spans full width below */
   .name-slide {
     display: flex !important;
-    flex-direction: row !important;
+    flex-direction: column !important;
     flex-wrap: nowrap !important;
-    align-items: center !important;
+    align-items: stretch !important;
     padding: 7px 9px 7px 11px !important;
-    gap: 6px !important;
+    gap: 5px !important;
     box-sizing: border-box; width: 100%; overflow: hidden;
   }
 
-  /* co-stack: mobile — vertical column: name+ticker row on top, chart status below */
+  /* Top row inside name-slide: action-btns + co-stack side by side */
+  .name-slide-top-row {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 6px !important;
+    width: 100%; min-width: 0; overflow: hidden;
+  }
+
+  /* co-stack: mobile — vertical column: name row, ticker row, chart status row */
   .co-stack {
     display: flex !important; flex-direction: column !important;
     align-items: flex-start !important; flex-wrap: nowrap !important;
@@ -1245,14 +1260,14 @@ select.fi option { background: var(--surface); color: var(--text); }
     overflow: hidden !important; grid-column: unset !important; grid-row: unset !important;
   }
 
-  /* co-name-row: mobile top row — dot + company name + ticker in one line */
+  /* co-name-row: dot + company name inline */
   .co-name-row {
     display: flex !important; flex-direction: row !important;
     align-items: center !important; gap: 5px !important;
     min-width: 0 !important; overflow: hidden !important; width: 100%;
   }
 
-  /* co-sub: mobile second row — sits below co-name-row */
+  /* co-sub: ticker + industry + badges row */
   .co-sub {
     display: flex !important; flex-direction: row !important;
     flex-wrap: nowrap !important; padding-left: 0 !important;
@@ -1261,21 +1276,25 @@ select.fi option { background: var(--surface); color: var(--text); }
   }
   .co-sub-left { gap: 3px !important; flex-wrap: nowrap !important; overflow: hidden !important; }
 
-  /* co-base-row: mobile third row — chart status */
+  /* co-base-row: chart status row */
   .co-base-row { flex-wrap: nowrap !important; padding-left: 0 !important; margin-top: 0 !important; overflow: hidden !important; }
 
-  /* inline-scores: right side, wrap allowed, aligned to center */
+  /* inline-scores: BELOW the top row — full width, left-aligned, single row, no wrap */
   .inline-scores {
     display: flex !important; flex-direction: row !important;
-    flex-wrap: wrap !important; flex-shrink: 0 !important;
-    justify-content: flex-end !important; align-self: center !important;
-    gap: 2px !important; overflow: hidden !important;
+    flex-wrap: nowrap !important; flex-shrink: 0 !important;
+    justify-content: flex-start !important; align-self: stretch !important;
+    gap: 3px !important; overflow-x: auto !important; overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important; -ms-overflow-style: none !important;
     margin-left: 0 !important;
     grid-column: unset !important; grid-row: unset !important;
-    max-width: 42% !important;
+    max-width: 100% !important; width: 100% !important;
+    order: 10 !important; /* always renders after the top row */
   }
+  .inline-scores::-webkit-scrollbar { display: none !important; }
 
-  /* action btns: left side, column-stacked, never wrap */
+  /* action btns: left side inside top row, column-stacked */
   .card-action-btns {
     display: flex !important; flex-direction: column !important;
     align-items: stretch !important; flex-wrap: nowrap !important;
@@ -1296,7 +1315,7 @@ select.fi option { background: var(--surface); color: var(--text); }
     white-space: nowrap;
   }
 
-  .iscore { min-width: 28px; width: auto; padding: 2px 4px; flex-shrink: 1; border-radius: 4px; }
+  .iscore { min-width: 28px; width: auto; padding: 2px 4px; flex-shrink: 0; border-radius: 4px; }
   .iscore.w-wide { min-width: 38px; }
   .iscore-label { font-size: 6px; }
   .iscore-val { font-size: 11.5px; }
@@ -2614,30 +2633,31 @@ function buildCard(r, idx) {
 return `
   <div class="stock-card${selClass}" data-score="${score}" data-ticker="${r._ticker}" onclick="onCardClick('${escHtml(r._coName)}','${r._ticker}',event)">
     <div class="name-slide">
-      <div class="card-action-btns">
-        <a class="investor-link-btn" href="https://ticker.finology.in/company/${r._ticker}?mode=C" target="_blank" rel="noopener" onclick="event.stopPropagation()">📊 Investor</a>
-        ${(!window._ohlcvTickers || window._hasChart(r._ticker)) ? `<span class="chart-c-btn"
-          onclick="event.stopPropagation(); openCandleChart('${r._ticker.replace(/'/g,"\\'")}','${escHtml(r._coName).replace(/'/g,"\\'")}',event)"
-          onmouseenter="openCandleChart('${r._ticker.replace(/'/g,"\\'")}','${escHtml(r._coName).replace(/'/g,"\\'")}',event)"
-          onmouseleave="scheduleCandleClose()"
-          ontouchstart="event.stopPropagation(); openCandleChart('${r._ticker.replace(/'/g,"\\'")}','${escHtml(r._coName).replace(/'/g,"\\'")}',event)"
-          title="">📈 Chart</span>` : ''}
-      </div>
-      <div class="co-stack">
-        <div class="co-name-row">
-          <div class="final-dot" style="background:${si.dot};box-shadow:0 0 8px ${si.dot}80;" title="${si.label} (${si.desc})"></div>
-          <div class="co-name" title="${escHtml(r._coName)}">${nameHtml}</div>
+      <div class="name-slide-top-row">
+        <div class="card-action-btns">
+          <a class="investor-link-btn" href="https://ticker.finology.in/company/${r._ticker}?mode=C" target="_blank" rel="noopener" onclick="event.stopPropagation()">📊 Investor</a>
+          ${(!window._ohlcvTickers || window._hasChart(r._ticker)) ? `<span class="chart-c-btn"
+            onclick="event.stopPropagation(); openCandleChart('${r._ticker.replace(/'/g,"\\'")}','${escHtml(r._coName).replace(/'/g,"\\'")}',event)"
+            onmouseenter="openCandleChart('${r._ticker.replace(/'/g,"\\'")}','${escHtml(r._coName).replace(/'/g,"\\'")}',event)"
+            onmouseleave="scheduleCandleClose()"
+            ontouchstart="event.stopPropagation(); openCandleChart('${r._ticker.replace(/'/g,"\\'")}','${escHtml(r._coName).replace(/'/g,"\\'")}',event)"
+            title="">📈 Chart</span>` : ''}
         </div>
-        <div class="co-sub">
-          <div class="co-sub-left">
-            <span class="ticker-tag" onmouseenter="showPeerChart(event,'${r._ticker}','${r._ind}')" onmouseleave="schedulePeerClose()" style="cursor:pointer;">${r._ticker}</span>
-
-            ${r._ind?`<span class="industry-tag" onclick="setIndustryFilter('${escHtml(r._ind)}', event)">${r._ind}</span>`:''}
-            ${ssBadge}
-            ${topRankBadge}
+        <div class="co-stack">
+          <div class="co-name-row">
+            <div class="final-dot" style="background:${si.dot};box-shadow:0 0 8px ${si.dot}80;" title="${si.label} (${si.desc})"></div>
+            <div class="co-name" title="${escHtml(r._coName)}">${nameHtml}</div>
           </div>
+          <div class="co-sub">
+            <div class="co-sub-left">
+              <span class="ticker-tag" onmouseenter="showPeerChart(event,'${r._ticker}','${r._ind}')" onmouseleave="schedulePeerClose()" style="cursor:pointer;">${r._ticker}</span>
+              ${r._ind?`<span class="industry-tag" onclick="setIndustryFilter('${escHtml(r._ind)}', event)">${r._ind}</span>`:''}
+              ${ssBadge}
+              ${topRankBadge}
+            </div>
+          </div>
+          ${(r['Base_Stage_Weekly']||r['Base_Status_Weekly']||r['Base_Type_Weekly'])?`<div class="co-base-row">${r['Base_Stage_Weekly']?`<span class="base-tag base-stage">Stage ${escHtml(r['Base_Stage_Weekly'])}</span>`:''} ${r['Base_Status_Weekly']?`<span class="base-tag base-status">${escHtml(r['Base_Status_Weekly'])}</span>`:''} ${r['Base_Type_Weekly']?`<span class="base-tag base-type">${escHtml(r['Base_Type_Weekly'])}</span>`:''}</div>`:''}
         </div>
-        ${(r['Base_Stage_Weekly']||r['Base_Status_Weekly']||r['Base_Type_Weekly'])?`<div class="co-base-row">${r['Base_Stage_Weekly']?`<span class="base-tag base-stage">Stage ${escHtml(r['Base_Stage_Weekly'])}</span>`:''} ${r['Base_Status_Weekly']?`<span class="base-tag base-status">${escHtml(r['Base_Status_Weekly'])}</span>`:''} ${r['Base_Type_Weekly']?`<span class="base-tag base-type">${escHtml(r['Base_Type_Weekly'])}</span>`:''}</div>`:''}
       </div>
       <div class="inline-scores">
         ${r._mcap?`<div class="iscore w-wide ${getChipColor('Market Cap',r._mcap)}" onmouseenter="showPeerChart(event,'${r._ticker}','${r._ind}')" onmouseleave="schedulePeerClose()" onclick="event.stopPropagation();showPeerChart(event,'${r._ticker}','${r._ind}')" ontouchstart="event.stopPropagation();showPeerChart(event,'${r._ticker}','${r._ind}')" style="cursor:pointer;" title="View Peer Comparison"><span class="iscore-label">Mcap</span><span class="iscore-val">${fmtMcap(r._mcap)}</span></div>`:''}
