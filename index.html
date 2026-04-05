@@ -2255,6 +2255,7 @@ function resetIndustryFilter() {
 }
 
 function clearMainSearch() {
+  clearTimeout(debTimer); // cancel any pending debounced filter — clear is instant
   const searchInput = document.getElementById('search-input');
   if (searchInput) searchInput.value = '';
   const clearBtn = document.getElementById('clear-search-btn');
@@ -2500,6 +2501,10 @@ return `
 
 function buildSummary(data) {
   const t = data.length;
+  // Single pass — avoids 5 separate .filter() iterations over the same array
+  const counts = [0, 0, 0, 0, 0]; // index = _score (0=vweak … 4=best)
+  for (let i = 0; i < t; i++) { const s = data[i]._score; if (s >= 0 && s <= 4) counts[s]++; }
+  const [vweak, weak, mod, good, best] = counts;
   document.getElementById('summary').innerHTML = `
     <div class="sum-card sc-total ${activeFilter==='all'?'active-sum':''}" onclick="setFilterById('all')">
       <div class="sum-label">Selected<span class="sum-label-sub">(All)</span></div>
@@ -2507,23 +2512,23 @@ function buildSummary(data) {
     </div>
     <div class="sum-card sc-best ${activeFilter==='best'?'active-sum':''}"  onclick="setFilterById('best')">
       <div class="sum-label">Best<span class="sum-label-sub">(All >50%)</span></div>
-      <div class="sum-val" style="color:var(--pop-green);">${data.filter(r=>r._score===4).length}</div>
+      <div class="sum-val" style="color:var(--pop-green);">${best}</div>
     </div>
     <div class="sum-card sc-good ${activeFilter==='good'?'active-sum':''}"  onclick="setFilterById('good')">
       <div class="sum-label">Good<span class="sum-label-sub">(All >10%)</span></div>
-      <div class="sum-val" style="color:var(--pop-blue);">${data.filter(r=>r._score===3).length}</div>
+      <div class="sum-val" style="color:var(--pop-blue);">${good}</div>
     </div>
     <div class="sum-card sc-mod ${activeFilter==='mod'?'active-sum':''}"   onclick="setFilterById('mod')">
       <div class="sum-label">Moderate<span class="sum-label-sub">(All >0%)</span></div>
-      <div class="sum-val" style="color:var(--pop-purple);">${data.filter(r=>r._score===2).length}</div>
+      <div class="sum-val" style="color:var(--pop-purple);">${mod}</div>
     </div>
     <div class="sum-card sc-weak ${activeFilter==='weak'?'active-sum':''}"  onclick="setFilterById('weak')">
       <div class="sum-label">Weak<span class="sum-label-sub">(2+ >0%)</span></div>
-      <div class="sum-val" style="color:var(--pop-orange);">${data.filter(r=>r._score===1).length}</div>
+      <div class="sum-val" style="color:var(--pop-orange);">${weak}</div>
     </div>
     <div class="sum-card sc-vweak ${activeFilter==='vweak'?'active-sum':''}" onclick="setFilterById('vweak')">
       <div class="sum-label">Very Weak<span class="sum-label-sub">(Others)</span></div>
-      <div class="sum-val" style="color:var(--pop-red);">${data.filter(r=>r._score===0).length}</div>
+      <div class="sum-val" style="color:var(--pop-red);">${vweak}</div>
     </div>`;
 }
 
@@ -2537,23 +2542,22 @@ function filterBothNews(forcedQuery = null) {
   const rawQ = (forcedQuery !== null ? forcedQuery : String(document.getElementById('search-input').value || '')).trim();
   
   if (!rawQ) {
-    filteredNewsData = [...allNewsData];
-    filteredInsightsData = [...allInsightsData];
+    // No query — reference the source arrays directly (no spread needed; they are read-only at this point)
+    filteredNewsData = allNewsData;
+    filteredInsightsData = allInsightsData;
   } else {
     // OR groups, each group = AND tokens (same engine as stock search)
     const orGroups = rawQ.toLowerCase().split('|').map(g => tokenize(g)).filter(g => g.length);
     
-    function newsMatches(text, ticker, extra) {
-      const words = tokenize(text + ' ' + (ticker||'') + ' ' + (extra||''));
+    filteredNewsData = allNewsData.filter(n => {
+      const tok = n._tok; // pre-computed at load time
       return orGroups.some(tokens =>
-        tokens.every(tok => words.some(w => w.startsWith(tok) || w.includes(tok)))
+        tokens.every(t => tok.some(w => w.startsWith(t) || w.includes(t)))
       );
-    }
-    
-    filteredNewsData     = allNewsData.filter(n => newsMatches(n.text, n.ticker, n.date));
-    // Insights: match ticker field only — not text or tag
+    });
+    // Insights: match ticker field only — use pre-computed _tickLow
     filteredInsightsData = allInsightsData.filter(n => {
-      const tick = String(n.ticker || '').toLowerCase();
+      const tick = n._tickLow; // pre-computed at load time
       return orGroups.some(tokens => tokens.every(tok => tick.startsWith(tok) || tick.includes(tok)));
     });
   }
@@ -2753,11 +2757,11 @@ function filterPaneSearch(pane) {
   if (pane === 'insights') {
     const q = (document.getElementById('insights-search').value || '').trim().toLowerCase();
     if (!q) {
-      filteredInsightsData = [...allInsightsData];
+      filteredInsightsData = allInsightsData;
     } else {
       const toks = tokenize(q);
       filteredInsightsData = allInsightsData.filter(n => {
-        const tick = String(n.ticker || '').toLowerCase();
+        const tick = n._tickLow; // pre-computed at load time
         return toks.every(tok => tick.startsWith(tok) || tick.includes(tok));
       });
     }
@@ -2766,12 +2770,12 @@ function filterPaneSearch(pane) {
   } else {
     const q = (document.getElementById('news-search').value || '').trim().toLowerCase();
     if (!q) {
-      filteredNewsData = [...allNewsData];
+      filteredNewsData = allNewsData;
     } else {
       const toks = tokenize(q);
       filteredNewsData = allNewsData.filter(n => {
-        const words = tokenize(n.text + ' ' + (n.date||'') + ' ' + (n.ticker||''));
-        return toks.every(tok => words.some(w => w.startsWith(tok) || w.includes(tok)));
+        const tok = n._tok; // pre-computed at load time
+        return toks.every(t => tok.some(w => w.startsWith(t) || w.includes(t)));
       });
     }
     currentNewsLimit = NEWS_CHUNK;
@@ -2844,10 +2848,10 @@ function tokenize(str) {
 function scoreSearchMatch(r, tokens) {
   // Returns: 2 = strong match (ticker/name starts with), 1 = match, 0 = no match
   if (!tokens.length) return 1;
-  const name  = String(r._coName || '').toLowerCase();
-  const tick  = String(r._ticker || '').toLowerCase();
-  const nameTk = tokenize(name);
-  const tickTk = tokenize(tick);
+  // Use pre-computed values set in mergeAndPrecalc; fall back if missing (safety)
+  const name  = r._nameLow  || String(r._coName || '').toLowerCase();
+  const tick  = r._tickLow  || String(r._ticker || '').toLowerCase();
+  const nameTk = r._nameTk  || tokenize(name);
 
   // All tokens must match somewhere
   const allMatch = tokens.every(tok => {
@@ -3052,6 +3056,10 @@ function mergeAndPrecalc(ms, tl, res, namesMap) {
         merged._coName    = clean || t || '—';
         merged._ticker    = t;
         merged._searchStr = String(merged._coName + ' ' + t).toLowerCase();
+        // Pre-compute search tokens once — avoids re-tokenizing on every filter call
+        merged._nameLow  = String(merged._coName).toLowerCase();
+        merged._tickLow  = String(t).toLowerCase();
+        merged._nameTk   = tokenize(merged._coName);
         merged._score     = calcScore(merged);
         merged._qtr       = String(merged['Qtr Name (Current)']||'').trim();
         merged._ind       = String(merged['Industry_Group']||'').trim();
@@ -3181,18 +3189,25 @@ async function loadAll() {
     });
 
     allNewsData = parseNewsCSV(newsT).sort((a,b) => b.timestamp - a.timestamp);
+    // Pre-compute search tokens once — avoids repeated tokenize() in every filter call
+    allNewsData.forEach(n => { n._tok = tokenize(n.text + ' ' + (n.ticker||'') + ' ' + (n.date||'')); });
     
     allInsightsData = ins.map(r => {
         try {
             const getK = k => { const fk = Object.keys(r).find(x => String(x).toLowerCase() === k); return fk ? String(r[fk]) : ''; };
             const t = getK('timestamp');
+            const ticker = String(r['Ticker'] || r['ticker'] || getK('ticker') || '');
+            const text   = getK('market_insight').trim();
             return {
                 dateStr: t.trim(),
                 timestamp: parseDateRobust(t),
-                ticker: String(r['Ticker'] || r['ticker'] || getK('ticker') || ''),
+                ticker,
                 tag: getK('tag').trim(),
-                text: getK('market_insight').trim(),
-                link: getK('insight_url').trim()
+                text,
+                link: getK('insight_url').trim(),
+                // Pre-computed for filter performance
+                _tickLow: String(ticker).toLowerCase(),
+                _tok: tokenize(text + ' ' + ticker)
             };
         } catch(e) { return null; }
     }).filter(n => n && n.text).sort((a,b) => b.timestamp - a.timestamp);
@@ -3613,46 +3628,38 @@ window.resetAllAppFilters = function() {
     window._filterNewsByFHTickers = _filterNewsByFHTickers;
 
     function _fhFilterNews(tickerArr) {
-      // Build a map of ticker → company name from allData for richer matching
-      const tickerToCoName = {};
-      if (typeof allData !== 'undefined') {
-        allData.forEach(r => {
-          const t = String(r._ticker || '').toUpperCase();
-          if (t) tickerToCoName[t] = String(r._coName || '').toLowerCase();
-        });
-      }
+      // Build a Set of uppercase tickers for O(1) lookup
+      const tickerSet = new Set(tickerArr); // already uppercase from loadFHTickers
 
-      // For each ticker, also get its cleaned company name tokens
-      // Match logic: "TICKER | Company Name" — same as onCardClick filterBothNews
-      function buildOrQuery(tickers) {
-        return tickers.map(t => {
-          const coName = tickerToCoName[t] || '';
-          return coName ? `${t} | ${coName}` : t;
-        }).join(' | ');
-      }
-
-      // Use the same tokenized OR engine as filterBothNews for consistency
-      const orQuery = buildOrQuery(tickerArr);
-      const orGroups = orQuery.toLowerCase().split('|').map(g => tokenize(g)).filter(g => g.length);
-
-      // Insights: match ticker only (exact ticker set)
-      const tickerSet = new Set(tickerArr);
-      filteredInsightsData = allInsightsData.filter(n => {
-        const nTicker = String(n.ticker || '').trim().toUpperCase();
-        return tickerSet.has(nTicker);
-      });
+      // Insights: exact ticker Set lookup — use pre-computed _tickLow (already lowercase)
+      filteredInsightsData = allInsightsData.filter(n => tickerSet.has(n.ticker.trim().toUpperCase()));
       currentInsightsLimit = NEWS_CHUNK;
       renderInsights();
 
-      // News: match ticker | company name (full OR engine)
-      const newsOrGroups = orGroups; // already built with ticker | coName
-      function newsMatches(text, ticker, extra) {
-        const words = tokenize(text + ' ' + (ticker || '') + ' ' + (extra || ''));
-        return newsOrGroups.some(tokens =>
-          tokens.every(tok => words.some(w => w.startsWith(tok) || w.includes(tok)))
-        );
+      // News: build per-ticker token groups once using pre-computed row data
+      // Match news whose pre-computed _tok includes the ticker (or company name tokens)
+      // Build a map of ticker → nameTk from allData (already has _nameTk pre-computed)
+      const tickerToNameTk = {};
+      if (typeof allData !== 'undefined') {
+        allData.forEach(r => {
+          const t = String(r._ticker || '').toUpperCase();
+          if (t && tickerSet.has(t)) tickerToNameTk[t] = r._nameTk || [];
+        });
       }
-      filteredNewsData = allNewsData.filter(n => newsMatches(n.text, n.ticker, n.date));
+
+      // Build combined token groups: [[tickerTok, ...nameToks], ...] per ticker
+      const matchGroups = tickerArr.map(t => {
+        const tLow = t.toLowerCase();
+        const nameTks = tickerToNameTk[t] || [];
+        return [tLow, ...nameTks]; // all searchable words for this ticker
+      });
+
+      filteredNewsData = allNewsData.filter(n => {
+        const tok = n._tok; // pre-computed at load time
+        return matchGroups.some(group =>
+          group.some(g => tok.some(w => w.startsWith(g) || w.includes(g)))
+        );
+      });
       currentNewsLimit = NEWS_CHUNK;
       renderGeneralNews();
     }
