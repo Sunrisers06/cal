@@ -1680,6 +1680,203 @@ select.fi option { background: var(--surface); color: var(--text); }
   .co-base-row { padding-left: 9px; gap: 2px; }
   .base-tag { font-size: 7px; padding: 1px 4px; }
 }
+
+/* ══════════════════════════════════════════════════════
+   4K / HIGH-DPI DISPLAY OPTIMISATION  (≥ 2560 px wide)
+   All changes are purely visual — no logic is altered.
+══════════════════════════════════════════════════════ */
+@media (min-width: 2560px) {
+
+  /* ── Root scale tokens ── */
+  :root {
+    --4k-scale: 1.45;   /* base multiplier for most text / spacing */
+  }
+
+  /* ── Login overlay ── */
+  .login-box        { max-width: 460px; padding: 56px; border-radius: 22px; }
+  .logo-img         { height: 110px; }
+  .login-title      { font-size: 18px; margin-bottom: 28px; }
+  .login-input      { font-size: 26px; padding: 18px; margin-bottom: 20px; border-radius: 11px; }
+  .login-btn        { font-size: 20px; padding: 18px; border-radius: 11px; }
+
+  /* ── Top bar ── */
+  .topbar           { height: 68px; padding: 0 22px; gap: 14px; }
+  .topbar .logo-img { height: 56px; }
+  .search-wrap      { width: 360px; }
+  .search-box       { font-size: 15px; padding: 9px 36px 9px 40px; border-radius: 9px; }
+  .search-icon      { font-size: 18px; left: 14px; }
+  .clear-search-btn { font-size: 15px; right: 10px; width: 26px; height: 26px; }
+  .icon-btn         { height: 40px; min-width: 40px; font-size: 18px; border-radius: 8px; }
+  .action-btn       { font-size: 14px; padding: 0 14px; gap: 7px; }
+  .fh-filter-btn    { height: 40px; width: 40px; font-size: 15px; border-radius: 8px; }
+  .top-filter-btn   { font-size: 13px; height: 40px; padding: 0 14px; border-radius: 8px; }
+  .top-filter-btn .top-badge { font-size: 10px; padding: 2px 7px; }
+
+  /* ── Filter bar ── */
+  .filter-bar       { padding: 11px 22px; gap: 9px; }
+  .fl               { font-size: 14px; }
+  .fi               { font-size: 14px; padding: 8px 12px; border-radius: 7px; }
+  .fi.w90           { width: 125px; }
+  .fi.w110          { width: 148px; }
+  .fi.w130          { width: 168px; }
+  .sort-fi          { width: 210px; }
+  .clear-btn        { font-size: 15px; padding: 10px 16px; }
+
+  /* ── Summary cards ── */
+  .summary          { gap: 10px; margin-bottom: 14px; }
+  .sum-card         { min-width: 100px; padding: 11px 16px; border-radius: 10px; }
+  .sum-label        { font-size: 12px; margin-bottom: 6px; }
+  .sum-label-sub    { font-size: 10px; }
+  .sum-val          { font-size: 22px; }
+
+  /* ── Meta row ── */
+  .meta-row         { margin-bottom: 12px; }
+  .meta-left        { font-size: 16px; }
+  .last-upd         { font-size: 14px; }
+
+  /* ── Cards grid — allow larger minimum so cards breathe ── */
+  #cards {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 640px), 1fr));
+    gap: 12px;
+  }
+
+  /* ── Stock card ── */
+  .stock-card       { border-radius: 14px; }
+  .stock-card::before { width: 8px; border-radius: 14px 0 0 14px; }
+
+  /* ── Company header ── */
+  .name-slide       { padding: 13px 18px 12px 22px; gap: 14px; }
+  .co-name          { font-size: 18px; }
+  .final-dot        { width: 12px; height: 12px; }
+  .ticker-tag       { font-size: 12px; padding: 2px 9px; border-radius: 4px; }
+  .industry-tag     { font-size: 12px; padding: 2px 9px; border-radius: 4px; }
+
+  /* ── Investor / chart action buttons ── */
+  .card-action-btns .investor-link-btn,
+  .card-action-btns .chart-c-btn  { font-size: 12px !important; padding: 6px 14px !important; border-radius: 6px !important; }
+  .investor-link-btn { font-size: 12px; padding: 2px 9px; border-radius: 4px; }
+  .chart-c-btn       { font-size: 12px; padding: 2px 10px; border-radius: 4px; }
+
+  /* ── Inline score tiles ── */
+  .iscore           { min-width: 46px; padding: 5px 8px; border-radius: 7px; }
+  .iscore.w-wide    { min-width: 60px; }
+  .iscore-label     { font-size: 10px; margin-bottom: 2px; }
+  .iscore-val       { font-size: 20px; }
+
+  /* ── Metrics grid ── */
+  .metrics-full     { padding: 7px; gap: 0; }
+  .metric-cell      { padding: 10px 12px 14px; border-radius: 10px; margin: 3px; }
+  .mc-label         { font-size: 13px; }
+  .mc-val           { font-size: 22px; }
+  .ybadge           { font-size: 13px; padding: 2px 7px; border-radius: 5px; }
+
+  /* ── Horizontal chart bars ── */
+  .h-bar-label      { font-size: 10px; width: 30px; }
+  .h-bar-track      { height: 12px; border-radius: 5px; }
+  .h-bar-fill       { border-radius: 4px; }
+  .h-bar-val        { font-size: 11px; width: 40px; }
+  .h-bar-row        { height: 20px; gap: 7px; }
+
+  /* ── Base matrix tags ── */
+  .co-base-row      { gap: 5px; padding-left: 22px; margin-top: 4px; }
+  .base-tag         { font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+
+  /* ── News sidebar ── */
+  .sidebar          { width: 680px; min-width: 380px; }
+  .sidebar-tab      { font-size: 13px; padding: 10px 14px; }
+  .tab-dot          { width: 8px; height: 8px; }
+  .tab-count        { font-size: 12px; padding: 2px 7px; }
+  .pane-toolbar     { padding: 9px 14px; gap: 9px; }
+  .pane-search      { font-size: 14px; padding: 6px 10px 6px 30px; }
+  .pane-search-wrap::before { font-size: 18px; left: 10px; }
+  .font-sz-btn      { width: 30px; height: 30px; border-radius: 5px; }
+  .font-sz-btn.font-sz-dec { font-size: 14px; }
+  .font-sz-btn.font-sz-inc { font-size: 17px; }
+  .fs-btn           { font-size: 20px; }
+  .news-item        { padding: 11px 20px 13px; }
+  .news-date        { font-size: 13px; margin-bottom: 6px; }
+  .news-link,
+  .news-text        { font-size: 16px; line-height: 1.55; }
+  .news-more-btn    { font-size: 14px; padding: 8px 14px; }
+  .insight-tag      { font-size: 11px; padding: 2px 9px; border-radius: 10px; }
+  .active-company-chip { font-size: 14px; padding: 7px 16px; }
+  .chip-clear       { font-size: 18px; }
+
+  /* ── Sidebar drag resizer ── */
+  #sidebar-resizer  { width: 7px; }
+
+  /* ── Return mini-cards (Top mode) ── */
+  .ret-mini         { padding: 6px 12px; border-radius: 8px; }
+  .ret-mini-label   { font-size: 10px; }
+  .ret-mini-val     { font-size: 16px; }
+  .top-rank-badge   { font-size: 12px; padding: 3px 10px; border-radius: 12px; }
+
+  /* ── Main content padding ── */
+  .main-content     { padding: 16px 22px 40px; }
+
+  /* ── Scroll-to-top button ── */
+  #scroll-to-top    { width: 58px; height: 58px; font-size: 26px; bottom: 30px; right: 28px; border-radius: 50%; }
+
+  /* ── Load-more button ── */
+  .load-more-btn    { font-size: 16px; padding: 12px 32px; border-radius: 24px; }
+  .no-results       { font-size: 18px; padding: 60px; }
+
+  /* ── Investor popup ── */
+  .investor-popup         { min-width: 280px; max-width: 380px; border-radius: 13px; padding: 14px 16px 0; }
+  .investor-popup-title   { font-size: 13px; margin-bottom: 11px; padding-bottom: 9px; }
+  .investor-link          { font-size: 15px; }
+  .superstar-badge        { width: 26px; height: 26px; font-size: 12px; }
+
+  /* ── Top filter panel ── */
+  #top-filter-panel       { min-width: 360px; max-width: 420px; border-radius: 15px; padding: 18px 22px; }
+  .top-panel-title        { font-size: 14px; }
+  .top-panel-label        { font-size: 12px; }
+  .top-pill               { font-size: 13px; padding: 7px 15px; }
+  .top-n-select           { font-size: 14px; padding: 9px 13px; }
+  .top-apply-btn,
+  .top-reset-btn          { font-size: 14px; padding: 11px; }
+
+  /* ── Peer popup ── */
+  #peer-popup             { width: min(460px, 94vw); border-radius: 18px; }
+  #peer-popup-title       { font-size: 13px; }
+  #peer-popup-count       { font-size: 11px; padding: 2px 7px; }
+  #peer-octa-svg          { width: 280px; height: 280px; }
+  #peer-list              { max-height: 280px; padding: 6px 16px 14px; }
+  .peer-param-pill        { font-size: 12px; padding: 5px 13px; }
+  .peer-item              { padding: 5px 0; gap: 9px; }
+  .peer-rank              { font-size: 11px; width: 18px; }
+  .peer-color-dot         { width: 9px; height: 9px; }
+  .peer-name              { font-size: 13px; }
+  .peer-val               { font-size: 13px; }
+  .peer-bar-wrap          { width: 80px; height: 7px; }
+
+  /* ── Candlestick popup ── */
+  #csp-hover-popup        { width: min(560px, 94vw); border-radius: 14px; }
+  #csph-ticker            { font-size: 14px; padding: 3px 10px; border-radius: 5px; }
+  #csph-name              { font-size: 12px; max-width: 220px; }
+  .csph-period-pill       { font-size: 11px; padding: 3px 12px; }
+}
+
+/* ── Fine-tune at true 4K (3840 px) ── */
+@media (min-width: 3200px) {
+  .topbar           { height: 80px; padding: 0 30px; }
+  .topbar .logo-img { height: 68px; }
+  .search-wrap      { width: 480px; }
+  .search-box       { font-size: 17px; padding: 11px 42px 11px 46px; }
+  .icon-btn         { height: 48px; min-width: 48px; font-size: 21px; }
+  .fh-filter-btn    { height: 48px; width: 48px; font-size: 17px; }
+  #cards {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 780px), 1fr));
+    gap: 16px;
+  }
+  .co-name          { font-size: 21px; }
+  .iscore-val       { font-size: 24px; }
+  .mc-val           { font-size: 26px; }
+  .news-link,
+  .news-text        { font-size: 18px; }
+  .sidebar          { width: 820px; }
+  .main-content     { padding: 22px 30px 56px; }
+}
 </style>
 
 
