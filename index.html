@@ -891,31 +891,31 @@ select.fi option { background: var(--surface); color: var(--text); }
 
 /* ══════════════════════════════
    FLUID COMPANY HEADER (.name-slide)
-   Always a single row — no wrapping under any condition.
+   Desktop: [action-btns] [co-stack: name/ticker/chart-status stacked] [inline-scores on right]
 ══════════════════════════════ */
 .name-slide {
   position: relative;
   display: flex; flex-direction: row; align-items: center;
   justify-content: space-between;
-  flex-wrap: nowrap;          /* ← never wrap to a second line */
+  flex-wrap: nowrap;
   padding: 8px 10px 8px 12px;
   gap: 8px;
   width: 100%; min-width: 0; box-sizing: border-box;
-  overflow: hidden;           /* clip rather than grow */
+  overflow: hidden;
   border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.01);
 }
 
-/* co-stack: single row — dot · name · tags all inline */
+/* co-stack: DESKTOP — vertical column: name row, then ticker row, then chart status */
 .co-stack {
-  display: flex; flex-direction: row; align-items: center;
-  flex-wrap: nowrap;
-  gap: 6px;
+  display: flex; flex-direction: column;
+  gap: 3px;
   flex: 1 1 0; min-width: 0; overflow: hidden;
 }
 
-/* co-name-row collapses into co-stack row */
+/* co-name-row: first row — dot + company name */
 .co-name-row {
-  display: contents; /* children participate directly in co-stack flex row */
+  display: flex; flex-direction: row; align-items: center;
+  gap: 6px; min-width: 0; overflow: hidden;
 }
 
 .final-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
@@ -924,29 +924,27 @@ select.fi option { background: var(--surface); color: var(--text); }
   font-size: 13.5px; font-weight: 700; font-family: 'Lexend', sans-serif; color: var(--text);
   line-height: 1.25; letter-spacing: -0.01em;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  min-width: 0; flex: 1 1 0;   /* grow but shrink before tags */
-  max-width: 38%;               /* cap so tags always stay visible */
+  min-width: 0; flex: 1 1 0;
+  max-width: 100%;
 }
 .co-name a { color: var(--text); text-decoration: none; transition: color .2s; }
 .co-name a:hover { color: var(--blue); }
 
-/* co-sub: inline tags row, sits beside co-name in the same flex row */
+/* co-sub: second row — ticker tag + industry tag + badges, all inline */
 .co-sub {
   display: flex; flex-direction: row; align-items: center;
   flex-wrap: nowrap; gap: 4px;
-  flex-shrink: 0; min-width: 0; padding-left: 0;
-  overflow: hidden;
+  min-width: 0; overflow: hidden;
 }
 .co-sub-left {
   display: flex; align-items: center; gap: 4px;
   flex-wrap: nowrap; flex-shrink: 0;
 }
 
-/* co-base-row: stage/status/type — shown inline after co-sub */
+/* co-base-row: third row — chart stage/status/type */
 .co-base-row {
   display: flex; align-items: center; gap: 3px;
   flex-wrap: nowrap; flex-shrink: 0;
-  padding-left: 0; margin-top: 0; /* reset column-mode indent */
   overflow: hidden;
 }
 
@@ -961,8 +959,9 @@ select.fi option { background: var(--surface); color: var(--text); }
 ══════════════════════════════ */
 .inline-scores { 
   display: flex; align-items: center; justify-content: flex-end; 
-  gap: 3px; flex-shrink: 0; flex-wrap: nowrap;
-  overflow: hidden;
+  gap: 3px; flex-shrink: 0; flex-wrap: wrap;
+  overflow: hidden; align-self: center;
+  max-width: 48%;
 }
 .iscore { 
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -1227,7 +1226,7 @@ select.fi option { background: var(--surface); color: var(--text); }
     width: 100%; box-sizing: border-box;
     margin-bottom: 0; border-radius: 8px; overflow: visible;
   }
-  /* Mobile name-slide: always a single flex row — no grid, no wrapping */
+  /* Mobile name-slide: row layout — [action-btns] [co-stack column] [inline-scores] */
   .name-slide {
     display: flex !important;
     flex-direction: row !important;
@@ -1238,26 +1237,45 @@ select.fi option { background: var(--surface); color: var(--text); }
     box-sizing: border-box; width: 100%; overflow: hidden;
   }
 
-  /* co-stack stays a single row */
+  /* co-stack: mobile — vertical column: name+ticker row on top, chart status below */
   .co-stack {
-    display: flex !important; flex-direction: row !important;
-    align-items: center !important; flex-wrap: nowrap !important;
-    gap: 5px !important; flex: 1 1 0 !important; min-width: 0 !important;
+    display: flex !important; flex-direction: column !important;
+    align-items: flex-start !important; flex-wrap: nowrap !important;
+    gap: 3px !important; flex: 1 1 0 !important; min-width: 0 !important;
     overflow: hidden !important; grid-column: unset !important; grid-row: unset !important;
   }
 
-  /* inline-scores: never go to a second row */
+  /* co-name-row: mobile top row — dot + company name + ticker in one line */
+  .co-name-row {
+    display: flex !important; flex-direction: row !important;
+    align-items: center !important; gap: 5px !important;
+    min-width: 0 !important; overflow: hidden !important; width: 100%;
+  }
+
+  /* co-sub: mobile second row — sits below co-name-row */
+  .co-sub {
+    display: flex !important; flex-direction: row !important;
+    flex-wrap: nowrap !important; padding-left: 0 !important;
+    gap: 3px !important; overflow: hidden !important;
+    align-items: center !important;
+  }
+  .co-sub-left { gap: 3px !important; flex-wrap: nowrap !important; overflow: hidden !important; }
+
+  /* co-base-row: mobile third row — chart status */
+  .co-base-row { flex-wrap: nowrap !important; padding-left: 0 !important; margin-top: 0 !important; overflow: hidden !important; }
+
+  /* inline-scores: right side, wrap allowed, aligned to center */
   .inline-scores {
     display: flex !important; flex-direction: row !important;
-    flex-wrap: nowrap !important; flex-shrink: 0 !important;
-    justify-content: flex-end !important;
+    flex-wrap: wrap !important; flex-shrink: 0 !important;
+    justify-content: flex-end !important; align-self: center !important;
     gap: 2px !important; overflow: hidden !important;
     margin-left: 0 !important;
     grid-column: unset !important; grid-row: unset !important;
-    max-width: 42% !important;    /* cap so company info always has room */
+    max-width: 42% !important;
   }
 
-  /* action btns: right side, column-stacked, never wrap */
+  /* action btns: left side, column-stacked, never wrap */
   .card-action-btns {
     display: flex !important; flex-direction: column !important;
     align-items: stretch !important; flex-wrap: nowrap !important;
@@ -1266,14 +1284,7 @@ select.fi option { background: var(--surface); color: var(--text); }
     grid-column: unset !important; grid-row: unset !important;
   }
 
-  .co-name { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 35%; }
-
-  /* co-sub tags stay inline, no wrap */
-  .co-sub { flex-wrap: nowrap !important; padding-left: 0 !important; gap: 3px !important; overflow: hidden !important; }
-  .co-sub-left { gap: 3px !important; flex-wrap: nowrap !important; overflow: hidden !important; }
-
-  /* co-base-row: inline, no wrap, no indent */
-  .co-base-row { flex-wrap: nowrap !important; padding-left: 0 !important; margin-top: 0 !important; overflow: hidden !important; }
+  .co-name { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; flex: 1 1 0; }
 
   .card-action-btns .investor-link-btn,
   .card-action-btns .chart-c-btn {
@@ -1312,9 +1323,9 @@ select.fi option { background: var(--surface); color: var(--text); }
 @media(max-width: 480px) {
   .main-content { padding: 4px 4px 16px; }
   .name-slide { padding: 5px 7px 5px 9px !important; gap: 4px !important; }
-  .co-name { font-size: 11.5px; max-width: 30%; }
+  .co-name { font-size: 11.5px; max-width: 100%; }
 
-  /* keep co-sub flat — no left-indent in single-row mode */
+  /* keep co-sub flat — no left-indent in column mode */
   .co-sub { padding-left: 0 !important; }
   .co-sub-left { gap: 2px; }
   .ticker-tag { font-size: 7.5px; padding: 1px 3px; }
@@ -3445,6 +3456,7 @@ async function loadAll() {
     
     if (res.length > 0) window.serialKey = Object.keys(res[0])[0];
     indexDataMap = processIndices(idx);
+    window.indexDataMap = indexDataMap; // expose for peer chart index-only filtering
     
     allData = mergeAndPrecalc(ms, tl, res, tickerToName);
     window._peerAllData = allData; // expose for peer comparison popup
@@ -5000,14 +5012,14 @@ window._makeDraggable = function(el, hdr, onDragStart) {
     window._lastPeerTicker   = ticker;
     window._lastPeerIndustry = industry;
 
-    // Use the live JS filter state — currentFilteredData is the array doFilter() just built.
-    // This correctly respects index filter (Nifty50 etc), search, mcap, all dropdowns.
+    // PEER CHART: Only apply Indices filter for peer selection.
+    // All other filters (search, mcap, qtr, ind, etc.) are intentionally excluded.
     const allIndustry = window._peerAllData.filter(r => r._ind === industry);
-    const filteredSet = window.currentFilteredData;
-    if (filteredSet && filteredSet.length > 0) {
-      const visibleTickers = new Set(filteredSet.map(r => String(r._ticker)));
-      visibleTickers.add(ticker); // always include self
-      _peers = allIndustry.filter(r => visibleTickers.has(String(r._ticker)));
+    const idxEl = document.getElementById('index-filter');
+    const idxQ  = idxEl ? idxEl.value : 'all';
+    if (idxQ !== 'all' && window.indexDataMap && window.indexDataMap[idxQ]) {
+      const idxSet = window.indexDataMap[idxQ];
+      _peers = allIndustry.filter(r => idxSet.has(String(r._ticker).toUpperCase()) || String(r._ticker) === ticker);
     } else {
       _peers = allIndustry;
     }
@@ -5095,15 +5107,15 @@ window._makeDraggable = function(el, hdr, onDragStart) {
   // Expose refresh callback for count change buttons
   window._peerRefreshCurrent = function() { refreshParam(_currentParam); };
 
-  // Expose rebuild: re-compute _peers from current filtered set then redraw
+  // Expose rebuild: re-compute _peers from index filter only, then redraw
   window._peerRebuildPeers = function() {
     if (!_currentTicker || !_currentInd) return;
     const allIndustry = window._peerAllData ? window._peerAllData.filter(r => r._ind === _currentInd) : [];
-    const filteredSet = window.currentFilteredData;
-    if (filteredSet && filteredSet.length > 0) {
-      const visibleTickers = new Set(filteredSet.map(r => String(r._ticker)));
-      visibleTickers.add(_currentTicker);
-      _peers = allIndustry.filter(r => visibleTickers.has(String(r._ticker)));
+    const idxEl = document.getElementById('index-filter');
+    const idxQ  = idxEl ? idxEl.value : 'all';
+    if (idxQ !== 'all' && window.indexDataMap && window.indexDataMap[idxQ]) {
+      const idxSet = window.indexDataMap[idxQ];
+      _peers = allIndustry.filter(r => idxSet.has(String(r._ticker).toUpperCase()) || String(r._ticker) === _currentTicker);
     } else {
       _peers = allIndustry;
     }
