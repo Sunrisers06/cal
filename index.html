@@ -4776,6 +4776,7 @@ window.resetAllAppFilters = function() {
   <div id="peer-params">
     <span class="peer-param-pill active" data-param="mcap">Mkt Cap</span>
     <span class="peer-param-pill" data-param="eps">EPS Rank</span>
+    <span class="peer-param-pill" data-param="smr">SMR</span>
     <span class="peer-param-pill" data-param="rs">Rel Str</span>
     <span class="peer-param-pill" data-param="dur">Durability</span>
     <span class="peer-param-pill" data-param="val">Valuation</span>
@@ -4956,6 +4957,7 @@ window._makeDraggable = function(el, hdr, onDragStart) {
   const PARAMS = {
     mcap: { label:'Mkt Cap',    get: r => r._mcap,                                          fmt: v => { if(isNaN(v)||!v) return '—'; if(v>=100000) return (v/100000).toFixed(1)+'L'; if(v>=1000) return (v/1000).toFixed(1)+'K'; return Math.round(v)+''; } },
     eps:  { label:'EPS Rank',   get: r => r._eps,                                           fmt: v => isNaN(v)?'—':Math.round(v)+'' },
+    smr:  { label:'SMR',        get: r => r._smr,                                           fmt: v => isNaN(v)?'—':Math.round(v)+'' },
     rs:   { label:'Rel Str',    get: r => r._str,                                           fmt: v => isNaN(v)?'—':Math.round(v)+'' },
     dur:  { label:'Durability', get: r => parseFloat(r['Trendlyne Durability Score'])||NaN, fmt: v => isNaN(v)?'—':Math.round(v)+'' },
     val:  { label:'Valuation',  get: r => parseFloat(r['Trendlyne Valuation Score'])||NaN,  fmt: v => isNaN(v)?'—':Math.round(v)+'' },
