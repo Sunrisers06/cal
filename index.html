@@ -1654,15 +1654,6 @@ select.fi option { background: var(--surface); color: var(--text); }
   background: rgba(0,0,0,0.15); flex-shrink: 0;
 }
 
-.deal-person-select {
-  flex: 1; background: var(--surface2); border: 1px solid var(--border2);
-  border-radius: 5px; padding: 4px 8px;
-  font-size: 10px; font-family: 'Lexend', sans-serif; color: var(--text);
-  outline: none; transition: border-color .2s; cursor: pointer; max-width: 65%;
-}
-.deal-person-select:focus { border-color: #f59e0b; }
-.deal-person-select option { background: var(--surface); }
-
 .deal-count-badge {
   font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px;
   background: rgba(245,158,11,0.12); color: #f59e0b;
@@ -1735,11 +1726,28 @@ select.fi option { background: var(--surface); color: var(--text); }
   .deal-table .dt-ticker { font-size: 9px; padding: 1px 4px; }
   .deal-sub-tab { font-size: 8.5px; padding: 5px 6px; }
   .deal-pane-toolbar { padding: 4px 8px; gap: 5px; }
-  .deal-person-select { font-size: 9.5px; padding: 3px 6px; }
   .deal-global-toolbar { padding: 4px 8px; gap: 5px; }
   .deal-count-badge { font-size: 8px; padding: 1px 5px; }
   .deal-load-more-btn { font-size: 10px !important; padding: 6px 14px !important; }
 }
+
+/* Task 3: Column resize handle */
+.deal-col-resize-handle {
+  position: absolute; right: 0; top: 0; bottom: 0;
+  width: 6px; cursor: col-resize;
+  background: transparent;
+  border-right: 1px solid transparent;
+  transition: border-color 0.15s;
+  z-index: 3;
+  user-select: none; touch-action: none;
+}
+.deal-col-resize-handle:hover,
+.deal-col-resize-handle.resizing {
+  border-right-color: rgba(245,158,11,0.7);
+  background: rgba(245,158,11,0.08);
+}
+/* Make th position:relative so handle can anchor to it */
+.deal-table thead th { position: relative; }
 
 /* Deal refresh button */
 .deal-refresh-btn {
@@ -2310,6 +2318,10 @@ select.fi option { background: var(--surface); color: var(--text); }
           <div class="pane-search-wrap" style="flex:1;">
             <input class="pane-search" id="deal-search" placeholder="Search ticker, person…" oninput="filterDealBlock()">
           </div>
+          <div class="font-size-controls">
+            <button class="font-sz-btn font-sz-dec" onclick="adjustDealFontSize(-1)" title="Decrease font size">A</button>
+            <button class="font-sz-btn font-sz-inc" onclick="adjustDealFontSize(1)" title="Increase font size">A</button>
+          </div>
           <button class="deal-refresh-btn" id="deal-refresh-btn" onclick="dealBlockRefresh()" title="Refresh all deal data">↻</button>
           <button class="fs-btn" onclick="toggleNewsFS('deal-block-section', this)" title="Fullscreen">⛶</button>
         </div>
@@ -2325,9 +2337,6 @@ select.fi option { background: var(--surface); color: var(--text); }
         <!-- INSIDER TRADES -->
         <div class="deal-sub-pane active-sub-pane" id="deal-insider-pane">
           <div class="deal-pane-toolbar">
-            <select class="deal-person-select" id="insider-person-filter" onchange="renderDealSub('insider')">
-              <option value="all">All Persons</option>
-            </select>
             <span class="deal-count-badge" id="insider-count">—</span>
           </div>
           <div class="deal-table-wrap">
@@ -2346,9 +2355,6 @@ select.fi option { background: var(--surface); color: var(--text); }
         <!-- BULK TRADES -->
         <div class="deal-sub-pane" id="deal-bulk-pane">
           <div class="deal-pane-toolbar">
-            <select class="deal-person-select" id="bulk-person-filter" onchange="renderDealSub('bulk')">
-              <option value="all">All Persons</option>
-            </select>
             <span class="deal-count-badge" id="bulk-count">—</span>
           </div>
           <div class="deal-table-wrap">
@@ -2367,9 +2373,6 @@ select.fi option { background: var(--surface); color: var(--text); }
         <!-- BLOCK TRADES -->
         <div class="deal-sub-pane" id="deal-block-pane">
           <div class="deal-pane-toolbar">
-            <select class="deal-person-select" id="block-person-filter" onchange="renderDealSub('block')">
-              <option value="all">All Persons</option>
-            </select>
             <span class="deal-count-badge" id="block-count">—</span>
           </div>
           <div class="deal-table-wrap">
@@ -2388,9 +2391,6 @@ select.fi option { background: var(--surface); color: var(--text); }
         <!-- SAST TRADES -->
         <div class="deal-sub-pane" id="deal-sast-pane">
           <div class="deal-pane-toolbar">
-            <select class="deal-person-select" id="sast-person-filter" onchange="renderDealSub('sast')">
-              <option value="all">All Persons</option>
-            </select>
             <span class="deal-count-badge" id="sast-count">—</span>
           </div>
           <div class="deal-table-wrap">
@@ -2681,6 +2681,158 @@ function closeMobileNews() {
     const saved = parseFloat(localStorage.getItem(FS_KEY));
     if (!isNaN(saved)) applyFontSize(saved);
   } catch(e) {}
+})();
+
+/* ══════════════════════════════════════════════════════
+   DEAL SECTION FONT SIZE CONTROL  (Task 2)
+   Mirrors the news font-size pattern exactly.
+══════════════════════════════════════════════════════ */
+(function() {
+  const FS_KEY_DEAL = 'sundarx_deal_fontsize';
+  const MIN_FS = 8, MAX_FS = 18, DEFAULT_FS = 10;
+  let currentFS = DEFAULT_FS;
+
+  function applyDealFontSize(size) {
+    currentFS = Math.max(MIN_FS, Math.min(MAX_FS, size));
+    let style = document.getElementById('deal-font-size-style');
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'deal-font-size-style';
+      document.head.appendChild(style);
+    }
+    style.textContent = `
+      .deal-table tbody td { font-size: ${currentFS}px !important; }
+      .deal-table thead th { font-size: ${Math.max(7, currentFS - 2)}px !important; }
+      .deal-table .dt-ticker { font-size: ${Math.max(7, currentFS - 0.5)}px !important; }
+    `;
+    try { localStorage.setItem(FS_KEY_DEAL, currentFS); } catch(e) {}
+  }
+
+  window.adjustDealFontSize = function(delta) {
+    applyDealFontSize(currentFS + delta);
+  };
+
+  // Restore saved size on load
+  try {
+    const saved = parseFloat(localStorage.getItem(FS_KEY_DEAL));
+    if (!isNaN(saved)) applyDealFontSize(saved);
+  } catch(e) {}
+})();
+
+/* ══════════════════════════════════════════════════════
+   DEAL TABLE COLUMN RESIZE  (Task 3)
+   Self-contained — no existing code touched.
+   Injects drag handles into every deal table <th>,
+   persists widths to localStorage, restores on init.
+══════════════════════════════════════════════════════ */
+(function() {
+  'use strict';
+  const STORAGE_KEY = 'sundarx_deal_col_widths';
+  const MIN_COL_W   = 40; // px
+
+  /* Inject resize handles into one table */
+  function initResizeHandles(tableId) {
+    const table = document.getElementById(tableId);
+    if (!table || table.dataset.resizeInit) return;
+    table.dataset.resizeInit = '1';
+    table.style.tableLayout = 'fixed';
+
+    const ths = table.querySelectorAll('thead th');
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) {}
+
+    ths.forEach(function(th, i) {
+      const key = tableId + '_' + i;
+      if (saved[key]) th.style.width = saved[key] + 'px';
+
+      const handle = document.createElement('div');
+      handle.className = 'deal-col-resize-handle';
+      handle.addEventListener('mousedown', function(e) { onMouseDown(e, th, tableId, i); });
+      handle.addEventListener('touchstart', function(e) { onTouchStart(e, th, tableId, i); }, { passive: false });
+      th.appendChild(handle);
+    });
+  }
+
+  function saveWidth(tableId, colIdx, width) {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      saved[tableId + '_' + colIdx] = Math.round(width);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+    } catch(e) {}
+  }
+
+  /* Mouse drag */
+  function onMouseDown(e, th, tableId, colIdx) {
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const startW = th.offsetWidth;
+    const handle = e.currentTarget;
+    handle.classList.add('resizing');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    function onMove(ev) {
+      const newW = Math.max(MIN_COL_W, startW + ev.clientX - startX);
+      th.style.width = newW + 'px';
+    }
+    function onUp() {
+      handle.classList.remove('resizing');
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      saveWidth(tableId, colIdx, th.offsetWidth);
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+
+  /* Touch drag */
+  function onTouchStart(e, th, tableId, colIdx) {
+    if (e.touches.length !== 1) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const tid    = e.touches[0].identifier;
+    const startX = e.touches[0].clientX;
+    const startW = th.offsetWidth;
+    const handle = e.currentTarget;
+    handle.classList.add('resizing');
+
+    function onMove(ev) {
+      let touch = null;
+      for (let i = 0; i < ev.changedTouches.length; i++) {
+        if (ev.changedTouches[i].identifier === tid) { touch = ev.changedTouches[i]; break; }
+      }
+      if (!touch) return;
+      const newW = Math.max(MIN_COL_W, startW + touch.clientX - startX);
+      th.style.width = newW + 'px';
+    }
+    function onEnd() {
+      handle.classList.remove('resizing');
+      saveWidth(tableId, colIdx, th.offsetWidth);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onEnd);
+    }
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onEnd, { passive: true });
+  }
+
+  const TABLE_IDS = ['insider-table','bulk-table','block-table','sast-table'];
+
+  function initAll() {
+    TABLE_IDS.forEach(function(id) { initResizeHandles(id); });
+  }
+
+  /* Watch deal section: init handles as soon as the pane becomes visible */
+  var _obs = new MutationObserver(function() { initAll(); });
+  var _dealSec = document.getElementById('deal-block-section');
+  if (_dealSec) _obs.observe(_dealSec, { childList: true, subtree: false, attributes: true, attributeFilter: ['class'] });
+
+  window._dealColResizeInit = initAll;
+
+  /* Fallback: try after a short delay in case section is already active */
+  setTimeout(initAll, 600);
 })();
 
 /* ══════════════════════════════════════════════════════
@@ -5975,15 +6127,8 @@ window._makeDraggable = function(el, hdr, onDragStart) {
   };
 
   /* ── Populate person dropdowns dynamically ── */
-  function populatePersonDropdowns() {
-    ['insider','bulk','block','sast'].forEach(sub => {
-      const sel = document.getElementById(sub + '-person-filter');
-      if (!sel) return;
-      const persons = [...new Set(_data[sub].map(r => r['Person']).filter(Boolean))].sort();
-      sel.innerHTML = '<option value="all">All Persons</option>' +
-        persons.map(p => `<option value="${escH(p)}">${escH(p)}</option>`).join('');
-    });
-  }
+  /* Task 1: Person dropdowns removed — function kept as no-op for safety */
+  function populatePersonDropdowns() {}
 
   /* ── Update total count badge in tab header ── */
   function updateDealsCount() {
@@ -5994,8 +6139,6 @@ window._makeDraggable = function(el, hdr, onDragStart) {
 
   /* ── Apply filters for one sub-section → _filtered[sub] ── */
   function applyFilters(sub) {
-    const personSel = document.getElementById(sub + '-person-filter');
-    const personQ   = personSel ? personSel.value : 'all';
     const q = _globalQ;
 
     // Main stock search ticker filter (pipe = OR).
@@ -6010,13 +6153,11 @@ window._makeDraggable = function(el, hdr, onDragStart) {
     const mainParts = mainRaw ? mainRaw.split('|').map(s => s.trim()).filter(Boolean) : [];
 
     _filtered[sub] = _data[sub].filter(row => {
-      // Ticker filter from main search box — EXACT match only (Task 2)
+      // Ticker filter from main search box — EXACT match only
       if (mainParts.length) {
         const ticker = String(row['Ticker'] || '').trim().toLowerCase();
         if (!mainParts.some(p => ticker === p.trim().toLowerCase())) return false;
       }
-      // Person dropdown filter
-      if (personQ !== 'all' && row['Person'] !== personQ) return false;
       // Deal-pane search bar filter
       if (q && !row._tok.includes(q)) return false;
       return true;
@@ -6198,6 +6339,8 @@ window._makeDraggable = function(el, hdr, onDragStart) {
   window._dealBlockInit = function() {
     if (!_loaded && !_loading) loadDealData(false);
     else if (_loaded) filterDealBlock();
+    // Task 3: inject column resize handles once tables are in the DOM
+    if (typeof window._dealColResizeInit === 'function') window._dealColResizeInit();
   };
 
   /* ── Hook filterBothNews so deal pane re-filters when stock search changes ── */
