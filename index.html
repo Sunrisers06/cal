@@ -1727,11 +1727,18 @@ select.fi option { background: var(--surface); color: var(--text); }
   display: none;
 }
 
-@media(max-width:480px) {
-  .deal-table { font-size: 9px; }
-  .deal-table thead th { font-size: 7px; padding: 4px 5px; }
-  .deal-table tbody td { padding: 4px 5px; font-size: 9px; }
+@media(max-width:600px) {
+  /* Task 3: Mobile-friendly deal table — compact, readable, reduced whitespace */
+  .deal-table { font-size: 9px; table-layout: fixed; }
+  .deal-table thead th { font-size: 7.5px; padding: 4px 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .deal-table tbody td { padding: 4px 4px; font-size: 9px; max-width: 90px; }
+  .deal-table .dt-ticker { font-size: 9px; padding: 1px 4px; }
   .deal-sub-tab { font-size: 8.5px; padding: 5px 6px; }
+  .deal-pane-toolbar { padding: 4px 8px; gap: 5px; }
+  .deal-person-select { font-size: 9.5px; padding: 3px 6px; }
+  .deal-global-toolbar { padding: 4px 8px; gap: 5px; }
+  .deal-count-badge { font-size: 8px; padding: 1px 5px; }
+  .deal-load-more-btn { font-size: 10px !important; padding: 6px 14px !important; }
 }
 
 /* Deal refresh button */
@@ -2564,6 +2571,14 @@ window.resetAllAppFilters = function() {
   
   const wrap = document.getElementById('search-wrap');
   if (wrap) wrap.classList.remove('mob-expanded');
+
+  // Task 1: Also clear pane-level search inputs and reset their filtered data
+  const insightsSearch = document.getElementById('insights-search');
+  if (insightsSearch) insightsSearch.value = '';
+  const newsSearch = document.getElementById('news-search');
+  if (newsSearch) newsSearch.value = '';
+  const dealSearch = document.getElementById('deal-search');
+  if (dealSearch) dealSearch.value = '';
   
   ['index-filter','qtr-filter','ind-filter','min-master','min-demand','investor-filter','base-stage-filter','base-status-filter','base-type-filter'].forEach(id => {
     const el = document.getElementById(id);
@@ -5784,8 +5799,12 @@ window._makeDraggable = function(el, hdr, onDragStart) {
   let _activeSub = 'insider';
   let _globalQ   = '';
 
+  /* ── Mobile detection (cached once) ── */
+  const _IS_MOBILE_DEAL = window.innerWidth <= 1024;
+  /* ── Task 3: Smaller initial render on mobile for faster first paint ── */
+  const DEAL_PAGE_SIZE = _IS_MOBILE_DEAL ? 30 : 100;
+
   /* ── Pagination state: offset per sub-section ── */
-  const DEAL_PAGE_SIZE = 100;
   let _renderOffset = { insider: 0, bulk: 0, block: 0, sast: 0 };
 
   /* ── Dedicated fetch for deal CSVs with proxy fallback ──
@@ -5934,8 +5953,16 @@ window._makeDraggable = function(el, hdr, onDragStart) {
 
     // Rebuild UI
     populatePersonDropdowns();
-    filterDealBlock();
-    updateDealsCount();
+    // Task 3: defer full render on mobile for faster perceived load
+    if (_IS_MOBILE_DEAL) {
+      requestAnimationFrame(function() {
+        filterDealBlock();
+        updateDealsCount();
+      });
+    } else {
+      filterDealBlock();
+      updateDealsCount();
+    }
 
     // Refresh chart deal strip if chart is currently open
     if (typeof window._dealStripRefresh === 'function') window._dealStripRefresh();
@@ -5971,15 +5998,22 @@ window._makeDraggable = function(el, hdr, onDragStart) {
     const personQ   = personSel ? personSel.value : 'all';
     const q = _globalQ;
 
-    // Main stock search ticker filter (pipe = OR)
-    const mainRaw = document.getElementById('search-input') ? document.getElementById('search-input').value.trim().toLowerCase() : '';
+    // Main stock search ticker filter (pipe = OR).
+    // window._dealCardQ is set by card-click / F/H / clear so deals stay in sync
+    // even when the main search bar hasn't been touched.
+    const overrideQ = (window._dealCardQ !== null && window._dealCardQ !== undefined)
+      ? String(window._dealCardQ).trim()
+      : null;
+    const mainRaw = overrideQ !== null
+      ? overrideQ.toLowerCase()
+      : (document.getElementById('search-input') ? document.getElementById('search-input').value.trim().toLowerCase() : '');
     const mainParts = mainRaw ? mainRaw.split('|').map(s => s.trim()).filter(Boolean) : [];
 
     _filtered[sub] = _data[sub].filter(row => {
-      // Ticker filter from main search box
+      // Ticker filter from main search box — EXACT match only (Task 2)
       if (mainParts.length) {
-        const ticker = String(row['Ticker'] || '').toLowerCase();
-        if (!mainParts.some(p => ticker.includes(p))) return false;
+        const ticker = String(row['Ticker'] || '').trim().toLowerCase();
+        if (!mainParts.some(p => ticker === p.trim().toLowerCase())) return false;
       }
       // Person dropdown filter
       if (personQ !== 'all' && row['Person'] !== personQ) return false;
@@ -5993,7 +6027,12 @@ window._makeDraggable = function(el, hdr, onDragStart) {
   window.filterDealBlock = function() {
     _globalQ = document.getElementById('deal-search') ? document.getElementById('deal-search').value.trim().toLowerCase() : '';
     ['insider','bulk','block','sast'].forEach(sub => applyFilters(sub));
-    renderDealSub(_activeSub);
+    // Task 3: defer DOM update on mobile so it doesn't block input/scroll
+    if (_IS_MOBILE_DEAL) {
+      requestAnimationFrame(function() { renderDealSub(_activeSub); });
+    } else {
+      renderDealSub(_activeSub);
+    }
   };
 
   /* ── Update the "Load Next 100" button visibility ── */
@@ -6073,7 +6112,12 @@ window._makeDraggable = function(el, hdr, onDragStart) {
     document.querySelectorAll('.deal-sub-pane').forEach(pane => {
       pane.classList.toggle('active-sub-pane', pane.id === 'deal-' + sub + '-pane');
     });
-    renderDealSub(sub);
+    // Task 3: defer on mobile to avoid layout thrash during tab switch
+    if (_IS_MOBILE_DEAL) {
+      requestAnimationFrame(function() { renderDealSub(sub); });
+    } else {
+      renderDealSub(sub);
+    }
   };
 
   /* ── Build table row HTML ── */
@@ -6160,8 +6204,18 @@ window._makeDraggable = function(el, hdr, onDragStart) {
   const _origFBN = window.filterBothNews;
   if (typeof _origFBN === 'function') {
     window.filterBothNews = function(forcedQuery) {
+      // Capture the forced query so applyFilters can use it instead of the search bar.
+      // A non-null forcedQuery comes from card clicks ("TICKER | Company Name") or clears (null).
+      // Extract only the first pipe-token (the ticker) — company name tokens would cause
+      // false-positive matches against deal tickers from other companies.
+      if (forcedQuery !== null && forcedQuery !== undefined && String(forcedQuery).trim()) {
+        window._dealCardQ = String(forcedQuery).split('|')[0].trim() || null;
+      } else {
+        window._dealCardQ = null; // null = fall back to search bar
+      }
       _origFBN(forcedQuery);
-      if (window._sidebarTab === 'deals' && _loaded) filterDealBlock();
+      // Always sync deal block regardless of active tab — keeps all panes consistent.
+      if (_loaded) filterDealBlock();
     };
   }
 
@@ -6169,7 +6223,64 @@ window._makeDraggable = function(el, hdr, onDragStart) {
 </script>
 
 <!-- ══════════════════════════════════════════════════════
-     DEAL STRIP ON CANDLESTICK CHART
+     DEAL FILTER SYNC — post-IIFE patches (Issues 2 & 3)
+     Wires toggleFHFilter and resetAllAppFilters so the
+     Deal block always stays in sync with every filter state.
+══════════════════════════════════════════════════════ -->
+<script>
+(function() {
+  'use strict';
+
+  /* Initialise the shared query slot to null so applyFilters
+     falls back to the search bar until something sets it. */
+  if (window._dealCardQ === undefined) window._dealCardQ = null;
+
+  /* Helper: call filterDealBlock only when deal data is loaded */
+  function _syncDeals() {
+    if (window._dealData && typeof window.filterDealBlock === 'function') {
+      window.filterDealBlock();
+    }
+  }
+
+  /* ── Patch toggleFHFilter (Issue 2) ──────────────────────────
+     F/H filtering calls _fhFilterNews() directly and never goes
+     through filterBothNews, so deals never get updated.
+     After the original toggle completes we set _dealCardQ to the
+     active ticker set (pipe-joined) so applyFilters picks it up.
+  ─────────────────────────────────────────────────────────────── */
+  var _prevToggleFH = window.toggleFHFilter;
+  window.toggleFHFilter = async function(type) {
+    await _prevToggleFH(type);
+
+    var active = window._fhState && window._fhState.active;
+    if (active && window._fhLoaded && window._fhTickers && window._fhTickers[active] && window._fhTickers[active].size) {
+      // Build pipe-separated ticker query — applyFilters already handles pipe = OR
+      window._dealCardQ = [...window._fhTickers[active]].join('|');
+    } else {
+      // F/H deactivated → let search bar drive deal filtering again
+      window._dealCardQ = null;
+    }
+
+    _syncDeals();
+  };
+
+  /* ── Patch resetAllAppFilters (Issue 3) ──────────────────────
+     The logo click and Clear button call resetAllAppFilters.
+     It clears the stock cards and calls doFilter() but never
+     calls filterBothNews, so the deal block is never reset.
+  ─────────────────────────────────────────────────────────────── */
+  var _prevReset = window.resetAllAppFilters;
+  window.resetAllAppFilters = function() {
+    window._dealCardQ = null; // clear override so applyFilters reads the (now-empty) search bar
+    // Also clear deal pane search state
+    const dealSearch = document.getElementById('deal-search');
+    if (dealSearch) dealSearch.value = '';
+    _prevReset();
+    _syncDeals();
+  };
+
+})();
+</script>
 ══════════════════════════════════════════════════════ -->
 <script>
 (function() {
