@@ -2328,10 +2328,10 @@ select.fi option { background: var(--surface); color: var(--text); }
 
         <!-- SUB-SECTIONS -->
         <div class="deal-sub-tabs">
-          <button class="deal-sub-tab active" id="dsub-insider"  onclick="switchDealSub('insider')">Insider</button>
-          <button class="deal-sub-tab"         id="dsub-bulk"    onclick="switchDealSub('bulk')">Bulk</button>
-          <button class="deal-sub-tab"         id="dsub-block"   onclick="switchDealSub('block')">Block</button>
-          <button class="deal-sub-tab"         id="dsub-sast"    onclick="switchDealSub('sast')">SAST</button>
+          <button class="deal-sub-tab active" id="dsub-insider"  onclick="switchDealSub('insider')">Insider<span class="dsub-count" id="dsub-count-insider"></span></button>
+          <button class="deal-sub-tab"         id="dsub-bulk"    onclick="switchDealSub('bulk')">Bulk<span class="dsub-count" id="dsub-count-bulk"></span></button>
+          <button class="deal-sub-tab"         id="dsub-block"   onclick="switchDealSub('block')">Block<span class="dsub-count" id="dsub-count-block"></span></button>
+          <button class="deal-sub-tab"         id="dsub-sast"    onclick="switchDealSub('sast')">SAST<span class="dsub-count" id="dsub-count-sast"></span></button>
         </div>
 
         <!-- INSIDER TRADES -->
@@ -2432,7 +2432,7 @@ select.fi option { background: var(--surface); color: var(--text); }
         </div>
         <button class="icon-btn action-btn" id="filter-toggle-btn" onclick="toggleFilters()" title="Filters">⚙<span class="filter-txt"> Filters</span></button>
         <button class="icon-btn global-clear-btn" id="global-clear-btn" onclick="resetIndustryFilter()" title="Clear Industry Filter" style="display: none;">✖</button>
-        <button class="icon-btn" onclick="_appReload()" title="Refresh">↻</button>
+        <button id="refresh-data-btn" class="icon-btn" onclick="refreshDataFromNetwork()">↺</button>
         <div class="logo" onclick="window.resetAllAppFilters()" title="Reset All Filters">
           <img src="https://lh3.googleusercontent.com/d/1pPqrvLPPH2Mh9aqjQgG1eAnoziFAxtWg" alt="Terminal Logo" class="logo-img" style="filter:brightness(0) invert(1);">
         </div>
@@ -3925,7 +3925,32 @@ function populateDropdowns() {
   }
 }
 
-async function loadAll() {
+/* ── Refresh Data button handler: force network fetch + update IDB ── */
+window.refreshDataFromNetwork = async function() {
+  if (!window._isUnlocked()) return;
+  const btn = document.getElementById('refresh-data-btn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="rdb-spinner"></span>'; }
+  try {
+    // Force-clear deal IDB cache key so deal data also re-fetches
+    if (window._idbCache) {
+      try {
+        const db = await window._idbCache.openDB();
+        await new Promise((res,rej) => {
+          const tx = db.transaction('csv_blobs','readwrite');
+          const req = tx.objectStore('csv_blobs').delete('deal_csvs_v1');
+          req.onsuccess = res; req.onerror = e => rej(e.target.error);
+        });
+      } catch(e) { /* non-critical */ }
+    }
+    await loadAll(true); // forceNetwork = true for main data
+    // Also force-refresh deal data if already loaded
+    if (typeof window.dealBlockRefresh === 'function') window.dealBlockRefresh();
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '↺'; }
+  }
+};
+
+async function loadAll(forceNetwork) {
   if (!window._isUnlocked()) return;
 
   document.getElementById('loading').style.display = 'block';
@@ -3933,22 +3958,48 @@ async function loadAll() {
   const sb = document.getElementById('sbox');
   sb.className = 'sbox s-info'; sb.textContent = 'Connecting to data sources…'; sb.style.display = 'block';
 
-  try {
-    sb.textContent = '⏳ Fetching all data sources…';
+  const OHLCV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vShTCI8l6LaBJ4gdLiestC5UUzjf0f3vfggnO914YxeYbdaGd1wfcwVLVoBq-z_GUUFnf1WRm7sy1sP/pub?gid=368137703&single=true&output=csv';
 
-    // Fetch all CSVs in parallel — including OHLCV chart data
-    const OHLCV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vShTCI8l6LaBJ4gdLiestC5UUzjf0f3vfggnO914YxeYbdaGd1wfcwVLVoBq-z_GUUFnf1WRm7sy1sP/pub?gid=368137703&single=true&output=csv';
-    const [msT, tlT, resT, idxT, namesT, newsT, insT, ohlcvT, ssT] = await Promise.all([
-      smartFetch(URLS.marketsmith),
-      smartFetch(URLS.trendlyne),
-      smartFetch(URLS.results),
-      smartFetch(URLS.indices),
-      smartFetch(URLS.namesMap),
-      smartFetch(URLS.news),
-      smartFetch(URLS.insights),
-      smartFetch(OHLCV_URL),
-      smartFetch(URLS.superstar).catch(e => { console.warn('SuperStar data unavailable:', e.message); return ''; }),
-    ]);
+  /* ── Try loading from IndexedDB first (unless forced refresh) ── */
+  let msT, tlT, resT, idxT, namesT, newsT, insT, ohlcvT, ssT;
+  let loadedFromCache = false;
+
+  if (!forceNetwork && window._idbCache) {
+    try {
+      sb.textContent = '⚡ Loading from cache…';
+      const cached = await window._idbCache.load();
+      if (cached && cached.msT && cached.resT) {
+        ({ msT, tlT, resT, idxT, namesT, newsT, insT, ohlcvT, ssT } = cached);
+        loadedFromCache = true;
+      }
+    } catch (e) {
+      console.warn('[loadAll] IDB load error, falling back to network:', e.message);
+    }
+  }
+
+  try {
+    if (!loadedFromCache) {
+      sb.textContent = '⏳ Fetching all data sources…';
+
+      // Fetch all CSVs in parallel — including OHLCV chart data
+      [msT, tlT, resT, idxT, namesT, newsT, insT, ohlcvT, ssT] = await Promise.all([
+        smartFetch(URLS.marketsmith),
+        smartFetch(URLS.trendlyne),
+        smartFetch(URLS.results),
+        smartFetch(URLS.indices),
+        smartFetch(URLS.namesMap),
+        smartFetch(URLS.news),
+        smartFetch(URLS.insights),
+        smartFetch(OHLCV_URL),
+        smartFetch(URLS.superstar).catch(e => { console.warn('SuperStar data unavailable:', e.message); return ''; }),
+      ]);
+
+      // Save to IDB asynchronously (non-blocking — don’t await)
+      if (window._idbCache) {
+        window._idbCache.save({ msT, tlT, resT, idxT, namesT, newsT, insT, ohlcvT, ssT })
+          .catch(e => console.warn('[loadAll] IDB save error (non-critical):', e.message));
+      }
+    }
 
     // Inject OHLCV data into chart engine immediately — hover charts are now instant
     if (ohlcvT && window._ohlcvInject) window._ohlcvInject(ohlcvT);
@@ -6088,11 +6139,75 @@ window._makeDraggable = function(el, hdr, onDragStart) {
     const refreshBtn = document.getElementById('deal-refresh-btn');
     if (refreshBtn) { refreshBtn.classList.add('spinning'); refreshBtn.disabled = true; }
 
-    // Show loading across all sub-sections
-    ['insider','bulk','block','sast'].forEach(sub => setSubLoading(sub, `⏳ Loading ${sub} trades…`));
+    // ── Try IDB cache first (skip on forced refresh) ──
+    let loadedFromCache = false;
+    if (!isRefresh && window._idbCache) {
+      try {
+        const db = await window._idbCache.openDB();
+        const rec = await new Promise((res, rej) => {
+          const tx = db.transaction('csv_blobs', 'readonly');
+          const req = tx.objectStore('csv_blobs').get('deal_csvs_v1');
+          req.onsuccess = e => res(e.target.result);
+          req.onerror   = e => rej(e.target.error);
+        });
+        if (rec && rec.ts && (Date.now() - rec.ts < 24 * 60 * 60 * 1000)) {
+          let json = null;
+          if (rec.compressed && rec.data) {
+            const ds = new DecompressionStream('gzip');
+            const wr = ds.writable.getWriter();
+            wr.write(new Uint8Array(rec.data)); wr.close();
+            const chunks = []; const reader = ds.readable.getReader();
+            while (true) { const {done,value} = await reader.read(); if (done) break; chunks.push(value); }
+            json = new TextDecoder().decode(chunks.reduce((a,c) => { const m = new Uint8Array(a.byteLength+c.byteLength); m.set(a); m.set(c,a.byteLength); return m; }, new Uint8Array(0)));
+          } else if (rec.json) { json = rec.json; }
+          if (json) {
+            const cached = JSON.parse(json);
+            ['insider','bulk','block','sast'].forEach(sub => { if (cached[sub]) _data[sub] = cached[sub]; });
+            loadedFromCache = true;
+            console.info('[DealBlock] Loaded from IDB cache ⚡');
+          }
+        }
+      } catch(e) { console.warn('[DealBlock] IDB read failed, fetching from network:', e.message); }
+    }
 
-    // Fetch all four independently and in parallel
-    await Promise.all(['insider','bulk','block','sast'].map(sub => loadOneSub(sub)));
+    if (!loadedFromCache) {
+      // Show loading across all sub-sections
+      ['insider','bulk','block','sast'].forEach(sub => setSubLoading(sub, `⏳ Loading ${sub} trades…`));
+
+      // Fetch all four independently and in parallel
+      await Promise.all(['insider','bulk','block','sast'].map(sub => loadOneSub(sub)));
+
+      // Save to IDB async (non-blocking)
+      if (window._idbCache) {
+        (async () => {
+          try {
+            const payload = { insider: _data.insider, bulk: _data.bulk, block: _data.block, sast: _data.sast };
+            const json = JSON.stringify(payload);
+            let record;
+            if (typeof CompressionStream !== 'undefined') {
+              const enc = new TextEncoder().encode(json);
+              const cs = new CompressionStream('gzip'); const wr = cs.writable.getWriter();
+              wr.write(enc); wr.close();
+              const chunks = []; const reader = cs.readable.getReader();
+              while (true) { const {done,value} = await reader.read(); if (done) break; chunks.push(value); }
+              const total = chunks.reduce((s,c) => s+c.byteLength, 0);
+              const out = new Uint8Array(total); let off = 0;
+              chunks.forEach(c => { out.set(c,off); off+=c.byteLength; });
+              record = { ts: Date.now(), compressed: true, data: out.buffer };
+            } else {
+              record = { ts: Date.now(), compressed: false, json };
+            }
+            const db = await window._idbCache.openDB();
+            await new Promise((res,rej) => {
+              const tx = db.transaction('csv_blobs','readwrite');
+              const req = tx.objectStore('csv_blobs').put(record,'deal_csvs_v1');
+              req.onsuccess = res; req.onerror = e => rej(e.target.error);
+            });
+            console.info('[DealBlock] IDB cache saved ⚡');
+          } catch(e) { console.warn('[DealBlock] IDB save failed (non-critical):', e.message); }
+        })();
+      }
+    }
 
     // Expose for chart strip usage
     window._dealData = _data;
@@ -6200,6 +6315,9 @@ window._makeDraggable = function(el, hdr, onDragStart) {
     const rows = _filtered[sub];
     const countEl = document.getElementById(sub + '-count');
     if (countEl) countEl.textContent = rows.length.toLocaleString();
+    // Also update the sub-tab pill count
+    const tabCountEl = document.getElementById('dsub-count-' + sub);
+    if (tabCountEl) tabCountEl.textContent = rows.length > 0 ? rows.length.toLocaleString() : '';
 
     const tbody = document.getElementById(sub + '-tbody');
     if (!tbody) return;
@@ -6988,5 +7106,232 @@ window._makeDraggable = function(el, hdr, onDragStart) {
 
 })();
 </script>
+
+
+<!-- ══════════════════════════════════════════════════════
+     INDEXEDDB + GZIP CACHE ENGINE
+     - Stores all 9 CSV blobs as compressed JSON in IDB
+     - loadAll() reads from IDB first, falls back to network
+     - "Refresh Data" button forces fresh network fetch + IDB update
+     - Login is ALWAYS required; IDB only affects data loading speed
+══════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  const DB_NAME    = 'sundarx_cache';
+  const DB_VERSION = 1;
+  const STORE_NAME = 'csv_blobs';
+  const CACHE_KEY  = 'all_csvs_v1';
+  const MAX_AGE_MS = 24 * 60 * 60 * 1000; // 1 day — auto-invalidate stale IDB data
+
+  /* ── Check CompressionStream support ── */
+  const HAS_COMPRESSION = (typeof CompressionStream !== 'undefined') &&
+                          (typeof DecompressionStream !== 'undefined');
+
+  /* ── Open (or create) the IndexedDB ── */
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = function (e) {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          db.createObjectStore(STORE_NAME);
+        }
+      };
+      req.onsuccess = e  => resolve(e.target.result);
+      req.onerror   = e  => reject(e.target.error);
+    });
+  }
+
+  /* ── GZIP compress a string → ArrayBuffer ── */
+  async function compress(str) {
+    if (!HAS_COMPRESSION) return null;
+    try {
+      const enc  = new TextEncoder().encode(str);
+      const cs   = new CompressionStream('gzip');
+      const wr   = cs.writable.getWriter();
+      wr.write(enc);
+      wr.close();
+      const chunks = [];
+      const reader = cs.readable.getReader();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+      }
+      const total = chunks.reduce((s, c) => s + c.byteLength, 0);
+      const out   = new Uint8Array(total);
+      let offset  = 0;
+      chunks.forEach(c => { out.set(c, offset); offset += c.byteLength; });
+      return out.buffer;
+    } catch (e) {
+      console.warn('[IDB] Compression failed:', e);
+      return null;
+    }
+  }
+
+  /* ── GZIP decompress an ArrayBuffer → string ── */
+  async function decompress(buf) {
+    if (!HAS_COMPRESSION) return null;
+    try {
+      const ds     = new DecompressionStream('gzip');
+      const wr     = ds.writable.getWriter();
+      wr.write(new Uint8Array(buf));
+      wr.close();
+      const chunks = [];
+      const reader = ds.readable.getReader();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+      }
+      return new TextDecoder().decode(
+        chunks.reduce((acc, c) => {
+          const merged = new Uint8Array(acc.byteLength + c.byteLength);
+          merged.set(acc); merged.set(c, acc.byteLength);
+          return merged;
+        }, new Uint8Array(0))
+      );
+    } catch (e) {
+      console.warn('[IDB] Decompression failed:', e);
+      return null;
+    }
+  }
+
+  /* ── Write to IDB ── */
+  async function idbSet(db, key, value) {
+    return new Promise((resolve, reject) => {
+      const tx  = db.transaction(STORE_NAME, 'readwrite');
+      const st  = tx.objectStore(STORE_NAME);
+      const req = st.put(value, key);
+      req.onsuccess = () => resolve();
+      req.onerror   = e  => reject(e.target.error);
+    });
+  }
+
+  /* ── Read from IDB ── */
+  async function idbGet(db, key) {
+    return new Promise((resolve, reject) => {
+      const tx  = db.transaction(STORE_NAME, 'readonly');
+      const st  = tx.objectStore(STORE_NAME);
+      const req = st.get(key);
+      req.onsuccess = e  => resolve(e.target.result);
+      req.onerror   = e  => reject(e.target.error);
+    });
+  }
+
+  /* ── Load cached CSVs from IDB (returns null if missing/stale/corrupt) ── */
+  async function loadFromIDB() {
+    try {
+      const db     = await openDB();
+      const record = await idbGet(db, CACHE_KEY);
+      if (!record) return null;
+      if (Date.now() - record.ts > MAX_AGE_MS) {
+        console.info('[IDB] Cache stale — will refresh from network.');
+        return null;
+      }
+      let json;
+      if (record.compressed && record.data) {
+        json = await decompress(record.data);
+        if (!json) throw new Error('Decompression returned null');
+      } else if (record.json) {
+        json = record.json; // fallback plain JSON (no compression support)
+      } else {
+        throw new Error('Unknown record format');
+      }
+      const parsed = JSON.parse(json);
+      console.info('[IDB] Cache HIT — serving data from IndexedDB ⚡');
+      return parsed;
+    } catch (e) {
+      console.warn('[IDB] Cache read failed, falling back to network:', e.message);
+      return null;
+    }
+  }
+
+  /* ── Save CSVs to IDB (async, non-blocking) ── */
+  async function saveToIDB(payload) {
+    try {
+      const db     = await openDB();
+      const json   = JSON.stringify(payload);
+      const buf    = await compress(json);
+      const record = buf
+        ? { ts: Date.now(), compressed: true,  data: buf }
+        : { ts: Date.now(), compressed: false, json };
+      await idbSet(db, CACHE_KEY, record);
+      const kb = buf ? (buf.byteLength / 1024).toFixed(1) : (json.length / 1024).toFixed(1);
+      console.info(`[IDB] Cache SAVED — ${kb} KB ${buf ? '(gzip)' : '(plain)'}`);
+    } catch (e) {
+      console.warn('[IDB] Cache save failed (non-critical):', e.message);
+    }
+  }
+
+  /* ── Public API exposed to loadAll ── */
+  window._idbCache = {
+    load:    loadFromIDB,
+    save:    saveToIDB,
+    openDB
+  };
+
+})();
+</script>
+
+<style>
+/* Refresh Data Button — minimal, fits topbar */
+#refresh-data-btn {
+  height: 30px; width: 30px;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.10);
+  border: 1px solid rgba(16, 185, 129, 0.30);
+  color: #10b981;
+  cursor: pointer;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all .2s ease;
+  flex-shrink: 0;
+}
+#refresh-data-btn:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.22);
+  border-color: rgba(16, 185, 129, 0.6);
+  color: #fff;
+}
+#refresh-data-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+#refresh-data-btn .rdb-spinner {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border: 1.5px solid rgba(16,185,129,0.3);
+  border-top-color: #10b981;
+  border-radius: 50%;
+  animation: rdbSpin 0.7s linear infinite;
+}
+@keyframes rdbSpin { to { transform: rotate(360deg); } }
+/* .dsub-count — small count pill inside deal sub-tab buttons */
+.dsub-count {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 8px;
+  font-weight: 800;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 1px 5px;
+  color: var(--text2);
+  vertical-align: middle;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  transition: background 0.15s;
+}
+.deal-sub-tab.active .dsub-count {
+  background: rgba(59,130,246,0.25);
+  border-color: rgba(59,130,246,0.5);
+  color: #fff;
+}
+</style>
 
     </body>
