@@ -2336,9 +2336,7 @@ select.fi option { background: var(--surface); color: var(--text); }
 
         <!-- INSIDER TRADES -->
         <div class="deal-sub-pane active-sub-pane" id="deal-insider-pane">
-          <div class="deal-pane-toolbar">
-            <span class="deal-count-badge" id="insider-count">—</span>
-          </div>
+          <span id="insider-count" style="display:none;"></span>
           <div class="deal-table-wrap">
             <table class="deal-table" id="insider-table">
               <thead><tr>
@@ -2354,9 +2352,7 @@ select.fi option { background: var(--surface); color: var(--text); }
 
         <!-- BULK TRADES -->
         <div class="deal-sub-pane" id="deal-bulk-pane">
-          <div class="deal-pane-toolbar">
-            <span class="deal-count-badge" id="bulk-count">—</span>
-          </div>
+          <span id="bulk-count" style="display:none;"></span>
           <div class="deal-table-wrap">
             <table class="deal-table" id="bulk-table">
               <thead><tr>
@@ -2372,9 +2368,7 @@ select.fi option { background: var(--surface); color: var(--text); }
 
         <!-- BLOCK TRADES -->
         <div class="deal-sub-pane" id="deal-block-pane">
-          <div class="deal-pane-toolbar">
-            <span class="deal-count-badge" id="block-count">—</span>
-          </div>
+          <span id="block-count" style="display:none;"></span>
           <div class="deal-table-wrap">
             <table class="deal-table" id="block-table">
               <thead><tr>
@@ -2390,9 +2384,7 @@ select.fi option { background: var(--surface); color: var(--text); }
 
         <!-- SAST TRADES -->
         <div class="deal-sub-pane" id="deal-sast-pane">
-          <div class="deal-pane-toolbar">
-            <span class="deal-count-badge" id="sast-count">—</span>
-          </div>
+          <span id="sast-count" style="display:none;"></span>
           <div class="deal-table-wrap">
             <table class="deal-table" id="sast-table">
               <thead><tr>
@@ -2852,7 +2844,8 @@ function closeMobileNews() {
     auth:       'https://docs.google.com/spreadsheets/d/e/2PACX-1vRq_s8CqNXdi3zYnTDkP8YvtZGq79ZmRKwb5jdbplyjUx1GS_KcCwJf7qeV0dVx_K-Xmpxl30QcVFSH/pub?gid=1388154912&single=true&output=csv',
     insights:   'https://docs.google.com/spreadsheets/d/e/2PACX-1vRq_s8CqNXdi3zYnTDkP8YvtZGq79ZmRKwb5jdbplyjUx1GS_KcCwJf7qeV0dVx_K-Xmpxl30QcVFSH/pub?gid=1479405821&single=true&output=csv',
     namesMap:   'https://docs.google.com/spreadsheets/d/e/2PACX-1vRq_s8CqNXdi3zYnTDkP8YvtZGq79ZmRKwb5jdbplyjUx1GS_KcCwJf7qeV0dVx_K-Xmpxl30QcVFSH/pub?gid=2075157589&single=true&output=csv',
-    superstar:  'https://docs.google.com/spreadsheets/d/e/2PACX-1vShTCI8l6LaBJ4gdLiestC5UUzjf0f3vfggnO914YxeYbdaGd1wfcwVLVoBq-z_GUUFnf1WRm7sy1sP/pub?gid=0&single=true&output=csv'
+    superstar:  'https://docs.google.com/spreadsheets/d/e/2PACX-1vShTCI8l6LaBJ4gdLiestC5UUzjf0f3vfggnO914YxeYbdaGd1wfcwVLVoBq-z_GUUFnf1WRm7sy1sP/pub?gid=0&single=true&output=csv',
+    epsales:    'https://docs.google.com/spreadsheets/d/e/2PACX-1vSaxjsS5vrT2UYikSwMMFi86R1OEoIg7t37x2Pd8MkoMiR8poqxGNQabPQdCwk5WUPjpjzsv0Vtq8IK/pub?gid=63767384&single=true&output=csv'
   };
   window._URLS = URLS;
 
@@ -2999,6 +2992,18 @@ function escHtml(s) { return String(s || '').replace(/"/g, '"'); }
 function fmt(v) { const x = parseFloat(v); if (isNaN(x) || v == null || v === '') return '—'; return Math.abs(x) >= 1000 ? x.toFixed(0) : Math.abs(x) >= 100 ? x.toFixed(0) : Math.abs(x) >= 10 ? x.toFixed(1) : x.toFixed(2); }
 function fmtWhole(v) { const x = parseFloat(v); if (isNaN(x) || v == null || v === '') return '—'; return Math.round(x).toString(); }
 function fmtAbs(v) { const x = parseFloat(v); if (isNaN(x) || v == null || v === '') return '—'; return Math.abs(Math.round(x)).toString(); }
+// Format EPS/Sales values from external data (handles Cr/L/K/plain numbers)
+function fmtEpSales(v) {
+  if (v === null || v === undefined || v === '') return '—';
+  const s = String(v).trim();
+  if (!s || s === '—') return '—';
+  const n = parseFloat(s.replace(/,/g, ''));
+  if (isNaN(n)) return s.slice(0, 8);
+  if (Math.abs(n) >= 1e7)  return (n / 1e7).toFixed(1)  + 'Cr';
+  if (Math.abs(n) >= 1e5)  return (n / 1e5).toFixed(1)  + 'L';
+  if (Math.abs(n) >= 1000) return (n / 1000).toFixed(1) + 'K';
+  return n.toFixed(Math.abs(n) < 10 ? 2 : 0);
+}
 
 function fmtMcap(v) {
   const x = parseFloat(v);
@@ -3198,6 +3203,8 @@ return `
         ${r['Buyer Demand']?`<div class="iscore ${getChipColor('Buyer Demand',r['Buyer Demand'])}"><span class="iscore-label">AD</span><span class="iscore-val">${r['Buyer Demand']}</span></div>`:''}
         ${r['ROCE Annual %']?`<div class="iscore ${getChipColor('ROCE Annual %',r['ROCE Annual %'])}"><span class="iscore-label">ROCE</span><span class="iscore-val">${fmtAbs(r['ROCE Annual %'])}</span></div>`:''}
         ${r['Group_Rank']?`<div class="iscore gray"><span class="iscore-label">GRP R</span><span class="iscore-val">${r['Group_Rank']}</span></div>`:''}
+        ${r._extEps?`<div class="iscore purple"><span class="iscore-label">EPS</span><span class="iscore-val">${fmtEpSales(r._extEps)}</span></div>`:''}
+        ${r._extSales?`<div class="iscore blue"><span class="iscore-label">Sales</span><span class="iscore-val">${fmtEpSales(r._extSales)}</span></div>`:''}
       </div>
     </div>
     <div class="metrics-full">${cells}</div>
@@ -3935,11 +3942,10 @@ window.refreshDataFromNetwork = async function() {
     if (window._idbCache) {
       try {
         const db = await window._idbCache.openDB();
-        await new Promise((res,rej) => {
-          const tx = db.transaction('csv_blobs','readwrite');
-          const req = tx.objectStore('csv_blobs').delete('deal_csvs_v1');
-          req.onsuccess = res; req.onerror = e => rej(e.target.error);
-        });
+        const txDel = db.transaction('csv_blobs','readwrite');
+        const st = txDel.objectStore('csv_blobs');
+        ['deal_csvs_v1','ur_csv_v1'].forEach(k => st.delete(k));
+        await new Promise((res,rej)=>{txDel.oncomplete=res;txDel.onerror=e=>rej(e.target.error);});
       } catch(e) { /* non-critical */ }
     }
     await loadAll(true); // forceNetwork = true for main data
@@ -3961,7 +3967,7 @@ async function loadAll(forceNetwork) {
   const OHLCV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vShTCI8l6LaBJ4gdLiestC5UUzjf0f3vfggnO914YxeYbdaGd1wfcwVLVoBq-z_GUUFnf1WRm7sy1sP/pub?gid=368137703&single=true&output=csv';
 
   /* ── Try loading from IndexedDB first (unless forced refresh) ── */
-  let msT, tlT, resT, idxT, namesT, newsT, insT, ohlcvT, ssT;
+  let msT, tlT, resT, idxT, namesT, newsT, insT, ohlcvT, ssT, epSalesT;
   let loadedFromCache = false;
 
   if (!forceNetwork && window._idbCache) {
@@ -3969,7 +3975,7 @@ async function loadAll(forceNetwork) {
       sb.textContent = '⚡ Loading from cache…';
       const cached = await window._idbCache.load();
       if (cached && cached.msT && cached.resT) {
-        ({ msT, tlT, resT, idxT, namesT, newsT, insT, ohlcvT, ssT } = cached);
+        ({ msT, tlT, resT, idxT, namesT, newsT, insT, ohlcvT, ssT, epSalesT } = cached);
         loadedFromCache = true;
       }
     } catch (e) {
@@ -3982,7 +3988,7 @@ async function loadAll(forceNetwork) {
       sb.textContent = '⏳ Fetching all data sources…';
 
       // Fetch all CSVs in parallel — including OHLCV chart data
-      [msT, tlT, resT, idxT, namesT, newsT, insT, ohlcvT, ssT] = await Promise.all([
+      [msT, tlT, resT, idxT, namesT, newsT, insT, ohlcvT, ssT, epSalesT] = await Promise.all([
         smartFetch(URLS.marketsmith),
         smartFetch(URLS.trendlyne),
         smartFetch(URLS.results),
@@ -3992,11 +3998,12 @@ async function loadAll(forceNetwork) {
         smartFetch(URLS.insights),
         smartFetch(OHLCV_URL),
         smartFetch(URLS.superstar).catch(e => { console.warn('SuperStar data unavailable:', e.message); return ''; }),
+        smartFetch(URLS.epsales).catch(e => { console.warn('EPS/Sales data unavailable:', e.message); return ''; }),
       ]);
 
       // Save to IDB asynchronously (non-blocking — don’t await)
       if (window._idbCache) {
-        window._idbCache.save({ msT, tlT, resT, idxT, namesT, newsT, insT, ohlcvT, ssT })
+        window._idbCache.save({ msT, tlT, resT, idxT, namesT, newsT, insT, ohlcvT, ssT, epSalesT })
           .catch(e => console.warn('[loadAll] IDB save error (non-critical):', e.message));
       }
     }
@@ -4070,7 +4077,28 @@ async function loadAll(forceNetwork) {
     
     allData = mergeAndPrecalc(ms, tl, res, tickerToName);
     window._peerAllData = allData; // expose for peer comparison popup
-    
+
+    // ── EPS/Sales external data: build ticker map and attach to allData rows ──
+    window._epSalesMap = {};
+    if (epSalesT) {
+      parseCSV(epSalesT).forEach(row => {
+        const t = String(row['Ticker'] || row['ticker'] || '').trim().toUpperCase();
+        if (!t) return;
+        window._epSalesMap[t] = {
+          ebitda:    row['EBITDA']     || '',
+          eps:       row['EPS']        || '',
+          netProfit: row['Net Profit'] || '',
+          sales:     row['Sales']      || ''
+        };
+      });
+    }
+    // Attach _extEps / _extSales to each row for fast access in buildCard & peer chart
+    allData.forEach(r => {
+      const d = window._epSalesMap[String(r._ticker).toUpperCase()];
+      r._extEps   = d ? d.eps   : '';
+      r._extSales = d ? d.sales : '';
+    });
+
     // Calculate returns from OHLCV close prices (OHLCV already injected above)
     calcOHLCVReturns();
 
@@ -4789,8 +4817,9 @@ window.resetAllAppFilters = function() {
   }
 
   /* ─── Prefetch: kick off immediately, no delay ─── */
+  /* Skip if loadAll() already injected OHLCV data via window._ohlcvInject */
   function prefetch() {
-    if (_index || _fetchP) return;
+    if (_index || _fetchP) return; // already have data or in-flight
     _fetchP = fetchOHLCV()
       .then(txt => {
         _index = buildIndex(txt);
@@ -5354,6 +5383,8 @@ window.resetAllAppFilters = function() {
     <span class="peer-param-pill" data-param="dur">Durability</span>
     <span class="peer-param-pill" data-param="val">Valuation</span>
     <span class="peer-param-pill" data-param="roce">ROCE %</span>
+    <span class="peer-param-pill" data-param="extEps">EPS</span>
+    <span class="peer-param-pill" data-param="extSales">Sales</span>
   </div>
   <div id="peer-octa-wrap">
     <svg id="peer-octa-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><polygon points="100.00,74.50 118.03,81.97 125.50,100.00 118.03,118.03 100.00,125.50 81.97,118.03 74.50,100.00 81.97,81.97" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="0.8"></polygon><polygon points="100.00,57.00 130.41,69.59 143.00,100.00 130.41,130.41 100.00,143.00 69.59,130.41 57.00,100.00 69.59,69.59" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="0.8"></polygon><polygon points="100.00,39.50 142.78,57.22 160.50,100.00 142.78,142.78 100.00,160.50 57.22,142.78 39.50,100.00 57.22,57.22" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="0.8"></polygon><polygon points="100.00,22.00 155.15,44.85 178.00,100.00 155.15,155.15 100.00,178.00 44.85,155.15 22.00,100.00 44.85,44.85" fill="none" stroke="rgba(34,211,238,0.22)" stroke-width="1.2"></polygon><line x1="100" y1="100" x2="100.00" y2="22.00" stroke="rgba(255,255,255,0.09)" stroke-width="0.8"></line><text x="100.00" y="8.00" text-anchor="middle" dominant-baseline="middle" font-family="Lexend,sans-serif" font-size="7" font-weight="500" fill="rgba(255,255,255,0.40)">ADANIPO</text><line x1="100" y1="100" x2="155.15" y2="44.85" stroke="rgba(255,255,255,0.09)" stroke-width="0.8"></line><text x="165.05" y="34.95" text-anchor="start" dominant-baseline="middle" font-family="Lexend,sans-serif" font-size="7" font-weight="500" fill="rgba(255,255,255,0.40)">DLF</text><line x1="100" y1="100" x2="178.00" y2="100.00" stroke="rgba(255,255,255,0.09)" stroke-width="0.8"></line><text x="192.00" y="100.00" text-anchor="start" dominant-baseline="middle" font-family="Lexend,sans-serif" font-size="7" font-weight="500" fill="rgba(255,255,255,0.40)">LODHA</text><line x1="100" y1="100" x2="155.15" y2="155.15" stroke="rgba(255,255,255,0.09)" stroke-width="0.8"></line><text x="165.05" y="165.05" text-anchor="start" dominant-baseline="middle" font-family="Lexend,sans-serif" font-size="7" font-weight="500" fill="rgba(255,255,255,0.40)">PHOENIX</text><line x1="100" y1="100" x2="100.00" y2="178.00" stroke="rgba(255,255,255,0.09)" stroke-width="0.8"></line><text x="100.00" y="192.00" text-anchor="middle" dominant-baseline="middle" font-family="Lexend,sans-serif" font-size="7" font-weight="500" fill="rgba(255,255,255,0.40)">PRESTIG</text><line x1="100" y1="100" x2="44.85" y2="155.15" stroke="rgba(255,255,255,0.09)" stroke-width="0.8"></line><text x="34.95" y="165.05" text-anchor="end" dominant-baseline="middle" font-family="Lexend,sans-serif" font-size="7" font-weight="500" fill="rgba(255,255,255,0.40)">OBEROIR</text><line x1="100" y1="100" x2="22.00" y2="100.00" stroke="rgba(255,255,255,0.09)" stroke-width="0.8"></line><text x="8.00" y="100.00" text-anchor="end" dominant-baseline="middle" font-family="Lexend,sans-serif" font-size="7" font-weight="500" fill="rgba(255,255,255,0.40)">KRT</text><line x1="100" y1="100" x2="44.85" y2="44.85" stroke="rgba(255,255,255,0.09)" stroke-width="0.8"></line><text x="34.95" y="34.95" text-anchor="end" dominant-baseline="middle" font-family="Lexend,sans-serif" font-size="7" font-weight="700" fill="#22d3ee">539533</text><polygon points="100.00,22.00 126.72,73.28 125.71,100.00 114.34,114.34 100.00,119.96 86.07,113.93 80.45,100.00 91.87,91.87" fill="rgba(34,211,238,0.10)" stroke="rgba(34,211,238,0.65)" stroke-width="1.5" stroke-linejoin="round"></polygon><circle cx="100.00" cy="22.00" r="4.5" fill="#3b82f6" stroke="#13131a" stroke-width="1.5"></circle><circle cx="126.72" cy="73.28" r="4.5" fill="#10b981" stroke="#13131a" stroke-width="1.5"></circle><circle cx="125.71" cy="100.00" r="4.5" fill="#f97316" stroke="#13131a" stroke-width="1.5"></circle><circle cx="114.34" cy="114.34" r="4.5" fill="#f43f5e" stroke="#13131a" stroke-width="1.5"></circle><circle cx="100.00" cy="119.96" r="4.5" fill="#eab308" stroke="#13131a" stroke-width="1.5"></circle><circle cx="86.07" cy="113.93" r="4.5" fill="#ec4899" stroke="#13131a" stroke-width="1.5"></circle><circle cx="80.45" cy="100.00" r="4.5" fill="#a78bfa" stroke="#13131a" stroke-width="1.5"></circle><circle cx="91.87" cy="91.87" r="10" fill="#22d3ee" opacity="0.18"></circle><circle cx="91.87" cy="91.87" r="6.5" fill="#22d3ee" stroke="#13131a" stroke-width="1.5"></circle></svg>
@@ -5534,7 +5565,9 @@ window._makeDraggable = function(el, hdr, onDragStart) {
     rs:   { label:'Rel Str',    get: r => r._str,                                           fmt: v => isNaN(v)?'—':Math.round(v)+'' },
     dur:  { label:'Durability', get: r => parseFloat(r['Trendlyne Durability Score'])||NaN, fmt: v => isNaN(v)?'—':Math.round(v)+'' },
     val:  { label:'Valuation',  get: r => parseFloat(r['Trendlyne Valuation Score'])||NaN,  fmt: v => isNaN(v)?'—':Math.round(v)+'' },
-    roce: { label:'ROCE %',     get: r => r._roce,                                          fmt: v => isNaN(v)?'—':v.toFixed(1)+'%' }
+    roce:     { label:'ROCE %',  get: r => r._roce,                                                           fmt: v => isNaN(v)?'—':v.toFixed(1)+'%' },
+    extEps:   { label:'EPS',     get: r => { const n=parseFloat(String(r._extEps||'').replace(/,/g,'')); return isNaN(n)?NaN:n; }, fmt: v => isNaN(v)?'—':fmtEpSales(v) },
+    extSales: { label:'Sales',   get: r => { const n=parseFloat(String(r._extSales||'').replace(/,/g,'')); return isNaN(n)?NaN:n; }, fmt: v => isNaN(v)?'—':fmtEpSales(v) }
   };
 
   const COLORS   = ['#3b82f6','#10b981','#f97316','#f43f5e','#eab308','#ec4899','#a78bfa','#f472b6'];
@@ -6144,21 +6177,11 @@ window._makeDraggable = function(el, hdr, onDragStart) {
     if (!isRefresh && window._idbCache) {
       try {
         const db = await window._idbCache.openDB();
-        const rec = await new Promise((res, rej) => {
-          const tx = db.transaction('csv_blobs', 'readonly');
-          const req = tx.objectStore('csv_blobs').get('deal_csvs_v1');
-          req.onsuccess = e => res(e.target.result);
-          req.onerror   = e => rej(e.target.error);
-        });
+        const rec = await window._idbCache.idbGet(db, 'deal_csvs_v1');
         if (rec && rec.ts && (Date.now() - rec.ts < 24 * 60 * 60 * 1000)) {
           let json = null;
-          if (rec.compressed && rec.data) {
-            const ds = new DecompressionStream('gzip');
-            const wr = ds.writable.getWriter();
-            wr.write(new Uint8Array(rec.data)); wr.close();
-            const chunks = []; const reader = ds.readable.getReader();
-            while (true) { const {done,value} = await reader.read(); if (done) break; chunks.push(value); }
-            json = new TextDecoder().decode(chunks.reduce((a,c) => { const m = new Uint8Array(a.byteLength+c.byteLength); m.set(a); m.set(c,a.byteLength); return m; }, new Uint8Array(0)));
+          if (rec.compressed && rec.data && window._idbCache) {
+            json = await window._idbCache.decompress(rec.data);
           } else if (rec.json) { json = rec.json; }
           if (json) {
             const cached = JSON.parse(json);
@@ -6183,26 +6206,12 @@ window._makeDraggable = function(el, hdr, onDragStart) {
           try {
             const payload = { insider: _data.insider, bulk: _data.bulk, block: _data.block, sast: _data.sast };
             const json = JSON.stringify(payload);
-            let record;
-            if (typeof CompressionStream !== 'undefined') {
-              const enc = new TextEncoder().encode(json);
-              const cs = new CompressionStream('gzip'); const wr = cs.writable.getWriter();
-              wr.write(enc); wr.close();
-              const chunks = []; const reader = cs.readable.getReader();
-              while (true) { const {done,value} = await reader.read(); if (done) break; chunks.push(value); }
-              const total = chunks.reduce((s,c) => s+c.byteLength, 0);
-              const out = new Uint8Array(total); let off = 0;
-              chunks.forEach(c => { out.set(c,off); off+=c.byteLength; });
-              record = { ts: Date.now(), compressed: true, data: out.buffer };
-            } else {
-              record = { ts: Date.now(), compressed: false, json };
-            }
+            const buf = await window._idbCache.compress(json);
+            const record = buf
+              ? { ts: Date.now(), compressed: true,  data: buf }
+              : { ts: Date.now(), compressed: false, json };
             const db = await window._idbCache.openDB();
-            await new Promise((res,rej) => {
-              const tx = db.transaction('csv_blobs','readwrite');
-              const req = tx.objectStore('csv_blobs').put(record,'deal_csvs_v1');
-              req.onsuccess = res; req.onerror = e => rej(e.target.error);
-            });
+            await window._idbCache.idbSet(db, 'deal_csvs_v1', record);
             console.info('[DealBlock] IDB cache saved ⚡');
           } catch(e) { console.warn('[DealBlock] IDB save failed (non-critical):', e.message); }
         })();
@@ -6247,7 +6256,16 @@ window._makeDraggable = function(el, hdr, onDragStart) {
 
   /* ── Update total count badge in tab header ── */
   function updateDealsCount() {
-    const total = _data.insider.length + _data.bulk.length + _data.block.length + _data.sast.length;
+    // Show filtered total if a filter is active, otherwise raw total
+    const hasFilter = _globalQ ||
+      (window._dealCardQ !== null && window._dealCardQ !== undefined && String(window._dealCardQ).trim()) ||
+      (document.getElementById('search-input') && document.getElementById('search-input').value.trim());
+    let total;
+    if (hasFilter) {
+      total = (_filtered.insider||[]).length + (_filtered.bulk||[]).length + (_filtered.block||[]).length + (_filtered.sast||[]).length;
+    } else {
+      total = _data.insider.length + _data.bulk.length + _data.block.length + _data.sast.length;
+    }
     const el = document.getElementById('deals-count');
     if (el) el.textContent = total > 0 ? total.toLocaleString() : '—';
   }
@@ -6282,8 +6300,19 @@ window._makeDraggable = function(el, hdr, onDragStart) {
   /* ── Global search bar handler ── */
   window.filterDealBlock = function() {
     _globalQ = document.getElementById('deal-search') ? document.getElementById('deal-search').value.trim().toLowerCase() : '';
+    // Apply filters for ALL subs in one pass
     ['insider','bulk','block','sast'].forEach(sub => applyFilters(sub));
-    // Task 3: defer DOM update on mobile so it doesn't block input/scroll
+    // Update ALL sub-tab counts immediately
+    ['insider','bulk','block','sast'].forEach(function(sub) {
+      const countEl    = document.getElementById(sub + '-count');
+      const tabCountEl = document.getElementById('dsub-count-' + sub);
+      const n = _filtered[sub].length;
+      if (countEl)    countEl.textContent    = n.toLocaleString();
+      if (tabCountEl) tabCountEl.textContent = n > 0 ? n.toLocaleString() : '';
+    });
+    // Update the sidebar tab total
+    updateDealsCount();
+    // Render only the active tab's table (others update lazily on click)
     if (_IS_MOBILE_DEAL) {
       requestAnimationFrame(function() { renderDealSub(_activeSub); });
     } else {
@@ -6309,14 +6338,14 @@ window._makeDraggable = function(el, hdr, onDragStart) {
 
   /* ── Render a specific sub-section table (first page only) ── */
   window.renderDealSub = function(sub) {
+    // Re-apply filters for this sub only (handles direct switchDealSub calls without filterDealBlock)
     applyFilters(sub);
-    _renderOffset[sub] = 0; // reset pagination on every fresh render
+    _renderOffset[sub] = 0;
 
     const rows = _filtered[sub];
-    const countEl = document.getElementById(sub + '-count');
-    if (countEl) countEl.textContent = rows.length.toLocaleString();
-    // Also update the sub-tab pill count
+    const countEl    = document.getElementById(sub + '-count');
     const tabCountEl = document.getElementById('dsub-count-' + sub);
+    if (countEl)    countEl.textContent    = rows.length.toLocaleString();
     if (tabCountEl) tabCountEl.textContent = rows.length > 0 ? rows.length.toLocaleString() : '';
 
     const tbody = document.getElementById(sub + '-tbody');
@@ -7011,7 +7040,7 @@ window._makeDraggable = function(el, hdr, onDragStart) {
     btn.disabled = false;
   }
 
-  /* ── Load data (lazy, cached) ── */
+  /* ── Load data (lazy, cached via IDB) ── */
   async function ensureData() {
     if (_urData) return true;
     if (_urLoading) return false;
@@ -7019,7 +7048,35 @@ window._makeDraggable = function(el, hdr, onDragStart) {
     const body = document.getElementById('ur-modal-body');
     if (body) body.innerHTML = '<div id="ur-modal-loading">⏳ Loading upcoming results…</div>';
     try {
-      const text = await urFetch(UR_CSV_URL);
+      // Try IDB cache first
+      let text = null;
+      if (window._idbCache) {
+        try {
+          const db = await window._idbCache.openDB();
+          const rec = await window._idbCache.idbGet(db, 'ur_csv_v1');
+          if (rec && rec.ts && (Date.now() - rec.ts < 24*60*60*1000)) {
+            if (rec.compressed && rec.data && window._idbCache) {
+              text = await window._idbCache.decompress(rec.data);
+            } else if (rec.json) { text = rec.json; }
+          }
+        } catch(e) { /* fall through to network */ }
+      }
+      if (!text) {
+        text = await urFetch(UR_CSV_URL);
+        // Save to IDB async
+        if (window._idbCache) {
+          (async () => {
+            try {
+              const buf = await window._idbCache.compress(text);
+              const record = buf
+                ? { ts: Date.now(), compressed: true,  data: buf }
+                : { ts: Date.now(), compressed: false, json: text };
+              const db = await window._idbCache.openDB();
+              await window._idbCache.idbSet(db, 'ur_csv_v1', record);
+            } catch(e) { /* non-critical */ }
+          })();
+        }
+      }
       _urData = parseUrCsv(text);
       _urLoading = false;
       return true;
@@ -7268,9 +7325,13 @@ window._makeDraggable = function(el, hdr, onDragStart) {
 
   /* ── Public API exposed to loadAll ── */
   window._idbCache = {
-    load:    loadFromIDB,
-    save:    saveToIDB,
-    openDB
+    load:       loadFromIDB,
+    save:       saveToIDB,
+    openDB,
+    compress,
+    decompress,
+    idbGet,
+    idbSet
   };
 
 })();
