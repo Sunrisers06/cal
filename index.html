@@ -3165,6 +3165,21 @@ function buildCard(r, idx) {
     returnMiniCards = `<div class="return-mini-cards">${miniItems}</div>`;
   }
 
+  // Deal count badge — count deals for this ticker (uses filtered data if available, else all data)
+  let dealBadge = '';
+  const _dealSource = window._dealFiltered || window._dealData;
+  if (_dealSource) {
+    const uc = String(r._ticker).toUpperCase();
+    let dc = 0;
+    ['insider','bulk','block','sast'].forEach(function(sub) {
+      const arr = _dealSource[sub];
+      if (arr) for (let i = 0; i < arr.length; i++) {
+        if (String(arr[i]['Ticker'] || '').trim().toUpperCase() === uc) dc++;
+      }
+    });
+    if (dc > 0) dealBadge = `<span class="card-deal-badge" title="${dc} deal${dc>1?'s':''} on record">⇄${dc}</span>`;
+  }
+
 return `
   <div class="stock-card${selClass}" data-score="${score}" data-ticker="${r._ticker}" onclick="onCardClick('${escHtml(r._coName)}','${r._ticker}',event)">
     <div class="name-slide">
@@ -3189,6 +3204,7 @@ return `
               ${r._ind?`<span class="industry-tag" onclick="setIndustryFilter('${escHtml(r._ind)}', event)">${r._ind}</span>`:''}
               ${ssBadge}
               ${topRankBadge}
+              ${dealBadge}
             </div>
           </div>
           ${(r['Base_Stage_Weekly']||r['Base_Status_Weekly']||r['Base_Type_Weekly'])?`<div class="co-base-row">${r['Base_Stage_Weekly']?`<span class="base-tag base-stage">Stage ${escHtml(r['Base_Stage_Weekly'])}</span>`:''} ${r['Base_Status_Weekly']?`<span class="base-tag base-status">${escHtml(r['Base_Status_Weekly'])}</span>`:''} ${r['Base_Type_Weekly']?`<span class="base-tag base-type">${escHtml(r['Base_Type_Weekly'])}</span>`:''}</div>`:''}
@@ -6222,8 +6238,9 @@ window._makeDraggable = function(el, hdr, onDragStart) {
       }
     }
 
-    // Expose for chart strip usage
-    window._dealData = _data;
+    // Expose for chart strip usage and deal count badges
+    window._dealData     = _data;
+    window._dealFiltered = _filtered;
 
     _loaded  = true;
     _loading = false;
@@ -6316,6 +6333,10 @@ window._makeDraggable = function(el, hdr, onDragStart) {
     });
     // Update the sidebar tab total
     updateDealsCount();
+    // Keep public reference in sync so buildCard badge can read latest filtered counts
+    window._dealFiltered = _filtered;
+    // Refresh deal count badges on visible company cards
+    _refreshCardDealBadges();
     // Render only the active tab's table (others update lazily on click)
     if (_IS_MOBILE_DEAL) {
       requestAnimationFrame(function() { renderDealSub(_activeSub); });
@@ -6412,14 +6433,22 @@ window._makeDraggable = function(el, hdr, onDragStart) {
     }
   };
 
+  /* ── Normalize raw deal Type value for display ── */
+  function normalizeDealType(raw) {
+    const t = String(raw || '').trim();
+    if (/^(b|bought|acq|acquisition)$/i.test(t)) return 'BUY';
+    if (/^(s|sold|sale)$/i.test(t))              return 'SELL';
+    return t;
+  }
+
   /* ── Build table row HTML ── */
   function buildDealRow(sub, row) {
     const ticker   = escH(row['Ticker'] || '—');
     const person   = escH(row['Person'] || '—');
     const date     = escH(row['Date']   || '—');
-    const type     = escH(row['Type']   || '—');
-    const typeClass = /buy|acqui|purchase/i.test(type) ? 'dt-buy'
-                    : /sell|disposal|sale/i.test(type)  ? 'dt-sell'
+    const type     = escH(normalizeDealType(row['Type'] || '—'));
+    const typeClass = /buy/i.test(type)  ? 'dt-buy'
+                    : /sell/i.test(type) ? 'dt-sell'
                     : 'dt-other';
     const personLink = row['Person Link']
       ? `<a class="dt-link" href="${escH(row['Person Link'])}" target="_blank" rel="noopener">${person}</a>`
@@ -6493,6 +6522,37 @@ window._makeDraggable = function(el, hdr, onDragStart) {
     // Task 3: inject column resize handles once tables are in the DOM
     if (typeof window._dealColResizeInit === 'function') window._dealColResizeInit();
   };
+
+  /* ── Refresh deal count badges on all currently-rendered company cards ── */
+  function _refreshCardDealBadges() {
+    if (!_loaded) return;
+    // Build ticker → count map from current _filtered data
+    const countMap = {};
+    ['insider','bulk','block','sast'].forEach(function(sub) {
+      (_filtered[sub] || []).forEach(function(row) {
+        const t = String(row['Ticker'] || '').trim().toUpperCase();
+        if (t) countMap[t] = (countMap[t] || 0) + 1;
+      });
+    });
+    // Update every visible card badge in-place (no re-render of card)
+    document.querySelectorAll('.stock-card[data-ticker]').forEach(function(card) {
+      const ticker = String(card.dataset.ticker || '').toUpperCase();
+      const count  = countMap[ticker] || 0;
+      let badge = card.querySelector('.card-deal-badge');
+      if (count > 0) {
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'card-deal-badge';
+          const subLeft = card.querySelector('.co-sub-left');
+          if (subLeft) subLeft.appendChild(badge);
+        }
+        badge.title     = count + ' deal' + (count > 1 ? 's' : '') + ' on record';
+        badge.textContent = '⇄' + count;
+      } else {
+        if (badge) badge.remove();
+      }
+    });
+  }
 
   /* ── Hook filterBothNews so deal pane re-filters when stock search changes ── */
   const _origFBN = window.filterBothNews;
@@ -6605,8 +6665,8 @@ window._makeDraggable = function(el, hdr, onDragStart) {
   function dealColor(type) {
     if (!type) return '#a1a1aa';
     const t = type.toLowerCase();
-    if (/buy|acqui|purchase/.test(t)) return '#00e676';
-    if (/sell|disposal|sale/.test(t))  return '#ff4d4f';
+    if (/^buy$|acqui|purchase/.test(t)) return '#00e676';
+    if (/^sell$|disposal|sale/.test(t)) return '#ff4d4f';
     return '#f59e0b';
   }
 
@@ -6621,7 +6681,7 @@ window._makeDraggable = function(el, hdr, onDragStart) {
           all.push({
             date:   row['Date'] || '',
             person: row['Person'] || '?',
-            type:   row['Type'] || '?',
+            type:   normalizeDealType(row['Type'] || '?'),
             sub
           });
         }
@@ -6988,12 +7048,13 @@ window._makeDraggable = function(el, hdr, onDragStart) {
   }
 
   /* ── Render one week: returns count of rows rendered ── */
-  function renderWeek(monday) {
+  function renderWeek(monday, minDate) {
     const sunday = weekSunday(monday);
     const body   = document.getElementById('ur-modal-body');
     if (!body) return 0;
 
-    const weekRows = _urData.filter(r => r.dateObj >= monday && r.dateObj <= sunday);
+    const weekRows = _urData.filter(r => r.dateObj >= monday && r.dateObj <= sunday
+                                      && (!minDate || r.dateObj >= minDate));
     if (!weekRows.length) return 0;
 
     // Group by ISO date key for stable ordering
@@ -7117,8 +7178,8 @@ window._makeDraggable = function(el, hdr, onDragStart) {
       monday = weekMonday(today);
     }
 
-    // Render current week
-    const shown = renderWeek(monday);
+    // Render current week (exclude dates before today)
+    const shown = renderWeek(monday, today);
     if (shown === 0) {
       body.innerHTML = '<div style="padding:30px 20px;text-align:center;color:var(--text3);font-size:12px;">No upcoming results found for this period.</div>';
     }
@@ -7376,6 +7437,27 @@ window._makeDraggable = function(el, hdr, onDragStart) {
   animation: rdbSpin 0.7s linear infinite;
 }
 @keyframes rdbSpin { to { transform: rotate(360deg); } }
+/* .card-deal-badge — small deal count badge on company card */
+.card-deal-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 8px;
+  font-weight: 800;
+  font-family: 'Lexend', sans-serif;
+  background: rgba(34, 211, 238, 0.10);
+  border: 1px solid rgba(34, 211, 238, 0.30);
+  color: #22d3ee;
+  border-radius: 3px;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  flex-shrink: 0;
+  cursor: default;
+  user-select: none;
+}
 /* .dsub-count — small count pill inside deal sub-tab buttons */
 .dsub-count {
   display: inline-block;
