@@ -1577,6 +1577,11 @@ select.fi option { background: var(--surface); color: var(--text); }
   content:''; position:absolute; top:0; left:0; width:5px; height:100%; border-radius:10px 0 0 10px; z-index: 10; 
 }
 
+/* Rendering performance hints */
+.stock-card {
+  contain: layout style;
+}
+
 /* No results compact */
 .no-results { text-align: center; padding: 40px; color: var(--text3); font-size: 13px; display: none; }
 
@@ -2524,22 +2529,26 @@ function scrollToTop() {
 }
 
 (function initScrollToTop() {
+  const stt = document.getElementById('scroll-to-top');
+  if (!stt) return;
+  let _scrollRaf = false;
   function handleGlobalScroll(e) {
-    const stt = document.getElementById('scroll-to-top');
-    if (!stt) return;
-    
-    let st = 0;
-    // Check if scroll event came from window/document
-    if (e.target === document || e.target === window) {
-      st = window.scrollY || document.documentElement.scrollTop;
-    } 
-    // Check if it came from an inner scrollable element
-    else if (e.target && e.target.scrollTop !== undefined) {
-      st = e.target.scrollTop;
-    }
-    
-    if (st > 300) stt.classList.add('visible');
-    else stt.classList.remove('visible');
+    if (_scrollRaf) return;
+    _scrollRaf = true;
+    requestAnimationFrame(function() {
+      _scrollRaf = false;
+      let st = 0;
+      // Check if scroll event came from window/document
+      if (e.target === document || e.target === window) {
+        st = window.scrollY || document.documentElement.scrollTop;
+      }
+      // Check if it came from an inner scrollable element
+      else if (e.target && e.target.scrollTop !== undefined) {
+        st = e.target.scrollTop;
+      }
+      if (st > 300) stt.classList.add('visible');
+      else stt.classList.remove('visible');
+    });
   }
 
   // Use capture phase to listen to all scrolls globally
@@ -2588,7 +2597,9 @@ window.resetAllAppFilters = function() {
   if(sortSel) sortSel.value = 'sno';
   
   selectedCardTicker = null;
-  document.querySelectorAll('.stock-card').forEach(el => el.classList.remove('news-selected'));
+  // Only remove news-selected from the one card that had it — no need to scan all
+  const prevSelected = document.getElementById('cards')?.querySelector('.stock-card.news-selected');
+  if (prevSelected) prevSelected.classList.remove('news-selected');
   const chip = document.getElementById('active-company-chip');
   if (chip) chip.classList.remove('show');
   
@@ -3311,12 +3322,42 @@ return `
   document.addEventListener('touchstart', _outsideClose, { capture: true, passive: true });
 }
 
+// Cache sum-val element references after first call
+let _sumValEls = null;
+let _sumCardEls = null;
+const _sumOrder = ['all','best','good','mod','weak','vweak'];
+function _initSumValEls() {
+  const sumEl = document.getElementById('summary');
+  if (!sumEl) return false;
+  const vals = sumEl.querySelectorAll('.sum-val');
+  const cards = sumEl.querySelectorAll('.sum-card');
+  // Order: total(0), best(1), good(2), mod(3), weak(4), vweak(5)
+  if (vals.length !== 6 || cards.length !== 6) return false;
+  _sumValEls = vals;
+  _sumCardEls = cards;
+  return true;
+}
 function buildSummary(data) {
   const t = data.length;
   // Single pass — avoids 5 separate .filter() iterations over the same array
   const counts = [0, 0, 0, 0, 0]; // index = _score (0=vweak … 4=best)
   for (let i = 0; i < t; i++) { const s = data[i]._score; if (s >= 0 && s <= 4) counts[s]++; }
   const [vweak, weak, mod, good, best] = counts;
+  // Fast path: update only text content in-place, skip full innerHTML rebuild
+  if ((_sumValEls && _sumValEls.length === 6) || _initSumValEls()) {
+    _sumValEls[0].textContent = t;
+    _sumValEls[1].textContent = best;
+    _sumValEls[2].textContent = good;
+    _sumValEls[3].textContent = mod;
+    _sumValEls[4].textContent = weak;
+    _sumValEls[5].textContent = vweak;
+    // Update active-sum class using cached card refs
+    for (let i = 0; i < 6; i++) {
+      _sumCardEls[i].classList.toggle('active-sum', activeFilter === _sumOrder[i]);
+    }
+    return;
+  }
+  // Fallback: full rebuild if elements not found
   document.getElementById('summary').innerHTML = `
     <div class="sum-card sc-total ${activeFilter==='all'?'active-sum':''}" onclick="setFilterById('all')">
       <div class="sum-label">Selected<span class="sum-label-sub">(All)</span></div>
@@ -3342,6 +3383,7 @@ function buildSummary(data) {
       <div class="sum-label">Very Weak<span class="sum-label-sub">(Others)</span></div>
       <div class="sum-val" style="color:var(--pop-red);">${vweak}</div>
     </div>`;
+  _sumValEls = null; _sumCardEls = null; // reset cache after full rebuild
 }
 
 /* ══════════════════════════════
@@ -3351,7 +3393,7 @@ let allNewsData = [], filteredNewsData = [], currentNewsLimit = 100;
 let allInsightsData = [], filteredInsightsData = [], currentInsightsLimit = 100;
 
 function filterBothNews(forcedQuery = null) {
-  const rawQ = (forcedQuery !== null ? forcedQuery : String(document.getElementById('search-input').value || '')).trim();
+  const rawQ = (forcedQuery !== null ? forcedQuery : String((_domCache && _domCache.searchInput ? _domCache.searchInput.value : document.getElementById('search-input').value) || '')).trim();
   
   if (!rawQ) {
     // No query — reference the source arrays directly (no spread needed; they are read-only at this point)
@@ -3569,7 +3611,12 @@ function switchSidebarTab(tab, dir) {
 })();
 
 /* Per-pane local search (independent from stock search) */
+let _paneSearchTimers = {};
 function filterPaneSearch(pane) {
+  clearTimeout(_paneSearchTimers[pane]);
+  _paneSearchTimers[pane] = setTimeout(function() { _doFilterPaneSearch(pane); }, IS_MOBILE ? MOBILE_DEBOUNCE : 160);
+}
+function _doFilterPaneSearch(pane) {
   if (pane === 'insights') {
     const q = (document.getElementById('insights-search').value || '').trim().toLowerCase();
     if (!q) {
@@ -3613,8 +3660,20 @@ function tagClass(tag) {
 
 function onCardClick(coName, ticker, event) {
   if (event && event.target.tagName.toLowerCase() === 'a') return;
+  const prev = selectedCardTicker;
   selectedCardTicker = ticker;
-  document.querySelectorAll('.stock-card').forEach(el => el.classList.toggle('news-selected', el.dataset.ticker === ticker));
+  // Only touch the cards that need class changes — avoid iterating all cards
+  const cards = document.getElementById('cards');
+  if (cards) {
+    if (prev && prev !== ticker) {
+      const prevEl = cards.querySelector(`.stock-card[data-ticker="${prev}"]`);
+      if (prevEl) prevEl.classList.remove('news-selected');
+    }
+    if (!prev || prev !== ticker) {
+      const newEl = cards.querySelector(`.stock-card[data-ticker="${ticker}"]`);
+      if (newEl) newEl.classList.add('news-selected');
+    }
+  }
   
   document.getElementById('chip-label').textContent = '📰 ' + String(coName).trim();
   document.getElementById('active-company-chip').classList.add('show');
@@ -3632,8 +3691,14 @@ function onCardClick(coName, ticker, event) {
 }
 
 function clearNewsFilter() {
+  if (selectedCardTicker) {
+    const cards = document.getElementById('cards');
+    if (cards) {
+      const sel = cards.querySelector(`.stock-card[data-ticker="${selectedCardTicker}"]`);
+      if (sel) sel.classList.remove('news-selected');
+    }
+  }
   selectedCardTicker = null;
-  document.querySelectorAll('.stock-card').forEach(el => el.classList.remove('news-selected'));
   const chip = document.getElementById('active-company-chip');
   if (chip) chip.classList.remove('show');
   // Restore news to match whatever is in the search bar
@@ -3648,6 +3713,32 @@ let allData = [], activeFilter = 'all', indexDataMap = {};
 window.serialKey = null;
 let currentFilteredData = [], currentRenderLimit = 100;
 let debTimer;
+
+// ── Cached DOM refs for doFilter hot path (set once after data loads) ──
+let _domCache = null;
+function _getDomCache() {
+  if (_domCache) return _domCache;
+  _domCache = {
+    searchInput:   document.getElementById('search-input'),
+    idxFilter:     document.getElementById('index-filter'),
+    qtrFilter:     document.getElementById('qtr-filter'),
+    indFilter:     document.getElementById('ind-filter'),
+    minMcap:       document.getElementById('min-mcap'),
+    minEps:        document.getElementById('min-eps'),
+    minSmr:        document.getElementById('min-smr'),
+    minStr:        document.getElementById('min-str'),
+    minRoce:       document.getElementById('min-roce'),
+    minMaster:     document.getElementById('min-master'),
+    minDemand:     document.getElementById('min-demand'),
+    sortSelect:    document.getElementById('sort-select'),
+    invFilter:     document.getElementById('investor-filter'),
+    baseStage:     document.getElementById('base-stage-filter'),
+    baseStatus:    document.getElementById('base-status-filter'),
+    baseType:      document.getElementById('base-type-filter'),
+    globalClearBtn:document.getElementById('global-clear-btn'),
+  };
+  return _domCache;
+}
 
 /* ══════════════════════════════════════════════════════
    SMART SEARCH ENGINE v2
@@ -3688,34 +3779,37 @@ function scoreSearchMatch(r, tokens) {
 }
 
 function onSearchInput() {
-  const q = document.getElementById('search-input').value;
-  document.getElementById('clear-search-btn').style.display = q ? 'flex' : 'none';
+  const dc = _getDomCache();
+  const q = dc.searchInput.value;
+  const clearBtn = document.getElementById('clear-search-btn');
+  if (clearBtn) clearBtn.style.display = q ? 'flex' : 'none';
   if (q) { const w = document.getElementById('search-wrap'); if(w) w.classList.add('mob-expanded'); }
   clearTimeout(debTimer);
   debTimer = setTimeout(doFilter, IS_MOBILE ? MOBILE_DEBOUNCE : 180);
 }
 
 function doFilter() {
-  const rawQ = document.getElementById('search-input').value.trim();
+  const dc = _getDomCache();
+  const rawQ = dc.searchInput.value.trim();
   
   // Pipe = OR groups, each group = AND tokens
   const orGroups = rawQ.toLowerCase().split('|').map(g => tokenize(g)).filter(g => g.length);
   
-  const idxQ    = document.getElementById('index-filter').value;
-  const qtrQ    = document.getElementById('qtr-filter').value;
-  const indQ    = document.getElementById('ind-filter').value;
-  const minMcap = parseFloat(document.getElementById('min-mcap').value);
-  const minEps  = parseFloat(document.getElementById('min-eps').value);
-  const minSmr  = parseFloat(document.getElementById('min-smr').value);
-  const minStr  = parseFloat(document.getElementById('min-str').value);
-  const minRoce = parseFloat(document.getElementById('min-roce').value);
-  const minMasterStr = document.getElementById('min-master').value;
-  const minDemandStr = document.getElementById('min-demand').value;
-  const sortMode = document.getElementById('sort-select').value;
-  const invQ     = document.getElementById('investor-filter') ? document.getElementById('investor-filter').value : 'all';
-  const baseStageQ  = document.getElementById('base-stage-filter')  ? document.getElementById('base-stage-filter').value  : 'all';
-  const baseStatusQ = document.getElementById('base-status-filter') ? document.getElementById('base-status-filter').value : 'all';
-  const baseTypeQ   = document.getElementById('base-type-filter')   ? document.getElementById('base-type-filter').value   : 'all';
+  const idxQ    = dc.idxFilter.value;
+  const qtrQ    = dc.qtrFilter.value;
+  const indQ    = dc.indFilter.value;
+  const minMcap = parseFloat(dc.minMcap.value);
+  const minEps  = parseFloat(dc.minEps.value);
+  const minSmr  = parseFloat(dc.minSmr.value);
+  const minStr  = parseFloat(dc.minStr.value);
+  const minRoce = parseFloat(dc.minRoce.value);
+  const minMasterStr = dc.minMaster.value;
+  const minDemandStr = dc.minDemand.value;
+  const sortMode = dc.sortSelect.value;
+  const invQ     = dc.invFilter ? dc.invFilter.value : 'all';
+  const baseStageQ  = dc.baseStage  ? dc.baseStage.value  : 'all';
+  const baseStatusQ = dc.baseStatus ? dc.baseStatus.value : 'all';
+  const baseTypeQ   = dc.baseType   ? dc.baseType.value   : 'all';
   const grades = ['A','B','C','D','E'];
 
   let base = allData.filter(r => {
@@ -3753,6 +3847,13 @@ function doFilter() {
   
   let final = base;
   if (activeFilter !== 'all') { const ts = {best:4,good:3,mod:2,weak:1,vweak:0}[activeFilter]; final = base.filter(r => r._score === ts); }
+  // Pre-compute sort key once per row — avoids repeated parseFloat() inside comparator
+  if (sortMode==='smr')      { final.forEach(r => { r._sk = parseFloat(r['SMR_Strength']); }); }
+  else if (sortMode==='dur') { final.forEach(r => { r._sk = parseFloat(r['Trendlyne Durability Score']); }); }
+  else if (sortMode==='val') { final.forEach(r => { r._sk = parseFloat(r['Trendlyne Valuation Score']); }); }
+  else if (sortMode==='grpr'){ final.forEach(r => { r._sk = parseFloat(r['Group_Rank']); }); }
+  else if (sortMode==='exteps')   { final.forEach(r => { r._sk = parseFloat(String(r._extEps||'').replace(/,/g,'')); }); }
+  else if (sortMode==='extsales') { final.forEach(r => { r._sk = parseFloat(String(r._extSales||'').replace(/,/g,'')); }); }
   final.sort((a, b) => {
     // When searching, strong prefix matches always come first
     if (orGroups.length > 0) {
@@ -3761,15 +3862,15 @@ function doFilter() {
     }
     let vA, vB, desc = true;
     if (sortMode==='eps')  { vA=a._eps;  vB=b._eps; }
-    else if (sortMode==='smr')  { vA=parseFloat(a['SMR_Strength']); vB=parseFloat(b['SMR_Strength']); }
+    else if (sortMode==='smr')  { vA=a._sk; vB=b._sk; }
     else if (sortMode==='str')  { vA=a._str;  vB=b._str; }
     else if (sortMode==='roce') { vA=a._roce; vB=b._roce; }
     else if (sortMode==='mcap') { vA=a._mcap; vB=b._mcap; }
-    else if (sortMode==='dur')  { vA=parseFloat(a['Trendlyne Durability Score']); vB=parseFloat(b['Trendlyne Durability Score']); }
-    else if (sortMode==='val')  { vA=parseFloat(a['Trendlyne Valuation Score']);  vB=parseFloat(b['Trendlyne Valuation Score']); }
-    else if (sortMode==='grpr') { vA=parseFloat(a['Group_Rank']); vB=parseFloat(b['Group_Rank']); desc=false; }
-    else if (sortMode==='exteps')   { vA=parseFloat(String(a._extEps||'').replace(/,/g,'')); vB=parseFloat(String(b._extEps||'').replace(/,/g,'')); }
-    else if (sortMode==='extsales') { vA=parseFloat(String(a._extSales||'').replace(/,/g,'')); vB=parseFloat(String(b._extSales||'').replace(/,/g,'')); }
+    else if (sortMode==='dur')  { vA=a._sk; vB=b._sk; }
+    else if (sortMode==='val')  { vA=a._sk; vB=b._sk; }
+    else if (sortMode==='grpr') { vA=a._sk; vB=b._sk; desc=false; }
+    else if (sortMode==='exteps')   { vA=a._sk; vB=b._sk; }
+    else if (sortMode==='extsales') { vA=a._sk; vB=b._sk; }
     else { vA=a._sno; vB=b._sno; desc=false; }
     const nA = isNaN(vA) ? -Infinity : vA, nB = isNaN(vB) ? -Infinity : vB;
     if (nA === nB) return 0;
@@ -3788,16 +3889,19 @@ function doFilter() {
       requestAnimationFrame(() => {
         buildSummary(base);
         filterBothNews(rawQ);
-        const gb = document.getElementById('global-clear-btn');
+        const gb = dc.globalClearBtn;
         if (gb) gb.style.display = indQ !== 'all' ? 'flex' : 'none';
       });
     });
   } else {
+    // Desktop: paint cards immediately, defer summary+news to next frame
     renderCards();
-    buildSummary(base);
-    filterBothNews(rawQ);
-    const gb = document.getElementById('global-clear-btn');
-    if (gb) gb.style.display = indQ !== 'all' ? 'flex' : 'none';
+    requestAnimationFrame(() => {
+      buildSummary(base);
+      filterBothNews(rawQ);
+      const gb = dc.globalClearBtn;
+      if (gb) gb.style.display = indQ !== 'all' ? 'flex' : 'none';
+    });
   }
 }
 function loadMore() {
@@ -3822,13 +3926,6 @@ function updatePaginationUI() {
 
 function setFilterById(f) {
   activeFilter = f;
-  
-  // Highlight active tile
-  document.querySelectorAll('.sum-card').forEach(c => c.classList.remove('active-sum'));
-  const targetMap = {all:'.sc-total', best:'.sc-best', good:'.sc-good', mod:'.sc-mod', weak:'.sc-weak', vweak:'.sc-vweak'};
-  const activeTile = document.querySelector(targetMap[f]);
-  if(activeTile) activeTile.classList.add('active-sum');
-  
   doFilter();
 }
 
@@ -4314,26 +4411,27 @@ doFilter = function() {
   }
 
   // Run base filter first (search, existing filters) but with topState index override
-  const rawQ = document.getElementById('search-input').value.trim();
+  const dc = _getDomCache();
+  const rawQ = dc.searchInput.value.trim();
   const orGroups = rawQ.toLowerCase().split('|').map(g => tokenize(g)).filter(g => g.length);
 
-  const qtrQ    = document.getElementById('qtr-filter').value;
-  const indQ    = document.getElementById('ind-filter').value;
-  const minMcap = parseFloat(document.getElementById('min-mcap').value);
-  const minEps  = parseFloat(document.getElementById('min-eps').value);
-  const minSmr  = parseFloat(document.getElementById('min-smr').value);
-  const minStr  = parseFloat(document.getElementById('min-str').value);
-  const minRoce = parseFloat(document.getElementById('min-roce').value);
-  const minMasterStr = document.getElementById('min-master').value;
-  const minDemandStr = document.getElementById('min-demand').value;
-  const invQ    = document.getElementById('investor-filter') ? document.getElementById('investor-filter').value : 'all';
-  const baseStageQ  = document.getElementById('base-stage-filter')  ? document.getElementById('base-stage-filter').value  : 'all';
-  const baseStatusQ = document.getElementById('base-status-filter') ? document.getElementById('base-status-filter').value : 'all';
-  const baseTypeQ   = document.getElementById('base-type-filter')   ? document.getElementById('base-type-filter').value   : 'all';
+  const qtrQ    = dc.qtrFilter.value;
+  const indQ    = dc.indFilter.value;
+  const minMcap = parseFloat(dc.minMcap.value);
+  const minEps  = parseFloat(dc.minEps.value);
+  const minSmr  = parseFloat(dc.minSmr.value);
+  const minStr  = parseFloat(dc.minStr.value);
+  const minRoce = parseFloat(dc.minRoce.value);
+  const minMasterStr = dc.minMaster.value;
+  const minDemandStr = dc.minDemand.value;
+  const invQ    = dc.invFilter ? dc.invFilter.value : 'all';
+  const baseStageQ  = dc.baseStage  ? dc.baseStage.value  : 'all';
+  const baseStatusQ = dc.baseStatus ? dc.baseStatus.value : 'all';
+  const baseTypeQ   = dc.baseType   ? dc.baseType.value   : 'all';
   const grades  = ['A','B','C','D','E'];
 
   // Use the top index filter if set, else the main index filter
-  const idxQ = ts.indexFilter !== 'all' ? ts.indexFilter : document.getElementById('index-filter').value;
+  const idxQ = ts.indexFilter !== 'all' ? ts.indexFilter : dc.idxFilter.value;
 
   let base = allData.filter(r => {
     if (orGroups.length > 0) {
@@ -4365,6 +4463,7 @@ doFilter = function() {
 
   let final = base;
   if (activeFilter !== 'all') { const ts2 = {best:4,good:3,mod:2,weak:1,vweak:0}[activeFilter]; final = base.filter(r => r._score === ts2); }
+  // Note: topState doFilter sorts by return value only — no additional sort key caching needed here
 
   // Attach return values for sorting
   const dur = ts.duration;
@@ -4386,16 +4485,16 @@ doFilter = function() {
   // Mark top rank on each
   final.forEach((r, i) => { r._topRank = i + 1; });
 
-  buildSummary(base);
-  filterBothNews(rawQ);
-
-  const isIndFiltered = indQ !== 'all';
-  const globalBtn = document.getElementById('global-clear-btn');
-  if (globalBtn) globalBtn.style.display = isIndFiltered ? 'flex' : 'none';
-
   currentFilteredData = final;
   currentRenderLimit  = RENDER_CHUNK;
   renderCards();
+  // Defer summary + news to next frame — same pattern as base doFilter
+  requestAnimationFrame(() => {
+    buildSummary(base);
+    filterBothNews(rawQ);
+    const globalBtn = dc.globalClearBtn;
+    if (globalBtn) globalBtn.style.display = indQ !== 'all' ? 'flex' : 'none';
+  });
 };
 
 // Override resetAllAppFilters to also reset top state
