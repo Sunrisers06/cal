@@ -6670,6 +6670,14 @@ window._makeDraggable = function(el, hdr, onDragStart) {
     return '#f59e0b';
   }
 
+  /* Normalize deal type — inline copy; normalizeDealType() lives in a different IIFE scope */
+  function _normType(raw) {
+    const t = String(raw || '').trim();
+    if (/^(b|bought|acq|acquisition)$/i.test(t)) return 'BUY';
+    if (/^(s|sold|sale)$/i.test(t))              return 'SELL';
+    return t;
+  }
+
   /* Get deals for a ticker across all sub-sections */
   function getDealsForTicker(ticker) {
     if (!window._dealData) return [];
@@ -6681,7 +6689,7 @@ window._makeDraggable = function(el, hdr, onDragStart) {
           all.push({
             date:   row['Date'] || '',
             person: row['Person'] || '?',
-            type:   normalizeDealType(row['Type'] || '?'),
+            type:   _normType(row['Type'] || '?'),
             sub
           });
         }
@@ -6882,6 +6890,14 @@ window._makeDraggable = function(el, hdr, onDragStart) {
     if (!tickerEl) return;
     const ticker = tickerEl.textContent.trim();
     if (!ticker) return;
+
+    // If deal data hasn't loaded yet, retry once when it does
+    if (!window._dealData) {
+      var _retryTimer = setTimeout(function() {
+        if (window._dealData) window._dealStripRefresh();
+      }, 2000);
+      return;
+    }
 
     // Get current raw data from OHLCV index
     if (!window._ohlcvTickers) return;
