@@ -3232,8 +3232,8 @@ return `
         ${r['Buyer Demand']?`<div class="iscore ${getChipColor('Buyer Demand',r['Buyer Demand'])}"><span class="iscore-label">AD</span><span class="iscore-val">${r['Buyer Demand']}</span></div>`:''}
         ${r['ROCE Annual %']?`<div class="iscore ${getChipColor('ROCE Annual %',r['ROCE Annual %'])}"><span class="iscore-label">ROCE</span><span class="iscore-val">${fmtAbs(r['ROCE Annual %'])}</span></div>`:''}
         ${r['Group_Rank']?`<div class="iscore gray"><span class="iscore-label">GRP R</span><span class="iscore-val">${r['Group_Rank']}</span></div>`:''}
-        ${r._extEps?`<div class="iscore purple"><span class="iscore-label">EPS</span><span class="iscore-val">${fmtEpSales(r._extEps)}</span></div>`:''}
-        ${r._extSales?`<div class="iscore blue"><span class="iscore-label">Sales</span><span class="iscore-val">${fmtEpSales(r._extSales)}</span></div>`:''}
+        ${r._extEps?`<div class="iscore gray"><span class="iscore-label">EPS</span><span class="iscore-val">${fmtEpSales(r._extEps)}</span></div>`:''}
+        ${r._extSales?`<div class="iscore gray"><span class="iscore-label">Sales</span><span class="iscore-val">${fmtEpSales(r._extSales)}</span></div>`:''}
       </div>
     </div>
     <div class="metrics-full">${cells}</div>
