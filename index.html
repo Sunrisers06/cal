@@ -1701,6 +1701,10 @@ select.fi option { background: var(--surface); color: var(--text); }
 .deal-table .dt-other { color: var(--pop-orange); font-weight: 600; }
 .deal-table .dt-link  { color: #f59e0b; text-decoration: none; font-weight: 600; }
 .deal-table .dt-link:hover { text-decoration: underline; }
+/* Consistent person styling across all deal tabs — matches SAST reference */
+.deal-table .dt-person { color: var(--text2); font-weight: 400; }
+.deal-table .dt-person.dt-link { color: var(--text2); font-weight: 400; }
+.deal-table .dt-person.dt-link:hover { color: var(--text); text-decoration: underline; }
 .deal-loading { text-align: center; padding: 30px; color: var(--text3); font-size: 11px; }
 .deal-empty   { text-align: center; padding: 30px; color: var(--text3); font-size: 11px; }
 
@@ -6544,18 +6548,47 @@ window._makeDraggable = function(el, hdr, onDragStart) {
     return t;
   }
 
+  /* ── Format date as dd-mmm-yy for all deal tabs ── */
+  function formatDealDate(raw) {
+    if (!raw || raw === '—') return '—';
+    const s = raw.trim();
+    // Try native Date parse (handles ISO, dd/mm/yyyy, mm/dd/yyyy, dd-mmm-yyyy etc.)
+    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    let d = null;
+
+    // Try dd/mm/yyyy or dd-mm-yyyy first (Indian format common in sheets)
+    const dmy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+    if (dmy) {
+      const day = parseInt(dmy[1], 10), mon = parseInt(dmy[2], 10) - 1, yr = parseInt(dmy[3], 10);
+      if (mon >= 0 && mon < 12) d = new Date(yr < 100 ? 2000 + yr : yr, mon, day);
+    }
+    // Try ISO yyyy-mm-dd
+    if (!d || isNaN(d)) {
+      const iso = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+      if (iso) d = new Date(parseInt(iso[1],10), parseInt(iso[2],10)-1, parseInt(iso[3],10));
+    }
+    // Fallback: let browser parse (handles "15-Jan-2025", "January 15 2025", etc.)
+    if (!d || isNaN(d)) d = new Date(s);
+
+    if (!d || isNaN(d.getTime())) return s; // unparseable — return as-is
+    const dd  = String(d.getDate()).padStart(2, '0');
+    const mmm = MONTHS[d.getMonth()];
+    const yy  = String(d.getFullYear()).slice(-2);
+    return `${dd}-${mmm}-${yy}`;
+  }
+
   /* ── Build table row HTML ── */
   function buildDealRow(sub, row) {
     const ticker   = escH(row['Ticker'] || '—');
     const person   = escH(row['Person'] || '—');
-    const date     = escH(row['Date']   || '—');
+    const date     = escH(formatDealDate(row['Date'] || ''));
     const type     = escH(normalizeDealType(row['Type'] || '—'));
     const typeClass = /buy/i.test(type)  ? 'dt-buy'
                     : /sell/i.test(type) ? 'dt-sell'
                     : 'dt-other';
     const personLink = row['Person Link']
-      ? `<a class="dt-link" href="${escH(row['Person Link'])}" target="_blank" rel="noopener">${person}</a>`
-      : person;
+      ? `<a class="dt-person dt-link" href="${escH(row['Person Link'])}" target="_blank" rel="noopener">${person}</a>`
+      : `<span class="dt-person">${person}</span>`;
     const tickerEl = `<span class="dt-ticker" onclick="setDealTickerFilter('${ticker}')">${ticker}</span>`;
 
     if (sub === 'insider') {
@@ -6573,7 +6606,7 @@ window._makeDraggable = function(el, hdr, onDragStart) {
       }
       return `<tr>
         <td>${tickerEl}</td>
-        <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;" title="${person}">${person}</td>
+        <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;" title="${person}">${personLink}</td>
         <td style="max-width:80px;overflow:hidden;text-overflow:ellipsis;" title="${escH(row['Person Role']||'')}">${escH(row['Person Role']||'—')}</td>
         <td>${date}</td>
         <td><span class="${typeClass}">${type}</span></td>
@@ -6629,7 +6662,7 @@ window._makeDraggable = function(el, hdr, onDragStart) {
     } else { // sast
       return `<tr>
         <td>${tickerEl}</td>
-        <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;" title="${person}">${person}</td>
+        <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;" title="${person}"><span class="dt-person">${person}</span></td>
         <td>${date}</td>
         <td><span class="${typeClass}">${type}</span></td>
         <td>${escH(row['Percent']||'—')}</td>
