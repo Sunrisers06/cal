@@ -2361,9 +2361,9 @@ select.fi option { background: var(--surface); color: var(--text); }
           <div class="deal-table-wrap">
             <table class="deal-table" id="bulk-table">
               <thead><tr>
-                <th>Ticker</th><th>Person</th><th>Date</th><th>Type</th><th>Value</th><th>Qty</th><th>Price</th>
+                <th>Ticker</th><th>Person</th><th>Date</th><th>Type</th><th>Value</th><th>Price</th>
               </tr></thead>
-              <tbody id="bulk-tbody"><tr><td colspan="7" class="deal-loading">Loading…</td></tr></tbody>
+              <tbody id="bulk-tbody"><tr><td colspan="6" class="deal-loading">Loading…</td></tr></tbody>
             </table>
             <div class="deal-load-more-wrap" id="bulk-load-more-wrap" style="display:none;">
               <button class="deal-load-more-btn" onclick="loadNextDealPage('bulk')">Load Next 100</button>
@@ -2377,9 +2377,9 @@ select.fi option { background: var(--surface); color: var(--text); }
           <div class="deal-table-wrap">
             <table class="deal-table" id="block-table">
               <thead><tr>
-                <th>Ticker</th><th>Person</th><th>Date</th><th>Type</th><th>Value</th>
+                <th>Ticker</th><th>Person</th><th>Date</th><th>Type</th><th>Value</th><th>Price</th>
               </tr></thead>
-              <tbody id="block-tbody"><tr><td colspan="5" class="deal-loading">Loading…</td></tr></tbody>
+              <tbody id="block-tbody"><tr><td colspan="6" class="deal-loading">Loading…</td></tr></tbody>
             </table>
             <div class="deal-load-more-wrap" id="block-load-more-wrap" style="display:none;">
               <button class="deal-load-more-btn" onclick="loadNextDealPage('block')">Load Next 100</button>
@@ -6140,11 +6140,11 @@ window._makeDraggable = function(el, hdr, onDragStart) {
   const COLS = {
     insider: ['Ticker','Person','Person Role','Date','Type','Shares','Value'],
     bulk:    ['Ticker','Person','Person Link','Date','Type','Value','Quantity','Price'],
-    block:   ['Ticker','Person','Person Link','Date','Type','Value'],
+    block:   ['Ticker','Company Link','Person','Person Link','Date','Type','Quantity','Price'],
     sast:    ['Ticker','Person','Date','Type','Percent','Quantity']
   };
 
-  const COL_COUNT = { insider:7, bulk:7, block:5, sast:6 };
+  const COL_COUNT = { insider:7, bulk:6, block:6, sast:6 };
 
   /* ── State ── */
   let _loaded  = false;
@@ -6222,10 +6222,14 @@ window._makeDraggable = function(el, hdr, onDragStart) {
        .trim()
     );
 
-    // Build index map: wantedCol → column index (case-insensitive match)
+    // Build index map: wantedCol → column index
+    // Priority: 1) exact case-insensitive  2) startsWith  3) contains
     const idxMap = {};
     wantedCols.forEach(wc => {
-      const idx = rawHdrs.findIndex(h => h.toLowerCase() === wc.toLowerCase());
+      const wcL = wc.toLowerCase();
+      let idx = rawHdrs.findIndex(h => h.toLowerCase() === wcL);
+      if (idx === -1) idx = rawHdrs.findIndex(h => h.toLowerCase().startsWith(wcL));
+      if (idx === -1) idx = rawHdrs.findIndex(h => h.toLowerCase().includes(wcL));
       idxMap[wc] = idx; // -1 means column not found in this sheet
     });
 
@@ -6555,6 +6559,18 @@ window._makeDraggable = function(el, hdr, onDragStart) {
     const tickerEl = `<span class="dt-ticker" onclick="setDealTickerFilter('${ticker}')">${ticker}</span>`;
 
     if (sub === 'insider') {
+      // Task 1: Handle mixed VALUE types — numeric (Lacs) or alphanumeric (e.g. "59.2 crore")
+      const rawVal = String(row['Value'] || '').trim();
+      let insiderValue = '—';
+      if (rawVal && rawVal !== '—') {
+        const numOnly = parseFloat(rawVal.replace(/[^0-9.]/g, ''));
+        if (!isNaN(numOnly)) {
+          const isCrore = /crore/i.test(rawVal);
+          insiderValue = isCrore ? numOnly + ' Cr.' : rawVal + ' Lacs';
+        } else {
+          insiderValue = rawVal;
+        }
+      }
       return `<tr>
         <td>${tickerEl}</td>
         <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;" title="${person}">${person}</td>
@@ -6562,25 +6578,53 @@ window._makeDraggable = function(el, hdr, onDragStart) {
         <td>${date}</td>
         <td><span class="${typeClass}">${type}</span></td>
         <td>${escH(row['Shares']||'—')}</td>
-        <td>${escH(row['Value']||'—')}</td>
+        <td>${escH(insiderValue)}</td>
       </tr>`;
     } else if (sub === 'bulk') {
+      // Task 2: VALUE = Quantity × Price; display in Lacs or Cr.; remove Qty column
+      const bulkQty   = parseFloat(String(row['Quantity'] || '').replace(/[^0-9.]/g, '')) || 0;
+      const bulkPrice = parseFloat(String(row['Price']    || '').replace(/[^0-9.]/g, '')) || 0;
+      let bulkValue = '—';
+      if (bulkQty > 0 && bulkPrice > 0) {
+        const raw = bulkQty * bulkPrice; // in absolute rupees
+        if (raw >= 1e7) {
+          bulkValue = (raw / 1e7).toFixed(2) + ' Cr.';
+        } else {
+          bulkValue = (raw / 1e5).toFixed(2) + ' Lacs';
+        }
+      }
       return `<tr>
         <td>${tickerEl}</td>
         <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;" title="${person}">${personLink}</td>
         <td>${date}</td>
         <td><span class="${typeClass}">${type}</span></td>
-        <td>${escH(row['Value']||'—')}</td>
-        <td>${escH(row['Quantity']||'—')}</td>
+        <td>${escH(bulkValue)}</td>
         <td>${escH(row['Price']||'—')}</td>
       </tr>`;
     } else if (sub === 'block') {
+      // Task 3: VALUE = Quantity × Price; Ticker links to Company Link; Person links to Person Link
+      const blockQty   = parseFloat(String(row['Quantity'] || '').replace(/[^0-9.]/g, '')) || 0;
+      const blockPrice = parseFloat(String(row['Price']    || '').replace(/[^0-9.]/g, '')) || 0;
+      let blockValue = '—';
+      if (blockQty > 0 && blockPrice > 0) {
+        const raw = blockQty * blockPrice;
+        if (raw >= 1e7) {
+          blockValue = (raw / 1e7).toFixed(2) + ' Cr.';
+        } else {
+          blockValue = (raw / 1e5).toFixed(2) + ' Lacs';
+        }
+      }
+      const companyLink = row['Company Link'];
+      const blockTickerEl = companyLink
+        ? `<a class="dt-link dt-ticker" href="${escH(companyLink)}" target="_blank" rel="noopener">${ticker}</a>`
+        : `<span class="dt-ticker" onclick="setDealTickerFilter('${ticker}')">${ticker}</span>`;
       return `<tr>
-        <td>${tickerEl}</td>
+        <td>${blockTickerEl}</td>
         <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;" title="${person}">${personLink}</td>
         <td>${date}</td>
         <td><span class="${typeClass}">${type}</span></td>
-        <td>${escH(row['Value']||'—')}</td>
+        <td>${escH(blockValue)}</td>
+        <td>${escH(row['Price']||'—')}</td>
       </tr>`;
     } else { // sast
       return `<tr>
