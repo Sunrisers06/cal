@@ -4067,12 +4067,13 @@
       position: fixed;
       inset: 0;
       z-index: 499990;
-      background: rgba(0, 0, 0, 0.55);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       display: none;
       align-items: center;
       justify-content: center;
+      transition: all 0.3s ease;
     }
 
     #ur-modal-overlay.ur-open {
@@ -4080,191 +4081,221 @@
     }
 
     #ur-modal {
-      background: var(--surface);
-      border: 1px solid var(--border2);
-      border-radius: 14px;
-      width: min(480px, 96vw);
-      max-height: 82vh;
+      background: rgba(18, 18, 26, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      width: min(520px, 96vw);
+      max-height: 85vh;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.65);
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
       overflow: hidden;
       font-family: 'Lexend', sans-serif;
+      animation: urScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes urScaleIn {
+      from { opacity: 0; transform: scale(0.95) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
     }
 
     #ur-modal-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 13px 16px 11px;
-      border-bottom: 1px solid var(--border);
+      padding: 16px 20px 14px;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
       flex-shrink: 0;
     }
 
     #ur-modal-title {
-      font-size: 13px;
+      font-size: 15px;
       font-weight: 700;
-      color: var(--text);
+      color: #fff;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
+      letter-spacing: -0.01em;
     }
 
     .ur-title-dot {
-      width: 8px;
-      height: 8px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
-      background: #10b981;
-      box-shadow: 0 0 6px rgba(16, 185, 129, 0.7);
+      background: linear-gradient(135deg, #10b981, #059669);
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
       flex-shrink: 0;
     }
 
     #ur-modal-close {
-      background: none;
-      border: none;
-      color: var(--text3);
-      font-size: 18px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.5);
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
       cursor: pointer;
-      padding: 2px 6px;
-      border-radius: 5px;
       transition: all 0.2s;
-      line-height: 1;
+      font-size: 14px;
     }
 
     #ur-modal-close:hover {
-      color: var(--text);
-      background: var(--surface3);
+      color: #fff;
+      background: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.3);
     }
 
     #ur-status-bar {
-      padding: 4px 16px 3px;
-      font-size: 9px;
-      color: var(--text3);
+      padding: 8px 20px;
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.4);
       text-align: right;
-      flex-shrink: 0;
-      letter-spacing: 0.04em;
-      border-bottom: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.2);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      letter-spacing: 0.02em;
     }
 
     #ur-modal-body {
       flex: 1;
       overflow-y: auto;
-      padding-bottom: 4px;
+      padding: 10px 0;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
     }
 
+    #ur-modal-body::-webkit-scrollbar { width: 5px; }
+    #ur-modal-body::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+
     #ur-modal-loading {
-      padding: 40px 20px;
+      padding: 60px 20px;
       text-align: center;
-      color: var(--text3);
-      font-size: 12px;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 13px;
     }
 
     .ur-date-group {
-      margin: 0;
+      margin-bottom: 15px;
     }
 
     .ur-date-header {
-      font-size: 10px;
-      font-weight: 800;
+      font-size: 11px;
+      font-weight: 700;
       color: #10b981;
-      background: rgba(16, 185, 129, 0.08);
-      border-top: 1px solid rgba(16, 185, 129, 0.18);
-      border-bottom: 1px solid rgba(16, 185, 129, 0.10);
-      padding: 5px 14px;
-      letter-spacing: 0.06em;
+      background: rgba(16, 185, 129, 0.05);
+      padding: 8px 20px;
+      letter-spacing: 0.05em;
       text-transform: uppercase;
       position: sticky;
-      top: 0;
-      z-index: 1;
+      top: -10px;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(16, 185, 129, 0.1);
+      margin-bottom: 4px;
     }
 
     .ur-company-row {
-      display: flex;
+      display: grid;
+      grid-template-columns: 85px 1fr;
       align-items: center;
-      gap: 8px;
-      padding: 5px 14px;
-      border-bottom: 1px solid var(--border);
-      transition: background 0.15s;
+      gap: 15px;
+      padding: 8px 20px;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .ur-company-row::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 20px;
+      right: 20px;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
     }
 
     .ur-company-row:hover {
       background: rgba(255, 255, 255, 0.03);
+      padding-left: 24px;
     }
 
-    .ur-company-row:last-child {
-      border-bottom: none;
+    .ur-company-row:last-child::after { display: none; }
+
+    .ur-ticker-link, .ur-ticker-no-link {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 0;
+      border-radius: 6px;
+      text-align: center;
+      width: 100%;
+      display: inline-block;
+      letter-spacing: 0.02em;
+      text-decoration: none;
+      transition: all 0.2s;
     }
 
     .ur-ticker-link {
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--pop-blue);
-      background: rgba(59, 130, 246, 0.10);
+      color: #3b82f6;
+      background: rgba(59, 130, 246, 0.12);
       border: 1px solid rgba(59, 130, 246, 0.25);
-      padding: 2px 7px;
-      border-radius: 4px;
-      text-decoration: none;
-      white-space: nowrap;
-      flex-shrink: 0;
-      transition: all 0.15s;
     }
 
     .ur-ticker-link:hover {
-      background: rgba(59, 130, 246, 0.22);
+      background: #3b82f6;
       color: #fff;
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+      transform: translateY(-1px);
     }
 
     .ur-ticker-no-link {
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--text3);
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      padding: 2px 7px;
-      border-radius: 4px;
-      white-space: nowrap;
-      flex-shrink: 0;
+      color: rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .ur-company-name {
-      font-size: 11px;
-      color: var(--text2);
-      flex: 1;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.85);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
     #ur-load-more-wrap {
-      padding: 10px 14px;
+      padding: 16px 20px;
+      background: rgba(0, 0, 0, 0.2);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
       display: none;
       justify-content: center;
-      border-top: 1px solid var(--border);
-      flex-shrink: 0;
     }
 
     .ur-load-more-btn {
       width: 100%;
-      padding: 7px 12px;
-      border-radius: 6px;
-      background: var(--surface2);
-      border: 1px solid var(--border2);
-      color: var(--text2);
+      padding: 10px 0;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
       font-family: 'Lexend', sans-serif;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
-      letter-spacing: 0.03em;
     }
 
     .ur-load-more-btn:hover:not(:disabled) {
-      background: var(--surface3);
-      color: var(--text);
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
     }
 
     .ur-load-more-btn:disabled {
-      opacity: 0.4;
+      opacity: 0.3;
       cursor: not-allowed;
     }
 
@@ -6080,6 +6111,57 @@
     ══════════════════════════════════════════════════════ */
     const smartFetch = (...args) => window._smartFetch(...args);
     const URLS = window._URLS;
+ 
+    /* ── Global NSE Name Fetching & Caching ── */
+    const NSE_CACHE_KEY = 'global_nse_names';
+    const _pendingNse = new Set();
+    function getNseCache() { try { return JSON.parse(localStorage.getItem(NSE_CACHE_KEY)) || {}; } catch(e) { return {}; } }
+    function setNseCache(cache) { localStorage.setItem(NSE_CACHE_KEY, JSON.stringify(cache)); }
+
+    async function fetchNseName(ticker) {
+      if (!ticker || _pendingNse.has(ticker)) return null;
+      const cache = getNseCache();
+      if (cache[ticker]) return cache[ticker];
+      _pendingNse.add(ticker);
+
+      const cleanN = s => String(s || '').replace(/\b(LTD\.?|LIMITED)\b/gi, '').replace(/\./g, '').replace(/\s+/g, ' ').trim();
+
+      // Source 1: NSE API
+      try {
+        const nseUrl = `https://www.nseindia.com/api/quote-equity?symbol=${encodeURIComponent(ticker)}`;
+        const text = await window._smartFetch(nseUrl);
+        const data = JSON.parse(text);
+        let name = data?.info?.companyName;
+        if (name) {
+          name = cleanN(name);
+          cache[ticker] = name;
+          setNseCache(cache);
+          _pendingNse.delete(ticker);
+          return name;
+        }
+      } catch(e) {}
+
+      // Source 2: Yahoo Finance Search (fallback)
+      try {
+        const yfUrl = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(ticker + '.NS')}`;
+        const text = await window._smartFetch(yfUrl);
+        const data = JSON.parse(text);
+        const res = data?.quotes?.find(q => String(q.symbol).startsWith(ticker + '.'));
+        let name = res?.longName || res?.shortName;
+        if (name) {
+          name = cleanN(name);
+          cache[ticker] = name;
+          setNseCache(cache);
+          _pendingNse.delete(ticker);
+          return name;
+        }
+      } catch(e) {}
+
+      _pendingNse.delete(ticker);
+      return null;
+    }
+    window.fetchNseName = fetchNseName;
+    window.getNseCache = getNseCache;
 
     const METRIC_COLORS = {
       'EPS Rank': [{ min: 80, color: 'green' }, { min: 70, color: 'blue' }, { min: 55, color: 'purple' }, { min: 40, color: 'orange' }, { min: 0, color: 'red' }],
@@ -6268,7 +6350,27 @@
     let selectedCardTicker = null;
     function buildCard(r, idx) {
       const score = r._score, si = SI[score];
-      const nameHtml = r['Link'] ? `<a href="${r['Link']}" target="_blank" rel="noopener">${r._coName}</a>` : r._coName;
+      
+      // Tiered Name Resolution
+      const cache = getNseCache();
+      const officialName = (window.tickerToName && window.tickerToName[r._ticker]) || cache[r._ticker];
+      const displayName = officialName || r._coName;
+      const nameHtml = r['Link'] ? `<a href="${r['Link']}" target="_blank" rel="noopener">${displayName}</a>` : displayName;
+
+      // Trigger fetch if name is missing from static map and cache
+      if (r._ticker && !officialName) {
+        setTimeout(() => {
+          fetchNseName(r._ticker).then(name => {
+            if (name) {
+              const el = document.getElementById(`card-name-${r._ticker}`);
+              if (el) {
+                el.innerHTML = r['Link'] ? `<a href="${r['Link']}" target="_blank" rel="noopener">${name}</a>` : name;
+                el.title = name;
+              }
+            }
+          });
+        }, 200);
+      }
 
       // SuperStar badge
       const ssEntries = (window.superStarMap && window.superStarMap[String(r._ticker).toUpperCase()]) || [];
@@ -6355,7 +6457,7 @@
         <div class="co-stack">
           <div class="co-name-row">
             <div class="final-dot" style="background:${si.dot};box-shadow:0 0 8px ${si.dot}80;" title="${si.label} (${si.desc})"></div>
-            <div class="co-name" title="${escHtml(r._coName)}">${nameHtml}</div>
+            <div id="card-name-${r._ticker}" class="co-name" title="${escHtml(displayName)}">${nameHtml}</div>
           </div>
           <div class="co-sub">
             <div class="co-sub-left">
@@ -7345,6 +7447,7 @@
           const n = String(row['Name'] || row['name'] || '').trim();
           if (t && n) tickerToName[t] = n;
         });
+        window.tickerToName = tickerToName;
 
         allNewsData = parseNewsCSV(newsT).sort((a, b) => b.timestamp - a.timestamp);
         // Pre-compute search tokens once — avoids repeated tokenize() in every filter call
@@ -10499,20 +10602,7 @@
 
       /* ── Fetch with proxy fallback ── */
       async function urFetch(url) {
-        const proxies = [u => u, u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u), u => 'https://corsproxy.io/?' + encodeURIComponent(u)];
-        for (const px of proxies) {
-          try {
-            const ctrl = new AbortController();
-            const tid = setTimeout(() => ctrl.abort(), 10000);
-            const resp = await fetch(px(url), { signal: ctrl.signal });
-            clearTimeout(tid);
-            if (!resp.ok) continue;
-            const text = await resp.text();
-            const t = text.trim();
-            if (t.length > 0 && !t.toLowerCase().startsWith('<!') && !t.toLowerCase().startsWith('<html')) return text;
-          } catch (_) { }
-        }
-        throw new Error('All proxies failed');
+        return window._smartFetch(url); // Use global smartFetch
       }
 
       /* ── CSV parser ── */
@@ -10572,15 +10662,35 @@
         });
 
         let html = '';
+        const nseCache = getNseCache();
+        const cleanName = s => String(s || '').replace(/\b(LTD\.?|LIMITED)\b/gi, '').replace(/\./g, '').replace(/\s+/g, ' ').trim();
         byDate.forEach(group => {
           const rowsHtml = group.rows.map(r => {
+            const tkUp = String(r.ticker || '').toUpperCase();
             const label = r.ticker || (r.company ? r.company.slice(0, 8).toUpperCase() : '—');
             const tickerEl = r.link
               ? `<a class="ur-ticker-link" href="${escH(r.link)}" target="_blank" rel="noopener">${escH(label)}</a>`
               : `<span class="ur-ticker-no-link">${escH(label)}</span>`;
-            return `<div class="ur-company-row">${tickerEl}<span class="ur-company-name" title="${escH(r.company)}">${escH(r.company || '—')}</span></div>`;
+
+            // Tiered Name Resolution: static map (uppercase) → NSE cache → CSV company → dash
+            const rawName = (window.tickerToName && window.tickerToName[tkUp]) || nseCache[tkUp] || nseCache[r.ticker] || r.company || '—';
+            const name = cleanName(rawName) || rawName;
+
+            // If not in static map nor cache, trigger async fetch (best-effort from browser)
+            if (tkUp && !((window.tickerToName && window.tickerToName[tkUp]) || nseCache[tkUp])) {
+              setTimeout(() => {
+                fetchNseName(tkUp).then(fetched => {
+                  if (fetched) {
+                    const el = document.getElementById(`ur-name-${tkUp}`);
+                    if (el) { el.textContent = fetched; el.title = fetched; }
+                  }
+                });
+              }, 50);
+            }
+
+            return `<div class="ur-company-row">${tickerEl}<span id="ur-name-${tkUp}" class="ur-company-name" title="${escH(name)}">${escH(name)}</span></div>`;
           }).join('');
-          html += `<div class="ur-date-group"><div class="ur-date-header">📅 ${fmtDateHdr(group.dateObj)}</div>${rowsHtml}</div>`;
+          html += `<div class="ur-date-group"><div class="ur-date-header"><span>📅</span> ${fmtDateHdr(group.dateObj)}</div>${rowsHtml}</div>`;
         });
 
         body.insertAdjacentHTML('beforeend', html);
