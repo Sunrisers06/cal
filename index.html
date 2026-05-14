@@ -4095,8 +4095,15 @@
     }
 
     @keyframes urScaleIn {
-      from { opacity: 0; transform: scale(0.95) translateY(10px); }
-      to { opacity: 1; transform: scale(1) translateY(0); }
+      from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
     }
 
     #ur-modal-header {
@@ -4167,8 +4174,14 @@
       scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
     }
 
-    #ur-modal-body::-webkit-scrollbar { width: 5px; }
-    #ur-modal-body::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+    #ur-modal-body::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    #ur-modal-body::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
 
     #ur-modal-loading {
       padding: 60px 20px;
@@ -4200,39 +4213,31 @@
 
     .ur-company-row {
       display: grid;
-      grid-template-columns: 85px 1fr;
+      grid-template-columns: 100px 1fr;
       align-items: center;
       gap: 15px;
-      padding: 8px 20px;
-      transition: all 0.2s ease;
-      position: relative;
-    }
-
-    .ur-company-row::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 20px;
-      right: 20px;
-      height: 1px;
-      background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+      padding: 10px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      transition: background 0.2s;
     }
 
     .ur-company-row:hover {
       background: rgba(255, 255, 255, 0.03);
-      padding-left: 24px;
     }
 
-    .ur-company-row:last-child::after { display: none; }
+
+    .ur-ticker-cell {
+      min-width: 0;
+    }
 
     .ur-ticker-link, .ur-ticker-no-link {
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 800;
       padding: 3px 0;
       border-radius: 6px;
       text-align: center;
       width: 100%;
-      display: inline-block;
+      display: block;
       letter-spacing: 0.02em;
       text-decoration: none;
       transition: all 0.2s;
@@ -4240,15 +4245,13 @@
 
     .ur-ticker-link {
       color: #3b82f6;
-      background: rgba(59, 130, 246, 0.12);
-      border: 1px solid rgba(59, 130, 246, 0.25);
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.2);
     }
 
     .ur-ticker-link:hover {
       background: #3b82f6;
       color: #fff;
-      box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
-      transform: translateY(-1px);
     }
 
     .ur-ticker-no-link {
@@ -4258,12 +4261,32 @@
     }
 
     .ur-company-name {
-      font-size: 13px;
-      font-weight: 500;
-      color: rgba(255, 255, 255, 0.85);
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.9);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      letter-spacing: -0.01em;
+    }
+
+    .ur-index-separator {
+      font-size: 9px;
+      font-weight: 800;
+      color: rgba(255, 255, 255, 0.2);
+      padding: 16px 20px 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .ur-index-separator::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0%, transparent 100%);
     }
 
     #ur-load-more-wrap {
@@ -6111,11 +6134,11 @@
     ══════════════════════════════════════════════════════ */
     const smartFetch = (...args) => window._smartFetch(...args);
     const URLS = window._URLS;
- 
+
     /* ── Global NSE Name Fetching & Caching ── */
     const NSE_CACHE_KEY = 'global_nse_names';
     const _pendingNse = new Set();
-    function getNseCache() { try { return JSON.parse(localStorage.getItem(NSE_CACHE_KEY)) || {}; } catch(e) { return {}; } }
+    function getNseCache() { try { return JSON.parse(localStorage.getItem(NSE_CACHE_KEY)) || {}; } catch (e) { return {}; } }
     function setNseCache(cache) { localStorage.setItem(NSE_CACHE_KEY, JSON.stringify(cache)); }
 
     async function fetchNseName(ticker) {
@@ -6139,7 +6162,7 @@
           _pendingNse.delete(ticker);
           return name;
         }
-      } catch(e) {}
+      } catch (e) { }
 
       // Source 2: Yahoo Finance Search (fallback)
       try {
@@ -6155,7 +6178,7 @@
           _pendingNse.delete(ticker);
           return name;
         }
-      } catch(e) {}
+      } catch (e) { }
 
       _pendingNse.delete(ticker);
       return null;
@@ -6350,7 +6373,7 @@
     let selectedCardTicker = null;
     function buildCard(r, idx) {
       const score = r._score, si = SI[score];
-      
+
       // Tiered Name Resolution
       const cache = getNseCache();
       const officialName = (window.tickerToName && window.tickerToName[r._ticker]) || cache[r._ticker];
@@ -7517,6 +7540,11 @@
         document.getElementById('last-upd').textContent = 'Updated: ' + new Date(updTs).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
         document.getElementById('loading').style.display = 'none';
         document.getElementById('main').style.display = 'block';
+
+        // Preload Upcoming Results in the background
+        if (typeof window._urPreload === 'function') {
+          setTimeout(window._urPreload, 1500);
+        }
 
         // Preload Deal Block in the background so it's instant when clicked
         if (typeof window._dealBlockInit === 'function') {
@@ -10665,18 +10693,42 @@
         const nseCache = getNseCache();
         const cleanName = s => String(s || '').replace(/\b(LTD\.?|LIMITED)\b/gi, '').replace(/\./g, '').replace(/\s+/g, ' ').trim();
         byDate.forEach(group => {
-          const rowsHtml = group.rows.map(r => {
+          const getPrio = (tk) => {
+            const t = String(tk || "").toUpperCase();
+            const m = window.indexDataMap || {};
+            if (m.Nifty_100 && m.Nifty_100.has(t)) return 1;
+            if (m.Nifty_MC && m.Nifty_MC.has(t)) return 2;
+            if (m.Nifty_SC && m.Nifty_SC.has(t)) return 3;
+            if (m.Nifty_MIC && m.Nifty_MIC.has(t)) return 4;
+            return 5;
+          };
+
+          group.rows.sort((a, b) => {
+            const pa = getPrio(a.ticker), pb = getPrio(b.ticker);
+            if (pa !== pb) return pa - pb;
+            return String(a.ticker).localeCompare(String(b.ticker));
+          });
+
+          let rowsHtml = '';
+          let lastPrio = -1;
+          const prioNames = { 1: 'Nifty 100', 2: 'Midcap', 3: 'Smallcap', 4: 'Microcap', 5: 'Others' };
+
+          group.rows.forEach(r => {
+            const currentPrio = getPrio(r.ticker);
+            if (currentPrio !== lastPrio) {
+              rowsHtml += `<div class="ur-index-separator">${prioNames[currentPrio]}</div>`;
+              lastPrio = currentPrio;
+            }
+
             const tkUp = String(r.ticker || '').toUpperCase();
             const label = r.ticker || (r.company ? r.company.slice(0, 8).toUpperCase() : '—');
             const tickerEl = r.link
               ? `<a class="ur-ticker-link" href="${escH(r.link)}" target="_blank" rel="noopener">${escH(label)}</a>`
               : `<span class="ur-ticker-no-link">${escH(label)}</span>`;
 
-            // Tiered Name Resolution: static map (uppercase) → NSE cache → CSV company → dash
             const rawName = (window.tickerToName && window.tickerToName[tkUp]) || nseCache[tkUp] || nseCache[r.ticker] || r.company || '—';
             const name = cleanName(rawName) || rawName;
 
-            // If not in static map nor cache, trigger async fetch (best-effort from browser)
             if (tkUp && !((window.tickerToName && window.tickerToName[tkUp]) || nseCache[tkUp])) {
               setTimeout(() => {
                 fetchNseName(tkUp).then(fetched => {
@@ -10687,9 +10739,12 @@
                 });
               }, 50);
             }
-
-            return `<div class="ur-company-row">${tickerEl}<span id="ur-name-${tkUp}" class="ur-company-name" title="${escH(name)}">${escH(name)}</span></div>`;
-          }).join('');
+            rowsHtml += `
+              <div class="ur-company-row">
+                <div class="ur-ticker-cell">${tickerEl}</div>
+                <div id="ur-name-${tkUp}" class="ur-company-name" title="${escH(name)}">${escH(name)}</div>
+              </div>`;
+          });
           html += `<div class="ur-date-group"><div class="ur-date-header"><span>📅</span> ${fmtDateHdr(group.dateObj)}</div>${rowsHtml}</div>`;
         });
 
@@ -10720,12 +10775,12 @@
       }
 
       /* ── Load data (lazy, cached via IDB) ── */
-      async function ensureData() {
+      async function ensureData(silent) {
         if (_urData) return true;
         if (_urLoading) return false;
         _urLoading = true;
         const body = document.getElementById('ur-modal-body');
-        if (body) body.innerHTML = '<div id="ur-modal-loading">⏳ Loading upcoming results…</div>';
+        if (body && !silent) body.innerHTML = '<div id="ur-modal-loading">⏳ Loading upcoming results…</div>';
         try {
           // Try IDB cache first
           let text = null;
@@ -10761,10 +10816,11 @@
           return true;
         } catch (e) {
           _urLoading = false;
-          if (body) body.innerHTML = '<div id="ur-modal-loading" style="color:var(--pop-red);">⚠ Failed to load data. Please refresh and try again.</div>';
+          if (body && !silent) body.innerHTML = '<div id="ur-modal-loading" style="color:var(--pop-red);">⚠ Failed to load data. Please refresh and try again.</div>';
           return false;
         }
       }
+      window._urPreload = () => ensureData(true);
 
       /* ── Public: open modal ── */
       window.openUpcomingResults = async function () {
