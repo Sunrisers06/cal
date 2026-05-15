@@ -2501,6 +2501,61 @@
       max-width: 100%;
     }
 
+    /* Favorite toggle button on card - hidden by default, visible on click */
+    .fav-toggle-btn {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text3);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 4px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      display: none;
+      /* Hidden by default */
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .stock-card.news-selected .fav-toggle-btn {
+      display: flex;
+      /* Show only when card is clicked/selected */
+    }
+
+    .fav-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+      transform: translateY(-1px);
+    }
+
+    .fav-toggle-btn.is-fav {
+      background: rgba(234, 179, 8, 0.15);
+      border-color: rgba(234, 179, 8, 0.4);
+      color: #fbbf24;
+      box-shadow: 0 0 15px rgba(234, 179, 8, 0.15);
+    }
+
+    .fav-toggle-btn.is-hold {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: rgba(59, 130, 246, 0.4);
+      color: #60a5fa;
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
+    }
+
+    .fav-toggle-btn .fav-icon {
+      font-size: 12px;
+      transition: transform 0.2s;
+    }
+
+    .fav-toggle-btn.is-fav .fav-icon,
+    .fav-toggle-btn.is-hold .fav-icon {
+      transform: scale(1.2);
+    }
+
     .mc-val.red {
       color: var(--pop-red);
     }
@@ -4186,135 +4241,148 @@
     #ur-modal-loading {
       padding: 60px 20px;
       text-align: center;
-      color: rgba(255, 255, 255, 0.5);
-      font-size: 13px;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 14px;
+      font-weight: 500;
+      animation: pulse 2s infinite;
     }
 
     .ur-date-group {
-      margin-bottom: 15px;
+      margin-bottom: 24px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
     }
 
     .ur-date-header {
-      font-size: 11px;
+      font-size: 13px;
       font-weight: 700;
       color: #10b981;
-      background: rgba(16, 185, 129, 0.05);
-      padding: 8px 20px;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      position: sticky;
-      top: -10px;
-      z-index: 10;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(16, 185, 129, 0.1);
-      margin-bottom: 4px;
+      background: rgba(16, 185, 129, 0.08);
+      padding: 14px 20px;
+      letter-spacing: 0.02em;
+      border-bottom: 1px solid rgba(16, 185, 129, 0.15);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .ur-company-row {
-      display: grid;
-      grid-template-columns: 100px 1fr;
+      display: flex;
       align-items: center;
-      gap: 15px;
-      padding: 10px 20px;
+      gap: 16px;
+      padding: 14px 20px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-      transition: background 0.2s;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .ur-company-row:last-child {
+      border-bottom: none;
     }
 
     .ur-company-row:hover {
-      background: rgba(255, 255, 255, 0.03);
+      background: rgba(255, 255, 255, 0.05);
+      padding-left: 24px;
+      padding-right: 16px;
     }
-
 
     .ur-ticker-cell {
-      min-width: 0;
+      flex-shrink: 0;
+      width: 90px;
     }
 
-    .ur-ticker-link, .ur-ticker-no-link {
+    .ur-ticker-link,
+    .ur-ticker-no-link {
       font-size: 11px;
       font-weight: 800;
-      padding: 3px 0;
+      padding: 4px 0;
       border-radius: 6px;
       text-align: center;
       width: 100%;
       display: block;
-      letter-spacing: 0.02em;
+      letter-spacing: 0.03em;
       text-decoration: none;
       transition: all 0.2s;
     }
 
     .ur-ticker-link {
-      color: #3b82f6;
+      color: #60a5fa;
       background: rgba(59, 130, 246, 0.1);
       border: 1px solid rgba(59, 130, 246, 0.2);
     }
 
     .ur-ticker-link:hover {
-      background: #3b82f6;
-      color: #fff;
+      background: rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+      border-color: rgba(59, 130, 246, 0.4);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
     }
 
     .ur-ticker-no-link {
-      color: rgba(255, 255, 255, 0.5);
+      color: rgba(255, 255, 255, 0.6);
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .ur-company-name {
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 600;
-      color: rgba(255, 255, 255, 0.9);
+      color: rgba(255, 255, 255, 0.95);
+      font-family: 'Lexend', sans-serif;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      letter-spacing: -0.01em;
+      flex-grow: 1;
     }
 
     .ur-index-separator {
-      font-size: 9px;
+      font-size: 10px;
       font-weight: 800;
-      color: rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.3);
       padding: 16px 20px 8px;
       text-transform: uppercase;
-      letter-spacing: 0.2em;
+      letter-spacing: 0.15em;
       display: flex;
       align-items: center;
       gap: 12px;
+      background: transparent;
     }
 
     .ur-index-separator::after {
       content: '';
       flex: 1;
       height: 1px;
-      background: linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0%, transparent 100%);
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
     }
 
     #ur-load-more-wrap {
       padding: 16px 20px;
-      background: rgba(0, 0, 0, 0.2);
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      background: transparent;
       display: none;
       justify-content: center;
     }
 
     .ur-load-more-btn {
       width: 100%;
-      padding: 10px 0;
-      border-radius: 10px;
+      padding: 12px 0;
+      border-radius: 12px;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.1);
       color: #fff;
       font-family: 'Lexend', sans-serif;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.25s;
     }
 
     .ur-load-more-btn:hover:not(:disabled) {
       background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.2);
-      transform: translateY(-1px);
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
     }
 
     .ur-load-more-btn:disabled {
@@ -6476,6 +6544,14 @@
             onmouseleave="scheduleCandleClose()"
             ontouchstart="event.stopPropagation(); openCandleChart('${r._ticker.replace(/'/g, "\\'")}','${escHtml(r._coName).replace(/'/g, "\\'")}',event)"
             title="">📈 Chart</span>` : ''}
+          <span class="fav-toggle-btn fav-toggle-${r._ticker}${window._fhTickers && window._fhTickers.F.has(String(r._ticker).toUpperCase()) ? ' is-fav' : ''}" 
+            onclick="window.toggleRemoteFH('${r._ticker}', 'F', event)" title="Toggle Favorite">
+            <span class="fav-icon">★</span> Fav
+          </span>
+          <span class="fav-toggle-btn hold-toggle-${r._ticker}${window._fhTickers && window._fhTickers.H.has(String(r._ticker).toUpperCase()) ? ' is-hold' : ''}" 
+            onclick="window.toggleRemoteFH('${r._ticker}', 'H', event)" title="Toggle Holding">
+            <span class="fav-icon">💼</span> Hold
+          </span>
         </div>
         <div class="co-stack">
           <div class="co-name-row">
@@ -7251,7 +7327,15 @@
       ms.forEach(r => { const t = getTck(r); if (t) mm[t] = r; });
       tl.forEach(r => { const t = getTck(r); if (t) tm[t] = r; });
 
-      return res.filter(r => getTck(r)).map(r => {
+      const seenTickers = new Set();
+      const uniqueRes = res.filter(r => {
+        const t = getTck(r);
+        if (!t || seenTickers.has(t)) return false;
+        seenTickers.add(t);
+        return true;
+      });
+
+      return uniqueRes.map(r => {
         try {
           const t = getTck(r);
           const msRow = mm[t] || {};
@@ -7541,6 +7625,9 @@
         document.getElementById('loading').style.display = 'none';
         document.getElementById('main').style.display = 'block';
 
+        // Load F/H tickers early so buttons are ready
+        if (typeof window.loadFHTickers === 'function') window.loadFHTickers();
+
         // Preload Upcoming Results in the background
         if (typeof window._urPreload === 'function') {
           setTimeout(window._urPreload, 1500);
@@ -7829,7 +7916,7 @@
       // Also clear F/H filter
       if (window._fhState && window._fhState.active) {
         window._fhState.active = null;
-        _updateFHBtnState();
+        if (typeof window._updateFHBtnState === 'function') window._updateFHBtnState();
       }
     };
   </script>
@@ -7849,35 +7936,115 @@
 
       const FH_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRq_s8CqNXdi3zYnTDkP8YvtZGq79ZmRKwb5jdbplyjUx1GS_KcCwJf7qeV0dVx_K-Xmpxl30QcVFSH/pub?gid=1355107746&single=true&output=csv';
 
+      const SYNC_URL = 'https://script.google.com/macros/s/AKfycbzGitT82ELDNGnkLd55q5d2YCHoDwqDFmgKLpdbD7PGss7AjkTrQ-IgDNcYh9YV5VrqXw/exec';
+
       window._fhState = { active: null }; // null | 'F' | 'H'
       window._fhTickers = { F: new Set(), H: new Set() };
+      window._sheetFavs = new Set(); // Static favs from CSV
+      window._remoteFavs = new Set(); // Dynamic favs from Sync URL
+      window._remoteSyncSuccess = false; // Source of truth flag
       window._fhLoaded = false;
       window._fhLoading = false;
 
       async function loadFHTickers() {
         if (window._fhLoaded || window._fhLoading) return;
         window._fhLoading = true;
+        console.log('[SundarX] Syncing F/H tickers...');
         try {
+          // 1. Fetch static CSV (Holdings + Default Favs)
           const text = await window._smartFetch(FH_CSV_URL);
           const lines = text.replace(/\r/g, '').trim().split('\n');
-          // Row 0 is header: Favorite, Holding
           const favSet = new Set(), holdSet = new Set();
           for (let i = 1; i < lines.length; i++) {
-            const cols = lines[i].split(',');
-            const fav = String(cols[0] || '').trim().toUpperCase();
-            const hold = String(cols[1] || '').trim().toUpperCase();
-            if (fav) favSet.add(fav);
-            if (hold) holdSet.add(hold);
+            // Split by comma but handle potential quotes
+            const cols = lines[i].split(',').map(c => c.replace(/^"|"$/g, '').trim().toUpperCase());
+            const fav = cols[0] || '';
+            const hold = cols[1] || '';
+            if (fav && fav !== 'FAVORITES') favSet.add(fav);
+            if (hold && hold !== 'HOLDINGS') holdSet.add(hold);
           }
-          window._fhTickers.F = favSet;
-          window._fhTickers.H = holdSet;
+          window._sheetFavs = favSet;
+          window._sheetHolds = holdSet;
+          console.log(`[SundarX] CSV loaded: ${favSet.size} Favs, ${holdSet.size} Holds`);
+
+          // 2. Fetch dynamic Remote Favs/Holds (Cross-device)
+          try {
+            const resp = await fetch(SYNC_URL);
+            const remoteData = await resp.json();
+            console.log('[SundarX] Remote sync data received:', remoteData);
+            if (remoteData.F) window._remoteFavs = new Set(remoteData.F.map(t => String(t).toUpperCase()));
+            if (remoteData.H) window._remoteHolds = new Set(remoteData.H.map(t => String(t).toUpperCase()));
+            window._remoteSyncSuccess = true;
+          } catch (re) {
+            console.warn('[SundarX] Remote sync fetch failed:', re.message);
+          }
+
+          recomputeFHTickers();
           window._fhLoaded = true;
-          console.log('[SundarX] F/H tickers loaded. Favorites:', favSet.size, 'Holdings:', holdSet.size);
+          console.log(`[SundarX] Final Sync Ready: ${window._fhTickers.F.size} Favs, ${window._fhTickers.H.size} Holds`);
         } catch (e) {
-          console.warn('[SundarX] Could not load F/H tickers:', e.message);
+          console.error('[SundarX] F/H load critical failure:', e.message);
+          recomputeFHTickers();
         }
         window._fhLoading = false;
       }
+      window.loadFHTickers = loadFHTickers;
+
+      window.recomputeFHTickers = function () {
+        if (window._remoteSyncSuccess) {
+          // If remote sync succeeded, it is the absolute source of truth (allows removals)
+          window._fhTickers.F = new Set(window._remoteFavs);
+          window._fhTickers.H = new Set(window._remoteHolds);
+        } else {
+          // Fallback to static CSV if dynamic sync failed or hasn't completed
+          window._fhTickers.F = new Set(window._sheetFavs);
+          window._fhTickers.H = new Set(window._sheetHolds);
+        }
+      };
+
+      window._syncLocks = new Set();
+      window.toggleRemoteFH = async function (ticker, type, event) {
+        if (event) event.stopPropagation();
+        const tk = String(ticker || '').toUpperCase();
+        if (!tk) return;
+
+        const lockKey = `${tk}-${type}`;
+        if (window._syncLocks.has(lockKey)) return;
+        window._syncLocks.add(lockKey);
+
+        const set = (type === 'H') ? window._fhTickers.H : window._fhTickers.F;
+        const isSet = set.has(tk);
+        const action = isSet ? 'remove' : 'add';
+        const cls = (type === 'H') ? 'is-hold' : 'is-fav';
+        const selector = (type === 'H') ? `.hold-toggle-${tk}` : `.fav-toggle-${tk}`;
+
+        // Optimistic UI update
+        const btns = document.querySelectorAll(selector);
+        btns.forEach(b => b.classList.toggle(cls, !isSet));
+
+        try {
+          const resp = await fetch(`${SYNC_URL}?action=${action}&ticker=${tk}&type=${type}`);
+          const result = await resp.json();
+          // Result is { F: [...], H: [...] }
+          if (result.F) window._remoteFavs = new Set(result.F.map(t => String(t).toUpperCase()));
+          if (result.H) window._remoteHolds = new Set(result.H.map(t => String(t).toUpperCase()));
+          window._remoteSyncSuccess = true;
+
+          recomputeFHTickers();
+
+          // Final UI sync
+          const finalSet = (type === 'H') ? window._fhTickers.H : window._fhTickers.F;
+          const finalState = finalSet.has(tk);
+          btns.forEach(b => b.classList.toggle(cls, finalState));
+
+          if (window._fhState.active === type) doFilter();
+        } catch (e) {
+          console.error('[SundarX] Sync failed:', e.message);
+          btns.forEach(b => b.classList.toggle(cls, isSet));
+        } finally {
+          window._syncLocks.delete(lockKey);
+        }
+      };
 
       function _updateFHBtnState() {
         const favBtn = document.getElementById('fav-filter-btn');
@@ -7889,10 +8056,7 @@
       window._updateFHBtnState = _updateFHBtnState;
 
       window.toggleFHFilter = async function (type) {
-        // Load tickers on first use
         if (!window._fhLoaded) await loadFHTickers();
-
-        // Toggle: if already active → deactivate, else set to this type
         window._fhState.active = (window._fhState.active === type) ? null : type;
         _updateFHBtnState();
         doFilter();
