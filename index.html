@@ -5902,22 +5902,29 @@
       document.body.classList.remove('news-open-mobile');
       if (newsBtn) newsBtn.classList.remove('active');
 
-      // Force a layout recalculation immediately so the browser knows the true document height again
-      void document.body.offsetHeight;
-      window.scrollTo(0, mainScrollPos);
-
-      // Give DOM a frame to ensure complex cards (content-visibility) are fully restored
-      setTimeout(() => {
+      function restoreScroll() {
+        // Most robust method: scroll directly to the DOM element they clicked
+        if (typeof selectedCardTicker !== 'undefined' && selectedCardTicker) {
+          const selCard = document.querySelector(`.stock-card[data-ticker="${selectedCardTicker}"]`);
+          if (selCard) {
+            selCard.scrollIntoView({ behavior: 'instant', block: 'center' });
+            return;
+          }
+        }
+        // Fallback to pixel position
         window.scrollTo(0, mainScrollPos);
-        // Fallback for older WebKit
         document.documentElement.scrollTop = mainScrollPos;
         document.body.scrollTop = mainScrollPos;
-      }, 10);
-      
-      // Extra safety net for slower mobile GPUs
-      setTimeout(() => {
-        window.scrollTo(0, mainScrollPos);
-      }, 50);
+      }
+
+      // Force a layout recalculation immediately
+      void document.body.offsetHeight;
+      restoreScroll();
+
+      // Give DOM frames to ensure complex cards (content-visibility) are fully restored
+      setTimeout(restoreScroll, 10);
+      setTimeout(restoreScroll, 50);
+      setTimeout(restoreScroll, 150); // Final safety net for slow GPUs
     }
 
     /* ══════════════════════════════════════════════════════
@@ -7044,9 +7051,13 @@
       filterBothNews(newsQuery);
 
       if (window.innerWidth <= 1024) {
-        document.body.classList.add('news-open-mobile');
-        const nb = document.getElementById('nav-news-btn');
-        if (nb) nb.classList.add('active');
+        if (!document.body.classList.contains('news-open-mobile')) {
+          // Properly capture the scroll position before hiding the main wrapper
+          mainScrollPos = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+          document.body.classList.add('news-open-mobile');
+          const nb = document.getElementById('nav-news-btn');
+          if (nb) nb.classList.add('active');
+        }
         window.scrollTo(0, 0);
       }
     }
