@@ -5885,8 +5885,8 @@
       if (document.body.classList.contains('news-open-mobile')) {
         closeMobileNews();
       } else {
-        // Save scroll position
-        mainScrollPos = window.scrollY || document.documentElement.scrollTop;
+        // Save scroll position safely across all mobile browsers
+        mainScrollPos = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
 
         // Open news
         document.body.classList.add('news-open-mobile');
@@ -5902,10 +5902,22 @@
       document.body.classList.remove('news-open-mobile');
       if (newsBtn) newsBtn.classList.remove('active');
 
-      // Give DOM a frame to un-hide the main wrapper before restoring scroll position
+      // Force a layout recalculation immediately so the browser knows the true document height again
+      void document.body.offsetHeight;
+      window.scrollTo(0, mainScrollPos);
+
+      // Give DOM a frame to ensure complex cards (content-visibility) are fully restored
       setTimeout(() => {
         window.scrollTo(0, mainScrollPos);
-      }, 0);
+        // Fallback for older WebKit
+        document.documentElement.scrollTop = mainScrollPos;
+        document.body.scrollTop = mainScrollPos;
+      }, 10);
+      
+      // Extra safety net for slower mobile GPUs
+      setTimeout(() => {
+        window.scrollTo(0, mainScrollPos);
+      }, 50);
     }
 
     /* ══════════════════════════════════════════════════════
