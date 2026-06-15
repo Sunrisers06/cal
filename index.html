@@ -2395,6 +2395,103 @@
             gap: 0;
         }
 
+        /* ══════════════════════════════
+   IN-CARD CANDLESTICK CHART (Chart view mode)
+══════════════════════════════ */
+        .card-chart-wrap {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 5px;
+            background: var(--bg);
+        }
+
+        .card-chart-inner {
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .card-chart-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 8px;
+            background: #f8f9fa;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+            gap: 6px;
+        }
+
+        .card-chart-title {
+            font-size: 9.5px;
+            font-weight: 700;
+            color: #6b7280;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            font-family: 'Lexend', sans-serif;
+            white-space: nowrap;
+        }
+
+        .card-chart-periods {
+            display: flex;
+            gap: 3px;
+            flex-shrink: 0;
+        }
+
+        .ccp-pill {
+            font-size: 8.5px;
+            font-family: 'Lexend', sans-serif;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            background: rgba(0, 0, 0, 0.05);
+            color: #6b7280;
+            transition: all 0.15s;
+            letter-spacing: 0.04em;
+            user-select: none;
+        }
+
+        .ccp-pill:hover {
+            background: rgba(30, 110, 255, 0.1);
+            border-color: rgba(30, 110, 255, 0.35);
+            color: #1e6eff;
+        }
+
+        .ccp-pill.active {
+            background: #1e6eff;
+            border-color: #1e6eff;
+            color: #fff;
+            box-shadow: 0 0 6px rgba(30, 110, 255, 0.35);
+        }
+
+        .card-chart-body {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+            min-height: 0;
+        }
+
+        .card-chart-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 7px;
+            height: 150px;
+            color: #9ca3af;
+            font-size: 11px;
+            font-family: 'Lexend', sans-serif;
+        }
+
+        .card-chart-canvas-price,
+        .card-chart-canvas-vol {
+            display: none;
+            width: 100%;
+        }
+
         .metric-cell {
             padding: 6px 8px 9px;
             background: rgba(255, 255, 255, 0.025);
@@ -5809,6 +5906,10 @@
 
             <div class="filter-bar" id="filter-bar">
                 <span class="fl">Filter</span>
+                <select id="view-mode-filter" class="fi w110" onchange="setViewMode(this.value)" title="Switch company card view">
+                    <option value="latest" selected>Latest Result</option>
+                    <option value="chart">Chart</option>
+                </select>
                 <input type="number" id="min-mcap" class="fi w90" placeholder="Min MCap" oninput="onSearchInput()">
                 <select id="index-filter" class="fi w110" onchange="doFilter()">
                     <option value="all">All Indices</option>
@@ -6580,6 +6681,32 @@
             return `<div class="h-chart">${rows}</div>`;
         }
 
+        /* ── Card-level inline candlestick chart markup (used in "Chart" view mode) ──
+           Renders a self-contained chart block with its own 6M/1Y/2Y period
+           pills. Actual drawing happens lazily once the wrap scrolls into view
+           (see initCardCharts / drawCardChart below). ── */
+        function buildCardChartSection(r) {
+            const ticker = r._ticker;
+            return `
+    <div class="card-chart-wrap" data-ticker="${escHtml(ticker)}" data-period="6m">
+      <div class="card-chart-inner">
+        <div class="card-chart-head">
+          <span class="card-chart-title">Price Chart</span>
+          <div class="card-chart-periods">
+            <span class="ccp-pill active" data-period="6m" onclick="setCardChartPeriod(event,this,'6m')">6M</span>
+            <span class="ccp-pill" data-period="1y" onclick="setCardChartPeriod(event,this,'1y')">1Y</span>
+            <span class="ccp-pill" data-period="2y" onclick="setCardChartPeriod(event,this,'2y')">2Y</span>
+          </div>
+        </div>
+        <div class="card-chart-body">
+          <div class="card-chart-loading"><div class="csph-spinner"></div><span>Loading…</span></div>
+          <canvas class="card-chart-canvas-price" style="display:none;"></canvas>
+          <canvas class="card-chart-canvas-vol" style="display:none;"></canvas>
+        </div>
+      </div>
+    </div>`;
+        }
+
         let selectedCardTicker = null;
         function buildCard(r, idx) {
             const score = r._score, si = SI[score];
@@ -6632,6 +6759,12 @@
                 return `<div class="metric-cell"><div class="mc-top"><span class="mc-label">${m.l}</span><span class="ybadge ${yf.c}">${yf.t}</span></div><div class="mc-val ${valCls(m.c)}">${fmt(m.c)}</div>${bars}</div>`;
             }).join('');
             const selClass = selectedCardTicker === r._ticker ? ' news-selected' : '';
+
+            // ── Latest Result vs Chart view (toggle in filter bar) ──
+            const cardViewMode = (window._cardViewMode === 'chart') ? 'chart' : 'latest';
+            const resultSectionHtml = cardViewMode === 'chart'
+                ? buildCardChartSection(r)
+                : `<div class="metrics-full">${cells}</div>`;
 
             // Top mode extras
             const topMode = window._topState && window._topState.active;
@@ -6776,7 +6909,7 @@
         </div>
       </div>
     </div>
-    <div class="metrics-full">${cells}</div>
+    ${resultSectionHtml}
     ${returnMiniCards}
   </div>`;
         }
@@ -7394,6 +7527,8 @@
         window.serialKey = null;
         let currentFilteredData = [], currentRenderLimit = 100;
         let debTimer;
+        // 'latest' = Latest Result metrics (default) | 'chart' = inline candlestick chart
+        window._cardViewMode = 'latest';
 
         // ── Cached DOM refs for doFilter hot path (set once after data loads) ──
         let _domCache = null;
@@ -7619,6 +7754,7 @@
             currentRenderLimit += RENDER_CHUNK;
             document.getElementById('cards').insertAdjacentHTML('beforeend', currentFilteredData.slice(start, currentRenderLimit).map((r, i) => buildCard(r, i)).join(''));
             updatePaginationUI();
+            initCardCharts();
         }
         function renderCards() {
             const cardsEl = document.getElementById('cards');
@@ -7626,6 +7762,7 @@
             // Direct innerHTML is faster than DocumentFragment for large batch inserts
             cardsEl.innerHTML = html;
             updatePaginationUI();
+            initCardCharts();
         }
         function updatePaginationUI() {
             const n = currentFilteredData.length;
@@ -7641,6 +7778,88 @@
             activeFilter = f;
             doFilter();
         }
+
+        /* ══════════════════════════════════════════════════════
+           CARD VIEW MODE — "Latest Result" vs "Chart"
+           Toggled from the Filter bar. In "Chart" mode, each card's
+           Latest Result section is replaced with an inline candlestick
+           chart (6M / 1Y / 2Y), reusing the same OHLCV data + drawing
+           engine as the hover candlestick popup.
+        ══════════════════════════════════════════════════════ */
+        window.setViewMode = function (mode) {
+            mode = (mode === 'chart') ? 'chart' : 'latest';
+            if (window._cardViewMode === mode) return;
+            window._cardViewMode = mode;
+            const sel = document.getElementById('view-mode-filter');
+            if (sel && sel.value !== mode) sel.value = mode;
+            renderCards();
+        };
+
+        /* ── Switch the period (6M/1Y/2Y) for a single card's chart ── */
+        window.setCardChartPeriod = function (e, el, period) {
+            if (e) e.stopPropagation();
+            const wrap = el.closest('.card-chart-wrap');
+            if (!wrap || wrap.dataset.period === period) return;
+            wrap.dataset.period = period;
+            wrap.querySelectorAll('.ccp-pill').forEach(p => p.classList.toggle('active', p.dataset.period === period));
+            drawCardChart(wrap);
+        };
+
+        /* ── Draw (or redraw) the candlestick chart for one card ── */
+        function drawCardChart(wrap) {
+            const ticker = wrap.dataset.ticker;
+            const period = wrap.dataset.period || '6m';
+            const pCv = wrap.querySelector('.card-chart-canvas-price');
+            const vCv = wrap.querySelector('.card-chart-canvas-vol');
+            const loadEl = wrap.querySelector('.card-chart-loading');
+            const widthEl = wrap.querySelector('.card-chart-inner') || wrap;
+            if (!ticker || !pCv || !vCv || !loadEl) return;
+            loadEl.style.display = 'flex';
+            loadEl.innerHTML = '<div class="csph-spinner"></div><span>Loading…</span>';
+            pCv.style.display = 'none';
+            vCv.style.display = 'none';
+            if (typeof window._renderCardCandleChart === 'function') {
+                window._renderCardCandleChart(ticker, period, pCv, vCv, loadEl, widthEl);
+            }
+        }
+
+        /* ── Lazily draw charts for cards as they enter the viewport ── */
+        function initCardCharts() {
+            if (window._cardViewMode !== 'chart') return;
+            const wraps = document.querySelectorAll('.card-chart-wrap:not([data-drawn])');
+            if (!wraps.length) return;
+
+            if (!('IntersectionObserver' in window)) {
+                wraps.forEach(w => { w.dataset.drawn = '1'; drawCardChart(w); });
+                return;
+            }
+            if (!window._cardChartObserver) {
+                window._cardChartObserver = new IntersectionObserver((entries, obs) => {
+                    entries.forEach(entry => {
+                        if (!entry.isIntersecting) return;
+                        const w = entry.target;
+                        if (!w.dataset.drawn) {
+                            w.dataset.drawn = '1';
+                            drawCardChart(w);
+                        }
+                        obs.unobserve(w);
+                    });
+                }, { rootMargin: '300px 0px' });
+            }
+            wraps.forEach(w => window._cardChartObserver.observe(w));
+        }
+
+        /* ── Redraw already-visible charts on resize/orientation change (debounced) ── */
+        (function () {
+            let _t = null;
+            window.addEventListener('resize', function () {
+                if (window._cardViewMode !== 'chart') return;
+                clearTimeout(_t);
+                _t = setTimeout(function () {
+                    document.querySelectorAll('.card-chart-wrap[data-drawn]').forEach(drawCardChart);
+                }, 250);
+            });
+        })();
 
         function toggleFilters() {
             document.getElementById('filter-bar').classList.toggle('show');
@@ -8853,14 +9072,12 @@
                 pop.style.transform = 'none';
             }
 
-            /* ─── Draw chart — MarketSmith-style (matches screenshot) ─── */
-            function drawChart(ticker) {
+            /* ─── Draw chart — MarketSmith-style (matches screenshot) ───
+               Parameterized core: works for the hover popup AND for
+               inline per-card charts (any canvas pair + container). ─── */
+            function drawChartCore(ticker, period, pCv, vCv, loadEl, widthEl) {
                 const UC = ticker.toUpperCase();
                 const allRaw = _index ? (_index.get(UC) || []) : [];
-
-                const loadEl = document.getElementById('csph-loading');
-                const pCv = document.getElementById('csph-canvas-price');
-                const vCv = document.getElementById('csph-canvas-vol');
 
                 if (!allRaw.length) {
                     loadEl.innerHTML = '<span style="color:#f43f5e;font-size:11px;">No data for ' + ticker + '</span>';
@@ -8873,7 +9090,7 @@
                 const s10full = sma(closes, 10);
                 const s40full = sma(closes, 40);
 
-                const months = _currentPeriod === '2y' ? 24 : _currentPeriod === '1y' ? 12 : 6;
+                const months = period === '2y' ? 24 : period === '1y' ? 12 : 6;
                 const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - months);
                 const cutTs = cutoff.getTime();
                 // Find first index inside window
@@ -8888,7 +9105,7 @@
                 }));
 
                 if (!raw.length) {
-                    loadEl.innerHTML = '<span style="color:#f43f5e;font-size:11px;">No ' + _currentPeriod.toUpperCase() + ' data for ' + ticker + '</span>';
+                    loadEl.innerHTML = '<span style="color:#f43f5e;font-size:11px;">No ' + period.toUpperCase() + ' data for ' + ticker + '</span>';
                     loadEl.style.display = 'flex'; pCv.style.display = 'none'; vCv.style.display = 'none';
                     return;
                 }
@@ -8896,9 +9113,8 @@
                 loadEl.style.display = 'none'; pCv.style.display = 'block'; vCv.style.display = 'block';
 
                 const isMobile = window.innerWidth < 600;
-                // Full popup width; price chart uses 16:9-ish ratio, volume ~1/5 of price height
-                const popupEl = document.getElementById('csp-hover-popup');
-                const W = popupEl ? (popupEl.offsetWidth || (isMobile ? 300 : 380)) : (isMobile ? 300 : 380);
+                // Full container width; price chart uses 16:9-ish ratio, volume ~1/5 of price height
+                const W = widthEl ? (widthEl.offsetWidth || (isMobile ? 300 : 380)) : (isMobile ? 300 : 380);
                 const PH = Math.round(W * 0.62);   // ~8:5 ratio — taller, more chart real-estate
                 const VH = Math.round(W * 0.14);   // volume panel ~14% of width
                 const DPR = Math.min(window.devicePixelRatio || 1, 2);
@@ -9077,7 +9293,7 @@
                 vc.fillText(fmtV(maxV * 0.5), W - 2, VP.t + vH2 * 0.5);
 
                 // "PERIOD" badge bottom-right of volume panel
-                const badgeTxt = _currentPeriod.toUpperCase();
+                const badgeTxt = period.toUpperCase();
                 vc.font = 'bold 7px "Lexend",monospace';
                 const bw = vc.measureText(badgeTxt).width + 6;
                 const bx = W - bw - 2, by = VH - VP.b;
@@ -9088,6 +9304,35 @@
                 vc.fillStyle = '#000000'; vc.textAlign = 'center'; vc.textBaseline = 'middle';
                 vc.fillText(badgeTxt, bx + bw / 2, by + 5);
             }
+
+            /* ─── Popup wrapper: draws into the hover-popup canvases using the popup's current period ─── */
+            function drawChart(ticker) {
+                drawChartCore(
+                    ticker,
+                    _currentPeriod,
+                    document.getElementById('csph-canvas-price'),
+                    document.getElementById('csph-canvas-vol'),
+                    document.getElementById('csph-loading'),
+                    document.getElementById('csp-hover-popup')
+                );
+            }
+
+            /* ─── Public: render an inline candlestick chart into arbitrary canvases ───
+               Used by card-level "Chart Mode" view. Returns a Promise that resolves
+               once the chart data is ready and the chart has been drawn (or rejects
+               with an error if OHLCV data could not be loaded). ─── */
+            window._renderCardCandleChart = function (ticker, period, pCv, vCv, loadEl, widthEl) {
+                return ensureData()
+                    .then(() => drawChartCore(ticker, period || '6m', pCv, vCv, loadEl, widthEl))
+                    .catch(err => {
+                        if (loadEl) {
+                            loadEl.innerHTML = '<span style="color:#f43f5e;font-size:10px;">⚠ Unable to load chart</span>';
+                            loadEl.style.display = 'flex';
+                        }
+                        if (pCv) pCv.style.display = 'none';
+                        if (vCv) vCv.style.display = 'none';
+                    });
+            };
 
             /* ─── Public: open on hover ─── */
             window.openCandleChart = function (ticker, name, e) {
