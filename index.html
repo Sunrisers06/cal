@@ -6688,13 +6688,13 @@
         function buildCardChartSection(r) {
             const ticker = r._ticker;
             return `
-    <div class="card-chart-wrap" data-ticker="${escHtml(ticker)}" data-period="6m">
+    <div class="card-chart-wrap" data-ticker="${escHtml(ticker)}" data-period="1y">
       <div class="card-chart-inner">
         <div class="card-chart-head">
           <span class="card-chart-title">Price Chart</span>
           <div class="card-chart-periods">
-            <span class="ccp-pill active" data-period="6m" onclick="setCardChartPeriod(event,this,'6m')">6M</span>
-            <span class="ccp-pill" data-period="1y" onclick="setCardChartPeriod(event,this,'1y')">1Y</span>
+            <span class="ccp-pill" data-period="6m" onclick="setCardChartPeriod(event,this,'6m')">6M</span>
+            <span class="ccp-pill active" data-period="1y" onclick="setCardChartPeriod(event,this,'1y')">1Y</span>
             <span class="ccp-pill" data-period="2y" onclick="setCardChartPeriod(event,this,'2y')">2Y</span>
           </div>
         </div>
@@ -7808,7 +7808,7 @@
         /* ── Draw (or redraw) the candlestick chart for one card ── */
         function drawCardChart(wrap) {
             const ticker = wrap.dataset.ticker;
-            const period = wrap.dataset.period || '6m';
+            const period = wrap.dataset.period || '1y';
             const pCv = wrap.querySelector('.card-chart-canvas-price');
             const vCv = wrap.querySelector('.card-chart-canvas-vol');
             const loadEl = wrap.querySelector('.card-chart-loading');
@@ -8841,8 +8841,8 @@
                 <span id="csph-name">OBSC Perfection</span>
             </div>
             <div id="csph-period-pills">
-                <span class="csph-period-pill active" data-period="6m" onclick="setCandlePeriod('6m',this)">6M</span>
-                <span class="csph-period-pill" data-period="1y" onclick="setCandlePeriod('1y',this)">1Y</span>
+                <span class="csph-period-pill" data-period="6m" onclick="setCandlePeriod('6m',this)">6M</span>
+                <span class="csph-period-pill active" data-period="1y" onclick="setCandlePeriod('1y',this)">1Y</span>
                 <span class="csph-period-pill" data-period="2y" onclick="setCandlePeriod('2y',this)">2Y</span>
             </div>
             <button id="csph-close-btn" data-nodrag
@@ -8880,7 +8880,7 @@
             let _fetchP = null;   // in-flight Promise
             let _closeTimer = null;
             let _currentTick = null;
-            let _currentPeriod = '6m'; // '6m' | '1y'
+            let _currentPeriod = '1y'; // '6m' | '1y' | '2y'
             let _canvasCache = {};     // ticker → {priceImgData, volImgData, W, PH, VH} — instant redraw
 
             // Allow loadAll() to inject already-fetched OHLCV text → instant index, no re-fetch needed
@@ -9323,7 +9323,7 @@
                with an error if OHLCV data could not be loaded). ─── */
             window._renderCardCandleChart = function (ticker, period, pCv, vCv, loadEl, widthEl) {
                 return ensureData()
-                    .then(() => drawChartCore(ticker, period || '6m', pCv, vCv, loadEl, widthEl))
+                    .then(() => drawChartCore(ticker, period || '1y', pCv, vCv, loadEl, widthEl))
                     .catch(err => {
                         if (loadEl) {
                             loadEl.innerHTML = '<span style="color:#f43f5e;font-size:10px;">⚠ Unable to load chart</span>';
