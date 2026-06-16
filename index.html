@@ -4035,8 +4035,10 @@
         .deal-ball-tooltip {
             position: fixed;
             z-index: 999999;
-            pointer-events: none;
+            pointer-events: auto;
             background: #0f0f14;
+            max-height: 50vh;
+            overflow-y: auto;
             color: #f4f4f5;
             font-size: 10px;
             font-weight: 500;
@@ -6698,7 +6700,7 @@
         function buildCardChartSection(r) {
             const ticker = r._ticker;
             return `
-    <div class="card-chart-wrap" data-ticker="${escHtml(ticker)}" data-period="1y">
+    <div class="card-chart-wrap" data-ticker="${escHtml(ticker)}" data-period="1y" onclick="event.stopPropagation()">
       <div class="card-chart-inner">
         <div class="card-chart-head">
           <span class="card-chart-title">Price Chart</span>
