@@ -9683,7 +9683,7 @@
                                 const hit = (this._balls || []).find(b => Math.hypot(b.x - mx, b.y - my) <= b.r) || null;
                                 const tip = document.getElementById('deal-ball-tip');
                                 if (hit && tip) {
-                                    tip.innerHTML = hit.deals.map(d => {
+                                    document.getElementById('deal-ball-tip-content').innerHTML = hit.deals.map(d => {
                                         const t = String(d.type).toUpperCase();
                                         const col = t === 'BUY' ? '#00e676' : t === 'SELL' ? '#ff4d4f' : '#f59e0b';
                                         return `<span style="color:${col}">${d.person}  |  ${d.type}  (${d.sub})  ${d.amt}</span>`;
@@ -9700,13 +9700,14 @@
                                     tip.style.top = top + 'px';
                                     this.style.cursor = 'pointer';
                                 } else {
-                                    if (tip) tip.style.display = 'none';
                                     this.style.cursor = 'crosshair';
                                 }
                             });
-                            dealCv.addEventListener('mouseleave', function() {
+                            dealCv.addEventListener('mouseleave', function(e) {
                                 const tip = document.getElementById('deal-ball-tip');
-                                if (tip) tip.style.display = 'none';
+                                if (!tip) return;
+                                if (e.relatedTarget && (e.relatedTarget === tip || tip.contains(e.relatedTarget))) return;
+                                tip.style.display = 'none';
                             });
                             dealCv._hasHoverEvent = true;
                         }
@@ -10713,7 +10714,10 @@
     <!-- ══════════════════════════════════════════════════════
      DEAL BLOCK ENGINE — modular, no existing code touched
 ══════════════════════════════════════════════════════ -->
-    <div class="deal-ball-tooltip" id="deal-ball-tip"></div>
+    <div class="deal-ball-tooltip" id="deal-ball-tip" onmouseleave="this.style.display='none';">
+        <div id="deal-ball-tip-close" onclick="document.getElementById('deal-ball-tip').style.display='none';" style="position: sticky; top: 0; right: 0; text-align: right; font-size: 14px; cursor: pointer; color: #ff4d4f; padding-bottom: 4px; z-index: 10; background: #0f0f14; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 4px;">&times; Close</div>
+        <div id="deal-ball-tip-content"></div>
+    </div>
 
     <script>
         (function () {
@@ -11653,7 +11657,7 @@
 
             function showTip(ball, ex, ey) {
                 if (!tip) return;
-                tip.innerHTML = ball.deals.map(d => {
+                document.getElementById('deal-ball-tip-content').innerHTML = ball.deals.map(d => {
                     const t = String(d.type).toUpperCase();
                     const col = t === 'BUY' ? '#00e676' : t === 'SELL' ? '#ff4d4f' : '#f59e0b';
                     return `<span style="color:${col}">${d.person}  |  ${d.type}  (${d.sub})  ${d.amt}</span>`;
@@ -11682,10 +11686,13 @@
             function onStripMouseMove(e) {
                 const hit = hitTest(this, e.clientX, e.clientY);
                 if (hit) { showTip(hit, e.clientX, e.clientY); this.style.cursor = 'pointer'; }
-                else { hideTip(); this.style.cursor = 'crosshair'; }
+                else { this.style.cursor = 'crosshair'; }
             }
 
-            function onStripMouseLeave() { hideTip(); }
+            function onStripMouseLeave(e) {
+                if (e && e.relatedTarget && (e.relatedTarget === tip || tip.contains(e.relatedTarget))) return;
+                hideTip();
+            }
 
             function onStripTouch(e) {
                 const t = e.touches[0];
