@@ -294,10 +294,10 @@
             z-index: 299999;
             pointer-events: auto;
             width: min(400px, 94vw);
-            background: #ffffff;
-            border: 1px solid rgba(0, 0, 0, 0.10);
+            background: #000000;
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.22), 0 2px 8px rgba(0, 0, 0, 0.10);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 2px 8px rgba(0, 0, 0, 0.4);
             display: none;
             flex-direction: column;
             overflow: hidden;
@@ -314,8 +314,8 @@
             align-items: center;
             justify-content: space-between;
             padding: 7px 10px 6px;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.07);
-            background: #f8f9fa;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: #121212;
             flex-shrink: 0;
             user-select: none;
             gap: 6px;
@@ -337,9 +337,9 @@
         #csph-ticker {
             font-size: 10.5px;
             font-weight: 700;
-            color: #0369a1;
-            background: rgba(3, 105, 161, 0.08);
-            border: 1px solid rgba(3, 105, 161, 0.20);
+            color: #0ea5e9;
+            background: rgba(14, 165, 233, 0.15);
+            border: 1px solid rgba(14, 165, 233, 0.30);
             padding: 2px 7px;
             border-radius: 4px;
         }
@@ -347,7 +347,7 @@
         #csph-name {
             font-size: 9px;
             font-weight: 600;
-            color: #6b7280;
+            color: #9ca3af;
             max-width: 160px;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -360,7 +360,7 @@
             background: none;
             border: none;
             cursor: pointer;
-            color: #6b7280;
+            color: #9ca3af;
             font-size: 16px;
             line-height: 1;
             padding: 2px 4px;
@@ -370,8 +370,8 @@
         }
 
         #csph-close-btn:hover {
-            background: rgba(0, 0, 0, 0.08);
-            color: #374151;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
         }
 
         #csph-body {
@@ -379,7 +379,7 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            background: #ffffff;
+            background: #000000;
             min-height: 0;
         }
 
@@ -398,7 +398,7 @@
         .csph-spinner {
             width: 18px;
             height: 18px;
-            border: 2px solid rgba(0, 0, 0, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.1);
             border-top-color: #3b82f6;
             border-radius: 50%;
             animation: csphSpin 0.65s linear infinite;
@@ -420,6 +420,11 @@
             width: 100%;
         }
 
+        #csph-canvas-ind {
+            display: none;
+            width: 100%;
+        }
+
         /* ── Period pill selector ── */
         #csph-period-pills {
             display: flex;
@@ -435,9 +440,9 @@
             padding: 2px 8px;
             border-radius: 10px;
             cursor: pointer;
-            border: 1px solid rgba(0, 0, 0, 0.15);
-            background: rgba(0, 0, 0, 0.05);
-            color: #6b7280;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: #9ca3af;
             transition: all 0.15s;
             letter-spacing: 0.04em;
             user-select: none;
@@ -2487,7 +2492,8 @@
         }
 
         .card-chart-canvas-price,
-        .card-chart-canvas-vol {
+        .card-chart-canvas-vol,
+        .card-chart-canvas-ind {
             display: none;
             width: 100%;
         }
@@ -4035,7 +4041,9 @@
             font-size: 10px;
             font-weight: 500;
             font-family: 'Lexend', sans-serif;
-            white-space: nowrap;
+            white-space: normal;
+            word-wrap: break-word;
+            max-width: 90vw;
             line-height: 1.5;
             padding: 5px 9px;
             border-radius: 6px;
@@ -9088,16 +9096,73 @@
                 const UC = ticker.toUpperCase();
                 const allRaw = _index ? (_index.get(UC) || []) : [];
 
+                // Resolve or dynamically insert the third canvas (A/D & OBV Pane)
+                let indCv = null;
+                let dealCv = null;
+                if (vCv) {
+                    if (vCv.id === 'csph-canvas-vol') {
+                        indCv = document.getElementById('csph-canvas-ind');
+                        if (!indCv) {
+                            indCv = document.createElement('canvas');
+                            indCv.id = 'csph-canvas-ind';
+                            vCv.parentNode.insertBefore(indCv, vCv.nextSibling);
+                        }
+                    } else {
+                        indCv = vCv.parentNode.querySelector('.card-chart-canvas-ind');
+                        if (!indCv) {
+                            indCv = document.createElement('canvas');
+                            indCv.className = 'card-chart-canvas-ind';
+                            vCv.parentNode.insertBefore(indCv, vCv.nextSibling);
+                        }
+                        dealCv = vCv.parentNode.querySelector('.card-chart-canvas-deal');
+                        if (!dealCv) {
+                            dealCv = document.createElement('canvas');
+                            dealCv.className = 'card-chart-canvas-deal';
+                            dealCv.style.cssText = 'display:block;cursor:crosshair;';
+                            vCv.parentNode.insertBefore(dealCv, indCv.nextSibling);
+                        }
+                    }
+                }
+
                 if (!allRaw.length) {
                     loadEl.innerHTML = '<span style="color:#f43f5e;font-size:11px;">No data for ' + ticker + '</span>';
                     loadEl.style.display = 'flex'; pCv.style.display = 'none'; vCv.style.display = 'none';
+                    if (indCv) indCv.style.display = 'none';
+                    if (dealCv) dealCv.style.display = 'none';
                     return;
                 }
 
-                // ── Compute MAs on FULL history, then slice to selected period for display ──
+                // ── Compute MAs, A/D, and OBV on FULL history, then slice to selected period for display ──
                 const closes = allRaw.map(r => r.close);
                 const s10full = sma(closes, 10);
+                const s20full = sma(closes, 20);
+                const s30full = sma(closes, 30);
                 const s40full = sma(closes, 40);
+
+                let ad = 0;
+                let obv = 0;
+                const adFull = new Array(allRaw.length).fill(0);
+                const obvFull = new Array(allRaw.length).fill(0);
+
+                for (let i = 0; i < allRaw.length; i++) {
+                    const r = allRaw[i];
+                    let mfm = 0;
+                    const range = r.high - r.low;
+                    if (range > 0) {
+                        mfm = ((r.close - r.low) - (r.high - r.close)) / range;
+                    }
+                    ad += mfm * r.vol;
+                    adFull[i] = ad;
+
+                    if (i > 0) {
+                        const prevClose = allRaw[i - 1].close;
+                        if (r.close > prevClose) obv += r.vol;
+                        else if (r.close < prevClose) obv -= r.vol;
+                    } else {
+                        obv = r.vol;
+                    }
+                    obvFull[i] = obv;
+                }
 
                 const months = period === '2y' ? 24 : period === '1y' ? 12 : 6;
                 const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - months);
@@ -9106,34 +9171,46 @@
                 let startIdx = 0;
                 while (startIdx < allRaw.length && allRaw[startIdx].date.getTime() < cutTs) startIdx++;
 
-                // Display slice with attached MA values
+                // Display slice with attached MA, A/D, and OBV values
                 const raw = allRaw.slice(startIdx).map((r, i) => ({
                     ...r,
                     ma10: s10full[startIdx + i],
+                    ma20: s20full[startIdx + i],
+                    ma30: s30full[startIdx + i],
                     ma40: s40full[startIdx + i],
+                    ad: adFull[startIdx + i],
+                    obv: obvFull[startIdx + i],
                 }));
 
                 if (!raw.length) {
                     loadEl.innerHTML = '<span style="color:#f43f5e;font-size:11px;">No ' + period.toUpperCase() + ' data for ' + ticker + '</span>';
                     loadEl.style.display = 'flex'; pCv.style.display = 'none'; vCv.style.display = 'none';
+                    if (indCv) indCv.style.display = 'none';
                     return;
                 }
 
                 loadEl.style.display = 'none'; pCv.style.display = 'block'; vCv.style.display = 'block';
+                if (indCv) indCv.style.display = 'block';
 
                 const isMobile = window.innerWidth < 600;
-                // Full container width; price chart uses 16:9-ish ratio, volume ~1/5 of price height
+                // Full container width; price chart uses 16:9-ish ratio, volume ~1/5 of price height, indicators ~18%
                 const W = widthEl ? (widthEl.offsetWidth || (isMobile ? 300 : 380)) : (isMobile ? 300 : 380);
                 const PH = Math.round(W * 0.62);   // ~8:5 ratio — taller, more chart real-estate
                 const VH = Math.round(W * 0.14);   // volume panel ~14% of width
+                const IH = Math.round(W * 0.18);   // indicators panel ~18% of width
                 const DPR = Math.min(window.devicePixelRatio || 1, 2);
 
                 pCv.style.width = W + 'px'; pCv.style.height = PH + 'px'; pCv.width = W * DPR; pCv.height = PH * DPR;
                 vCv.style.width = W + 'px'; vCv.style.height = VH + 'px'; vCv.width = W * DPR; vCv.height = VH * DPR;
+                if (indCv) {
+                    indCv.style.width = W + 'px'; indCv.style.height = IH + 'px'; indCv.width = W * DPR; indCv.height = IH * DPR;
+                }
 
                 const pc = pCv.getContext('2d');
                 const vc = vCv.getContext('2d');
+                const ic = indCv ? indCv.getContext('2d') : null;
                 pc.scale(DPR, DPR); vc.scale(DPR, DPR);
+                if (ic) ic.scale(DPR, DPR);
 
                 const n = raw.length;
 
@@ -9158,8 +9235,8 @@
                 const toX = i => PP.l + (i + 0.5) * (pW / n);
                 const bW = Math.max(1.2, pW / n * 0.55);
 
-                // Background — original white
-                pc.fillStyle = '#ffffff'; pc.fillRect(0, 0, W, PH);
+                // Background — pure dark black
+                pc.fillStyle = '#000000'; pc.fillRect(0, 0, W, PH);
 
                 // ── Horizontal dashed grid lines with RIGHT-aligned price labels ──
                 const nGridLines = 5;
@@ -9169,43 +9246,48 @@
                     const val = pMax - frac * pR;
                     const y = PP.t + pH * frac;
                     // Dashed grid line
-                    pc.strokeStyle = 'rgba(0,0,0,0.08)';
+                    pc.strokeStyle = 'rgba(255,255,255,0.08)';
                     pc.lineWidth = 0.6;
                     pc.setLineDash([3, 4]);
                     pc.beginPath(); pc.moveTo(PP.l, y); pc.lineTo(W - PP.r, y); pc.stroke();
                     pc.setLineDash([]);
-                    // Price label — full black bold, right-aligned flush to right edge
-                    pc.fillStyle = '#000000';
+                    // Price label — full white bold, right-aligned flush to right edge
+                    pc.fillStyle = '#ffffff';
                     pc.fillText(fmtP(val), W - 2, y);
                 }
 
-                // ── Candles: vivid blue bull, vivid magenta/pink bear ──
-                const BULL_COL = '#1e6eff';   // vivid blue
-                const BEAR_COL = '#ff2d78';   // vivid magenta-pink
-
+                // ── Candles: all white, up hollow, down solid ──
                 raw.forEach((r, i) => {
                     const x = toX(i);
                     const bull = r.close >= r.open;
-                    const col = bull ? BULL_COL : BEAR_COL;
                     const yH = toY(r.high), yL = toY(r.low);
                     const yO = toY(r.open), yC = toY(r.close);
                     const yTop = Math.min(yO, yC);
                     const bH = Math.max(1.2, Math.abs(yC - yO));
 
                     // Wick
-                    pc.strokeStyle = col;
+                    pc.strokeStyle = '#ffffff';
                     pc.lineWidth = Math.max(0.7, bW * 0.15);
                     pc.beginPath(); pc.moveTo(x, yH); pc.lineTo(x, yL); pc.stroke();
 
-                    // Body — solid fill both bull and bear
-                    pc.fillStyle = col;
-                    pc.globalAlpha = 1;
-                    pc.fillRect(x - bW / 2, yTop, bW, bH);
+                    // Body
+                    if (bull) {
+                        // Hollow up candle: fill black first to mask grid lines, then stroke white outline
+                        pc.fillStyle = '#000000';
+                        pc.fillRect(x - bW / 2, yTop, bW, bH);
+                        pc.strokeStyle = '#ffffff';
+                        pc.lineWidth = Math.max(0.8, bW * 0.15);
+                        pc.strokeRect(x - bW / 2, yTop, bW, bH);
+                    } else {
+                        // Solid down candle: solid fill white
+                        pc.fillStyle = '#ffffff';
+                        pc.fillRect(x - bW / 2, yTop, bW, bH);
+                    }
                 });
 
                 // ── MA lines ──
-                // MA10: orange
-                pc.strokeStyle = '#f97316'; pc.lineWidth = 1.3; pc.lineJoin = 'round'; pc.lineCap = 'round'; pc.setLineDash([]);
+                // MA10: Orange Bold line
+                pc.strokeStyle = '#f97316'; pc.lineWidth = 2.0; pc.lineJoin = 'round'; pc.lineCap = 'round'; pc.setLineDash([]);
                 pc.beginPath(); let st = false;
                 raw.forEach((r, i) => {
                     if (!r.ma10) return;
@@ -9213,8 +9295,26 @@
                     st ? pc.lineTo(x, y) : (pc.moveTo(x, y), st = true);
                 }); pc.stroke();
 
-                // MA40: black line
-                pc.strokeStyle = '#111111'; pc.lineWidth = 1.2; pc.setLineDash([]);
+                // MA20: Blue line
+                pc.strokeStyle = '#2563eb'; pc.lineWidth = 1.2; pc.lineJoin = 'round'; pc.lineCap = 'round'; pc.setLineDash([]);
+                pc.beginPath(); st = false;
+                raw.forEach((r, i) => {
+                    if (!r.ma20) return;
+                    const x = toX(i), y = toY(r.ma20);
+                    st ? pc.lineTo(x, y) : (pc.moveTo(x, y), st = true);
+                }); pc.stroke();
+
+                // MA30: Lavender line
+                pc.strokeStyle = '#8b5cf6'; pc.lineWidth = 1.2; pc.lineJoin = 'round'; pc.lineCap = 'round'; pc.setLineDash([]);
+                pc.beginPath(); st = false;
+                raw.forEach((r, i) => {
+                    if (!r.ma30) return;
+                    const x = toX(i), y = toY(r.ma30);
+                    st ? pc.lineTo(x, y) : (pc.moveTo(x, y), st = true);
+                }); pc.stroke();
+
+                // MA40: Pink Bold line
+                pc.strokeStyle = '#ec4899'; pc.lineWidth = 2.0; pc.lineJoin = 'round'; pc.lineCap = 'round'; pc.setLineDash([]);
                 pc.beginPath(); st = false;
                 raw.forEach((r, i) => {
                     if (!r.ma40) return;
@@ -9236,11 +9336,11 @@
                 pc.fillStyle = '#fff'; pc.textAlign = 'right'; pc.textBaseline = 'middle';
                 pc.fillText(tagTxt, W - 3, yLc);
 
-                // ── Black thin separator line at bottom of price chart ──
-                pc.strokeStyle = 'rgba(0,0,0,0.35)'; pc.lineWidth = 0.8; pc.setLineDash([]);
+                // ── Separator line at bottom of price chart ──
+                pc.strokeStyle = 'rgba(255,255,255,0.15)'; pc.lineWidth = 0.8; pc.setLineDash([]);
                 pc.beginPath(); pc.moveTo(0, PH - 1); pc.lineTo(W, PH - 1); pc.stroke();
 
-                // ── Date labels at bottom — all black, last one right-aligned ──
+                // ── Date labels at bottom — white/light gray, last one right-aligned ──
                 pc.textBaseline = 'top';
                 const step = Math.max(1, Math.floor(n / 4));
 
@@ -9258,12 +9358,12 @@
 
                     if (isLast) {
                         pc.font = 'bold 8.5px "Lexend",monospace';
-                        pc.fillStyle = '#000000';
+                        pc.fillStyle = '#ffffff';
                         pc.textAlign = 'right';
                         pc.fillText(label, W - PP.r, PH - PP.b + 4);
                     } else {
                         pc.font = 'bold 7.5px "Lexend",monospace';
-                        pc.fillStyle = '#000000';
+                        pc.fillStyle = '#e2e8f0';
                         pc.textAlign = 'center';
                         pc.fillText(label, toX(i), PH - PP.b + 4);
                     }
@@ -9278,10 +9378,10 @@
                 let maxV = 1;
                 for (const r of raw) if (r.vol > maxV) maxV = r.vol;
 
-                vc.fillStyle = '#ffffff'; vc.fillRect(0, 0, W, VH);
+                vc.fillStyle = '#000000'; vc.fillRect(0, 0, W, VH);
 
-                // ── Black thin separator line at top of volume panel ──
-                vc.strokeStyle = 'rgba(0,0,0,0.35)'; vc.lineWidth = 0.8;
+                // ── Separator line at top of volume panel ──
+                vc.strokeStyle = 'rgba(255,255,255,0.15)'; vc.lineWidth = 0.8;
                 vc.beginPath(); vc.moveTo(0, 0); vc.lineTo(W, 0); vc.stroke();
 
                 // Volume bars — vivid blue bull, vivid magenta bear
@@ -9295,8 +9395,8 @@
                     vc.globalAlpha = 1;
                 });
 
-                // Volume right-side labels — full black bold, right-aligned
-                vc.font = 'bold 7.5px "Lexend",monospace'; vc.fillStyle = '#000000';
+                // Volume right-side labels — full white bold, right-aligned
+                vc.font = 'bold 7.5px "Lexend",monospace'; vc.fillStyle = '#ffffff';
                 vc.textAlign = 'right'; vc.textBaseline = 'middle';
                 vc.fillText(fmtV(maxV), W - 2, VP.t + 4);
                 vc.fillText(fmtV(maxV * 0.5), W - 2, VP.t + vH2 * 0.5);
@@ -9306,12 +9406,310 @@
                 vc.font = 'bold 7px "Lexend",monospace';
                 const bw = vc.measureText(badgeTxt).width + 6;
                 const bx = W - bw - 2, by = VH - VP.b;
-                vc.fillStyle = 'rgba(0,0,0,0.06)';
+                vc.fillStyle = 'rgba(255,255,255,0.1)';
                 vc.fillRect(bx, by, bw, 10);
-                vc.strokeStyle = 'rgba(0,0,0,0.15)'; vc.lineWidth = 0.5;
+                vc.strokeStyle = 'rgba(255,255,255,0.2)'; vc.lineWidth = 0.5;
                 vc.strokeRect(bx, by, bw, 10);
-                vc.fillStyle = '#000000'; vc.textAlign = 'center'; vc.textBaseline = 'middle';
+                vc.fillStyle = '#ffffff'; vc.textAlign = 'center'; vc.textBaseline = 'middle';
                 vc.fillText(badgeTxt, bx + bw / 2, by + 5);
+
+                /* ════════════════════════════════════════
+                   INDICATORS PANEL (A/D and OBV)
+                ════════════════════════════════════════ */
+                if (ic) {
+                    const IP = { t: 5, b: 5, l: 6, r: 48 };
+                    const iH = IH - IP.t - IP.b;
+
+                    let adMin = Infinity, adMax = -Infinity;
+                    let obvMin = Infinity, obvMax = -Infinity;
+                    raw.forEach(r => {
+                        if (r.ad < adMin) adMin = r.ad;
+                        if (r.ad > adMax) adMax = r.ad;
+                        if (r.obv < obvMin) obvMin = r.obv;
+                        if (r.obv > obvMax) obvMax = r.obv;
+                    });
+                    const adRange = adMax - adMin || 1;
+                    const obvRange = obvMax - obvMin || 1;
+
+                    const toYAD = v => IP.t + iH * (1 - (v - adMin) / adRange);
+                    const toYOBV = v => IP.t + iH * (1 - (v - obvMin) / obvRange);
+
+                    // Background — pure dark black
+                    ic.fillStyle = '#000000'; ic.fillRect(0, 0, W, IH);
+
+                    // Separator line at top of indicator panel
+                    ic.strokeStyle = 'rgba(255,255,255,0.15)'; ic.lineWidth = 0.8;
+                    ic.beginPath(); ic.moveTo(0, 0); ic.lineTo(W, 0); ic.stroke();
+
+                    // Dashed middle line
+                    ic.strokeStyle = 'rgba(255,255,255,0.06)'; ic.lineWidth = 0.5; ic.setLineDash([3, 4]);
+                    ic.beginPath(); ic.moveTo(IP.l, IP.t + iH * 0.5); ic.lineTo(W - IP.r, IP.t + iH * 0.5); ic.stroke();
+                    ic.setLineDash([]);
+
+                    // Draw A/D line: Bright Pink
+                    ic.strokeStyle = '#ff00ff'; ic.lineWidth = 1.2; ic.lineJoin = 'round'; ic.lineCap = 'round';
+                    ic.beginPath();
+                    let stAD = false;
+                    raw.forEach((r, i) => {
+                        const x = toX(i), y = toYAD(r.ad);
+                        stAD ? ic.lineTo(x, y) : (pc.moveTo(x, y), stAD = true);
+                    });
+                    ic.stroke();
+
+                    // Draw OBV line: Bright Blue
+                    ic.strokeStyle = '#00ccff'; ic.lineWidth = 1.2; ic.lineJoin = 'round'; ic.lineCap = 'round';
+                    ic.beginPath();
+                    let stOBV = false;
+                    raw.forEach((r, i) => {
+                        const x = toX(i), y = toYOBV(r.obv);
+                        stOBV ? ic.lineTo(x, y) : (pc.moveTo(x, y), stOBV = true);
+                    });
+                    ic.stroke();
+
+                    // Indicator labels / legend (A/D and OBV key in top left)
+                    ic.font = 'bold 7.5px "Lexend",monospace';
+                    ic.textAlign = 'left';
+                    ic.textBaseline = 'top';
+
+                    ic.fillStyle = '#ff00ff';
+                    ic.fillText('A/D', IP.l + 2, IP.t + 1);
+
+                    const adTextWidth = ic.measureText('A/D').width;
+                    ic.fillStyle = 'rgba(255,255,255,0.25)';
+                    ic.fillText(' | ', IP.l + 2 + adTextWidth, IP.t + 1);
+
+                    const sepWidth = ic.measureText(' | ').width;
+                    ic.fillStyle = '#00ccff';
+                    ic.fillText('OBV', IP.l + 2 + adTextWidth + sepWidth, IP.t + 1);
+
+                    // Right-side indicators values for the last close
+                    const lastAd = raw[raw.length - 1].ad;
+                    const lastObv = raw[raw.length - 1].obv;
+                    ic.font = 'bold 7px "Lexend",monospace';
+                    ic.textAlign = 'right';
+                    ic.textBaseline = 'middle';
+                    
+                    // Draw A/D value at the mapped Y position of the last point
+                    ic.fillStyle = '#ff00ff';
+                    ic.fillText(fmtV(lastAd), W - 2, toYAD(lastAd));
+
+                    // Draw OBV value (shifted slightly up or down to avoid overlap if needed)
+                    let obvY = toYOBV(lastObv);
+                    if (Math.abs(obvY - toYAD(lastAd)) < 9) {
+                        obvY += obvY > toYAD(lastAd) ? 8 : -8;
+                    }
+                    ic.fillStyle = '#00ccff';
+                    ic.fillText(fmtV(lastObv), W - 2, obvY);
+                }
+
+                /* ════════════════════════════════════════
+                   DEAL STRIP PANEL (INLINE ONLY)
+                ════════════════════════════════════════ */
+                if (dealCv) {
+                    dealCv.style.display = 'block';
+                    const SH = 22;
+                    dealCv.style.width = W + 'px';
+                    dealCv.style.height = SH + 'px';
+                    dealCv.width = W * DPR;
+                    dealCv.height = SH * DPR;
+
+                    const dc = dealCv.getContext('2d');
+                    dc.scale(DPR, DPR);
+
+                    dc.fillStyle = '#000000';
+                    dc.fillRect(0, 0, W, SH);
+
+                    dc.strokeStyle = 'rgba(255,255,255,0.15)'; dc.lineWidth = 0.8;
+                    dc.beginPath(); dc.moveTo(0, 0); dc.lineTo(W, 0); dc.stroke();
+
+                    dc.font = 'bold 7px "Lexend",monospace';
+                    dc.fillStyle = '#a0aec0';
+                    dc.textAlign = 'left';
+                    dc.textBaseline = 'middle';
+                    dc.fillText('DEALS', 4, SH / 2);
+
+                    const _normType = r => {
+                        const t = String(r || '').trim();
+                        if (/^(b|bought|acq|acquisition)$/i.test(t)) return 'BUY';
+                        if (/^(s|sold|sale)$/i.test(t)) return 'SELL';
+                        return t;
+                    };
+                    const _pd = s => {
+                        if (!s) return null;
+                        let m;
+                        if ((m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/))) return new Date(+m[3], +m[2] - 1, +m[1]);
+                        if ((m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/))) return new Date(+m[1], +m[2] - 1, +m[3]);
+                        const d = new Date(s); return isNaN(d) ? null : d;
+                    };
+                    const _dealColor = type => {
+                        if (!type) return '#a1a1aa';
+                        const t = type.toLowerCase();
+                        if (/^buy$|acqui|purchase/.test(t)) return '#00e676';
+                        if (/^sell$|disposal|sale/.test(t)) return '#ff4d4f';
+                        return '#f59e0b';
+                    };
+                    const _getAmount = (row, sub) => {
+                        if (sub === 'insider') {
+                            const rawVal = String(row['Value'] || '').trim();
+                            if (rawVal && rawVal !== '—') {
+                                const numOnly = parseFloat(rawVal.replace(/[^0-9.]/g, ''));
+                                if (!isNaN(numOnly)) return (/crore/i.test(rawVal) ? numOnly + ' Cr.' : rawVal + ' Lacs');
+                                return rawVal;
+                            }
+                        } else if (sub === 'bulk' || sub === 'block') {
+                            const qty = parseFloat(String(row['Quantity'] || '').replace(/[^0-9.]/g, '')) || 0;
+                            const price = parseFloat(String(row['Price'] || '').replace(/[^0-9.]/g, '')) || 0;
+                            if (qty > 0 && price > 0) {
+                                const raw = qty * price;
+                                return raw >= 1e7 ? (raw / 1e7).toFixed(2) + ' Cr.' : (raw / 1e5).toFixed(2) + ' Lacs';
+                            }
+                        } else {
+                            const pct = String(row['Percent'] || '').trim();
+                            if (pct && pct !== '—') return pct + '%';
+                            return String(row['Quantity'] || '').trim();
+                        }
+                        return '—';
+                    };
+
+                    const deals = [];
+                    if (window._dealData) {
+                        ['insider', 'bulk', 'block', 'sast'].forEach(sub => {
+                            (window._dealData[sub] || []).forEach(row => {
+                                if (String(row['Ticker'] || '').trim().toUpperCase() === UC) {
+                                    deals.push({
+                                        date: row['Date'] || '',
+                                        person: row['Person'] || '?',
+                                        type: _normType(row['Type'] || '?'),
+                                        amt: _getAmount(row, sub),
+                                        sub
+                                    });
+                                }
+                            });
+                        });
+                    }
+
+                    if (!deals.length) {
+                        dealCv.style.display = 'none';
+                    } else {
+                        const dateToX = new Map();
+                        raw.forEach((r, i) => {
+                            const d = r.date;
+                            const key = d.getFullYear() + '-' +
+                                String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                                String(d.getDate()).padStart(2, '0');
+                            dateToX.set(key, toX(i));
+                        });
+
+                        const R = 6.0;
+                        const MAX_GAP_MS = 14 * 24 * 3600 * 1000;
+                        const resolved = [];
+                        deals.forEach(deal => {
+                            const dt = _pd(deal.date);
+                            if (!dt) return;
+                            const dtKey = dt.getFullYear() + '-' +
+                                String(dt.getMonth() + 1).padStart(2, '0') + '-' +
+                                String(dt.getDate()).padStart(2, '0');
+                            if (dateToX.has(dtKey)) {
+                                resolved.push({ deal, x: dateToX.get(dtKey) });
+                                return;
+                            }
+                            const dtMs = dt.getTime();
+                            let bestX = null, bestDiff = Infinity;
+                            dateToX.forEach((x, k) => {
+                                const [ky, km, kd] = k.split('-').map(Number);
+                                const kMs = new Date(ky, km - 1, kd).getTime();
+                                const diff = Math.abs(kMs - dtMs);
+                                if (diff < bestDiff) { bestDiff = diff; bestX = x; }
+                            });
+                            if (bestX !== null && bestDiff <= MAX_GAP_MS) {
+                                resolved.push({ deal, x: bestX });
+                            }
+                        });
+
+                        const byX = new Map();
+                        resolved.forEach(item => {
+                            const xKey = Math.round(item.x * 10) / 10;
+                            if (!byX.has(xKey)) byX.set(xKey, []);
+                            byX.get(xKey).push(item);
+                        });
+
+                        const balls = [];
+                        const cy = SH / 2;
+                        byX.forEach((items) => {
+                            const count = items.length;
+                            const cx_pos = items[0].x;
+                            const r = count > 1 ? R + 1 : R;
+
+                            let hasBuy = false;
+                            let hasSell = false;
+                            items.forEach(item => {
+                                const t = String(item.deal.type).toUpperCase();
+                                if (t === 'BUY') hasBuy = true;
+                                else if (t === 'SELL') hasSell = true;
+                            });
+
+                            let aggColor = '#f59e0b';
+                            if (hasBuy && !hasSell) aggColor = '#00e676';
+                            else if (hasSell && !hasBuy) aggColor = '#ff4d4f';
+
+                            balls.push({ deals: items.map(i => i.deal), x: cx_pos, y: cy, r: r + 2 });
+
+                            dc.beginPath();
+                            dc.arc(cx_pos, cy, r, 0, Math.PI * 2);
+                            dc.fillStyle = aggColor;
+                            dc.fill();
+
+                            dc.strokeStyle = 'rgba(0,0,0,0.5)';
+                            dc.lineWidth = 1;
+                            dc.stroke();
+
+                            if (count > 1) {
+                                dc.fillStyle = '#000';
+                                dc.font = `bold ${Math.max(6, r * 1.2)}px "Lexend",sans-serif`;
+                                dc.textAlign = 'center';
+                                dc.textBaseline = 'middle';
+                                dc.fillText(String(count), cx_pos, cy);
+                            }
+                        });
+
+                        dealCv._balls = balls;
+                        if (!dealCv._hasHoverEvent) {
+                            dealCv.addEventListener('mousemove', function(e) {
+                                const rect = this.getBoundingClientRect();
+                                const mx = e.clientX - rect.left;
+                                const my = e.clientY - rect.top;
+                                const hit = (this._balls || []).find(b => Math.hypot(b.x - mx, b.y - my) <= b.r) || null;
+                                const tip = document.getElementById('deal-ball-tip');
+                                if (hit && tip) {
+                                    tip.innerHTML = hit.deals.map(d => {
+                                        const t = String(d.type).toUpperCase();
+                                        const col = t === 'BUY' ? '#00e676' : t === 'SELL' ? '#ff4d4f' : '#f59e0b';
+                                        return `<span style="color:${col}">${d.person}  |  ${d.type}  (${d.sub})  ${d.amt}</span>`;
+                                    }).join('<br>');
+                                    tip.style.display = 'block';
+                                    const tw = tip.offsetWidth, th = tip.offsetHeight;
+                                    let left = e.clientX + 10;
+                                    let top = e.clientY - th - 6;
+                                    if (left + tw > window.innerWidth - 8) left = e.clientX - tw - 10;
+                                    if (left < 8) left = 8;
+                                    if (top < 4) top = e.clientY + 15;
+                                    if (top + th > window.innerHeight - 8) top = window.innerHeight - th - 8;
+                                    tip.style.left = left + 'px';
+                                    tip.style.top = top + 'px';
+                                    this.style.cursor = 'pointer';
+                                } else {
+                                    if (tip) tip.style.display = 'none';
+                                    this.style.cursor = 'crosshair';
+                                }
+                            });
+                            dealCv.addEventListener('mouseleave', function() {
+                                const tip = document.getElementById('deal-ball-tip');
+                                if (tip) tip.style.display = 'none';
+                            });
+                            dealCv._hasHoverEvent = true;
+                        }
+                    }
+                }
             }
 
             /* ─── Popup wrapper: draws into the hover-popup canvases using the popup's current period ─── */
@@ -9377,6 +9775,8 @@
                 document.getElementById('csph-loading').style.display = 'flex';
                 document.getElementById('csph-canvas-price').style.display = 'none';
                 document.getElementById('csph-canvas-vol').style.display = 'none';
+                const indCv = document.getElementById('csph-canvas-ind');
+                if (indCv) indCv.style.display = 'none';
 
                 ensureData()
                     .then(() => { if (_currentTick === ticker) drawChart(ticker); })
@@ -11063,6 +11463,28 @@
                 if (!window._dealData) return [];
                 const uc = ticker.toUpperCase();
                 const all = [];
+                const _getAmount = (row, sub) => {
+                    if (sub === 'insider') {
+                        const rawVal = String(row['Value'] || '').trim();
+                        if (rawVal && rawVal !== '—') {
+                            const numOnly = parseFloat(rawVal.replace(/[^0-9.]/g, ''));
+                            if (!isNaN(numOnly)) return (/crore/i.test(rawVal) ? numOnly + ' Cr.' : rawVal + ' Lacs');
+                            return rawVal;
+                        }
+                    } else if (sub === 'bulk' || sub === 'block') {
+                        const qty = parseFloat(String(row['Quantity'] || '').replace(/[^0-9.]/g, '')) || 0;
+                        const price = parseFloat(String(row['Price'] || '').replace(/[^0-9.]/g, '')) || 0;
+                        if (qty > 0 && price > 0) {
+                            const raw = qty * price;
+                            return raw >= 1e7 ? (raw / 1e7).toFixed(2) + ' Cr.' : (raw / 1e5).toFixed(2) + ' Lacs';
+                        }
+                    } else {
+                        const pct = String(row['Percent'] || '').trim();
+                        if (pct && pct !== '—') return pct + '%';
+                        return String(row['Quantity'] || '').trim();
+                    }
+                    return '—';
+                };
                 ['insider', 'bulk', 'block', 'sast'].forEach(sub => {
                     (window._dealData[sub] || []).forEach(row => {
                         if (String(row['Ticker'] || '').trim().toUpperCase() === uc) {
@@ -11070,6 +11492,7 @@
                                 date: row['Date'] || '',
                                 person: row['Person'] || '?',
                                 type: _normType(row['Type'] || '?'),
+                                amt: _getAmount(row, sub),
                                 sub
                             });
                         }
@@ -11115,12 +11538,12 @@
                 ctx.scale(DPR, DPR);
 
                 // Background
-                ctx.fillStyle = '#f0f0f2';
+                ctx.fillStyle = '#000000';
                 ctx.fillRect(0, 0, W, SH);
 
                 // Label
                 ctx.font = 'bold 7px "Lexend",monospace';
-                ctx.fillStyle = '#888';
+                ctx.fillStyle = '#a0aec0';
                 ctx.textAlign = 'left';
                 ctx.textBaseline = 'middle';
                 ctx.fillText('DEALS', 4, SH / 2);
@@ -11141,7 +11564,7 @@
                     dateToX.set(key, toX(i));
                 });
 
-                const R = 4.0;
+                const R = 6.0;
                 const MAX_GAP_MS = 14 * 24 * 3600 * 1000; // 14-day tolerance (covers weekends + holidays)
 
                 // ── Step 1: Resolve each deal to its nearest chart X position ──
@@ -11189,36 +11612,36 @@
                 byX.forEach((items) => {
                     const count = items.length;
                     const cx_pos = items[0].x;
-                    // Spread dots vertically; clamp radius to fit in strip
-                    const r = Math.min(R, (SH - 4) / (count * 2));
-                    const spacing = r * 2.4;
-                    const totalH = (count - 1) * spacing;
-                    const startY = cy - totalH / 2;
+                    const r = count > 1 ? R + 1 : R;
 
-                    items.forEach((item, idx) => {
-                        const bx = cx_pos;
-                        const by = count === 1 ? cy : startY + idx * spacing;
-                        const col = dealColor(item.deal.type);
-
-                        ctx.beginPath();
-                        ctx.arc(bx, by, r, 0, 2 * Math.PI);
-                        ctx.fillStyle = col;
-                        ctx.fill();
-                        ctx.strokeStyle = 'rgba(0,0,0,0.28)';
-                        ctx.lineWidth = 0.7;
-                        ctx.stroke();
-
-                        // Larger hit-test radius for easy tooltip triggering
-                        _balls.push({ x: bx, y: by, r: r + 3, deal: item.deal });
+                    let hasBuy = false;
+                    let hasSell = false;
+                    items.forEach(item => {
+                        const t = String(item.deal.type).toUpperCase();
+                        if (t === 'BUY') hasBuy = true;
+                        else if (t === 'SELL') hasSell = true;
                     });
 
-                    // Count badge when >1 deal stacked at same position
+                    let aggColor = '#f59e0b';
+                    if (hasBuy && !hasSell) aggColor = '#00e676';
+                    else if (hasSell && !hasBuy) aggColor = '#ff4d4f';
+
+                    _balls.push({ x: cx_pos, y: cy, r: r + 3, deals: items.map(i => i.deal) });
+
+                    ctx.beginPath();
+                    ctx.arc(cx_pos, cy, r, 0, 2 * Math.PI);
+                    ctx.fillStyle = aggColor;
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(0,0,0,0.28)';
+                    ctx.lineWidth = 0.7;
+                    ctx.stroke();
+
                     if (count > 1) {
-                        ctx.font = 'bold 6px "Lexend",monospace';
+                        ctx.font = `bold ${Math.max(6, r * 1.2)}px "Lexend",monospace`;
                         ctx.fillStyle = 'rgba(0,0,0,0.55)';
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
-                        ctx.fillText(String(count), cx_pos, 4);
+                        ctx.fillText(String(count), cx_pos, cy);
                     }
                 });
             }
@@ -11228,13 +11651,19 @@
 
             function showTip(ball, ex, ey) {
                 if (!tip) return;
-                const d = ball.deal;
-                tip.textContent = `${d.person}  |  ${d.type}  (${d.sub})  ${d.date}`;
+                tip.innerHTML = ball.deals.map(d => {
+                    const t = String(d.type).toUpperCase();
+                    const col = t === 'BUY' ? '#00e676' : t === 'SELL' ? '#ff4d4f' : '#f59e0b';
+                    return `<span style="color:${col}">${d.person}  |  ${d.type}  (${d.sub})  ${d.amt}</span>`;
+                }).join('<br>');
                 tip.style.display = 'block';
                 const tw = tip.offsetWidth, th = tip.offsetHeight;
-                let left = ex + 10, top = ey - th - 6;
+                let left = ex + 10;
+                let top = ey - th - 6;
                 if (left + tw > window.innerWidth - 8) left = ex - tw - 10;
-                if (top < 4) top = ey + 10;
+                if (left < 8) left = 8;
+                if (top < 4) top = ey + 15;
+                if (top + th > window.innerHeight - 8) top = window.innerHeight - th - 8;
                 tip.style.left = left + 'px';
                 tip.style.top = top + 'px';
             }
