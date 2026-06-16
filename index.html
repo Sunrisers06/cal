@@ -5832,6 +5832,7 @@
                             title="Fullscreen">⛶</button>
                     </div>
 
+
                     <div class="deal-sub-pane active-sub-pane" id="superstar-sub-pane">
                         <div class="deal-table-wrap">
                             <table class="deal-table" id="superstar-table">
@@ -5906,7 +5907,8 @@
 
             <div class="filter-bar" id="filter-bar">
                 <span class="fl">Filter</span>
-                <select id="view-mode-filter" class="fi w110" onchange="setViewMode(this.value)" title="Switch company card view">
+                <select id="view-mode-filter" class="fi w110" onchange="setViewMode(this.value)"
+                    title="Switch company card view">
                     <option value="latest" selected>Latest Result</option>
                     <option value="chart">Chart</option>
                 </select>
@@ -7480,7 +7482,7 @@
             // Filter news only by ticker | company name — do NOT touch search bar or stock cards
             const newsQuery = `${String(ticker).trim()} | ${String(coName).trim()}`;
             filterBothNews(newsQuery);
-            
+
             // Clear superstar internal filters to ensure the selected company's data is not hidden
             const ssSearch = document.getElementById('superstar-search');
             if (ssSearch) ssSearch.value = '';
@@ -7488,7 +7490,7 @@
             if (ssInvFilter) ssInvFilter.value = 'all';
             const ssChgFilter = document.getElementById('superstar-chg-filter');
             if (ssChgFilter) ssChgFilter.value = 'all';
-            
+
             renderSuperstarBlock();
 
             if (window.innerWidth <= 1024) {
@@ -7514,6 +7516,13 @@
             selectedCardTicker = null;
             const chip = document.getElementById('active-company-chip');
             if (chip) chip.classList.remove('show');
+            // Also reset all superstar internal filters
+            const ssSearch = document.getElementById('superstar-search');
+            if (ssSearch) ssSearch.value = '';
+            const ssInvFilter = document.getElementById('superstar-inv-filter');
+            if (ssInvFilter) ssInvFilter.value = 'all';
+            const ssChgFilter = document.getElementById('superstar-chg-filter');
+            if (ssChgFilter) ssChgFilter.value = 'all';
             // Restore news to match whatever is in the search bar
             filterBothNews(null);
             renderSuperstarBlock();
