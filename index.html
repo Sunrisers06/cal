@@ -6730,13 +6730,12 @@
            (see initCardCharts / drawCardChart below). ── */
         function buildCardChartSection(r) {
             const ticker = r._ticker;
-            // Build return badges for 1M 3M 6M 1Y 2Y
+            // Build return badges for 1M 3M 6M 1Y
             const retPairs = [
                 { lbl: '1M', v: isNaN(r._ret1m) ? NaN : r._ret1m },
                 { lbl: '3M', v: isNaN(r._ret3m) ? NaN : r._ret3m },
                 { lbl: '6M', v: isNaN(r._ret6m) ? NaN : r._ret6m },
-                { lbl: '1Y', v: isNaN(r._ret1y) ? NaN : r._ret1y },
-                { lbl: '2Y', v: isNaN(r._ret2y) ? NaN : r._ret2y }
+                { lbl: '1Y', v: isNaN(r._ret1y) ? NaN : r._ret1y }
             ];
             const retHtml = retPairs.map(p => {
                 if (isNaN(p.v)) return `<span class="cch-ret-badge cch-ret-na"><span class="cch-ret-lbl">${p.lbl}</span>—</span>`;
