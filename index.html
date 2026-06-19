@@ -137,7 +137,8 @@
 
             html,
             body {
-                overflow: auto !important;
+                overflow-x: hidden !important;
+                overflow-y: auto !important;
                 height: auto !important;
                 overscroll-behavior-y: none !important;
                 min-height: 100vh;
@@ -9259,8 +9260,10 @@
                     toX
                 };
                 pCv.style.cursor = 'crosshair';
-                if (vCv) vCv.style.cursor = 'crosshair';
-                if (indCv) indCv.style.cursor = 'crosshair';
+                pCv.style.touchAction = 'pan-y';
+                if (vCv) { vCv.style.cursor = 'crosshair'; vCv.style.touchAction = 'pan-y'; }
+                if (indCv) { indCv.style.cursor = 'crosshair'; indCv.style.touchAction = 'pan-y'; }
+
 
                 const wireCrosshair = (canvas) => {
                     if (!canvas || canvas._hasCrosshairEvent) return;
