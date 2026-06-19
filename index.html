@@ -9242,6 +9242,91 @@
                 const toX = i => PP.l + (i + 0.5) * (pW / n);
                 const bW = Math.max(1.2, pW / n * 0.55);
 
+                // Update chart state for event listeners
+                pCv._chartState = {
+                    ticker,
+                    period,
+                    vCv,
+                    indCv,
+                    loadEl,
+                    widthEl,
+                    raw,
+                    n,
+                    W,
+                    PH,
+                    PP,
+                    pW,
+                    toX
+                };
+                pCv.style.cursor = 'crosshair';
+                if (vCv) vCv.style.cursor = 'crosshair';
+                if (indCv) indCv.style.cursor = 'crosshair';
+
+                const wireCrosshair = (canvas) => {
+                    if (!canvas || canvas._hasCrosshairEvent) return;
+
+                    const onMouseMove = (e) => {
+                        const state = pCv._chartState;
+                        if (!state || !state.raw || state.n === 0) return;
+                        const rect = canvas.getBoundingClientRect();
+                        const mx = e.clientX - rect.left;
+                        const my = e.clientY - rect.top;
+
+                        // Calculate nearest index
+                        let idx = Math.round((mx - state.PP.l) / (state.pW / state.n) - 0.5);
+                        idx = Math.max(0, Math.min(state.n - 1, idx));
+
+                        pCv._hoverX = state.PP.l + (idx + 0.5) * (state.pW / state.n);
+                        pCv._hoverY = my;
+                        pCv._hoverIdx = idx;
+                        pCv._hoverCanvas = canvas;
+
+                        drawChartCore(state.ticker, state.period, pCv, state.vCv, state.loadEl, state.widthEl);
+                    };
+
+                    const onMouseLeave = () => {
+                        const state = pCv._chartState;
+                        if (!state) return;
+                        pCv._hoverX = null;
+                        pCv._hoverY = null;
+                        pCv._hoverIdx = null;
+                        pCv._hoverCanvas = null;
+                        drawChartCore(state.ticker, state.period, pCv, state.vCv, state.loadEl, state.widthEl);
+                    };
+
+                    canvas.addEventListener('mousemove', onMouseMove);
+                    canvas.addEventListener('mouseleave', onMouseLeave);
+
+                    // Touch support for mobile devices
+                    const onTouch = (e) => {
+                        const state = pCv._chartState;
+                        if (!state || !state.raw || state.n === 0 || e.touches.length === 0) return;
+                        const rect = canvas.getBoundingClientRect();
+                        const mx = e.touches[0].clientX - rect.left;
+                        const my = e.touches[0].clientY - rect.top;
+
+                        let idx = Math.round((mx - state.PP.l) / (state.pW / state.n) - 0.5);
+                        idx = Math.max(0, Math.min(state.n - 1, idx));
+
+                        pCv._hoverX = state.PP.l + (idx + 0.5) * (state.pW / state.n);
+                        pCv._hoverY = my;
+                        pCv._hoverIdx = idx;
+                        pCv._hoverCanvas = canvas;
+
+                        drawChartCore(state.ticker, state.period, pCv, state.vCv, state.loadEl, state.widthEl);
+                    };
+
+                    canvas.addEventListener('touchstart', onTouch, { passive: true });
+                    canvas.addEventListener('touchmove', onTouch, { passive: true });
+                    canvas.addEventListener('touchend', onMouseLeave, { passive: true });
+
+                    canvas._hasCrosshairEvent = true;
+                };
+
+                wireCrosshair(pCv);
+                if (vCv) wireCrosshair(vCv);
+                if (indCv) wireCrosshair(indCv);
+
                 // Background — pure dark black
                 pc.fillStyle = '#000000'; pc.fillRect(0, 0, W, PH);
 
@@ -9263,38 +9348,9 @@
                     pc.fillText(fmtP(val), W - 2, y);
                 }
 
-                // ── Candles: all white, up hollow, down solid ──
-                raw.forEach((r, i) => {
-                    const x = toX(i);
-                    const bull = r.close >= r.open;
-                    const yH = toY(r.high), yL = toY(r.low);
-                    const yO = toY(r.open), yC = toY(r.close);
-                    const yTop = Math.min(yO, yC);
-                    const bH = Math.max(1.2, Math.abs(yC - yO));
-
-                    // Wick
-                    pc.strokeStyle = '#ffffff';
-                    pc.lineWidth = Math.max(0.7, bW * 0.15);
-                    pc.beginPath(); pc.moveTo(x, yH); pc.lineTo(x, yL); pc.stroke();
-
-                    // Body
-                    if (bull) {
-                        // Hollow up candle: fill black first to mask grid lines, then stroke white outline
-                        pc.fillStyle = '#000000';
-                        pc.fillRect(x - bW / 2, yTop, bW, bH);
-                        pc.strokeStyle = '#ffffff';
-                        pc.lineWidth = Math.max(0.8, bW * 0.15);
-                        pc.strokeRect(x - bW / 2, yTop, bW, bH);
-                    } else {
-                        // Solid down candle: solid fill white
-                        pc.fillStyle = '#ffffff';
-                        pc.fillRect(x - bW / 2, yTop, bW, bH);
-                    }
-                });
-
                 // ── MA lines ──
-                // MA10: Orange Bold line
-                pc.strokeStyle = '#f97316'; pc.lineWidth = 2.0; pc.lineJoin = 'round'; pc.lineCap = 'round'; pc.setLineDash([]);
+                // MA10: Bright Orange Bold line
+                pc.strokeStyle = '#ff6600'; pc.lineWidth = 2.0; pc.lineJoin = 'round'; pc.lineCap = 'round'; pc.setLineDash([]);
                 pc.beginPath(); let st = false;
                 raw.forEach((r, i) => {
                     if (!r.ma10) return;
@@ -9328,6 +9384,35 @@
                     const x = toX(i), y = toY(r.ma40);
                     st ? pc.lineTo(x, y) : (pc.moveTo(x, y), st = true);
                 }); pc.stroke();
+
+                // ── Candles: all white, up hollow, down solid ──
+                raw.forEach((r, i) => {
+                    const x = toX(i);
+                    const bull = r.close >= r.open;
+                    const yH = toY(r.high), yL = toY(r.low);
+                    const yO = toY(r.open), yC = toY(r.close);
+                    const yTop = Math.min(yO, yC);
+                    const bH = Math.max(1.2, Math.abs(yC - yO));
+
+                    // Wick
+                    pc.strokeStyle = '#ffffff';
+                    pc.lineWidth = Math.max(0.7, bW * 0.15);
+                    pc.beginPath(); pc.moveTo(x, yH); pc.lineTo(x, yL); pc.stroke();
+
+                    // Body
+                    if (bull) {
+                        // Hollow up candle: fill black first to mask grid lines, then stroke white outline
+                        pc.fillStyle = '#000000';
+                        pc.fillRect(x - bW / 2, yTop, bW, bH);
+                        pc.strokeStyle = '#ffffff';
+                        pc.lineWidth = Math.max(0.8, bW * 0.15);
+                        pc.strokeRect(x - bW / 2, yTop, bW, bH);
+                    } else {
+                        // Solid down candle: solid fill white
+                        pc.fillStyle = '#ffffff';
+                        pc.fillRect(x - bW / 2, yTop, bW, bH);
+                    }
+                });
 
                 // ── Last close: dashed horizontal line + price tag ──
                 const lc = raw[n - 1].close;
@@ -9375,6 +9460,88 @@
                         pc.fillText(label, toX(i), PH - PP.b + 4);
                     }
                 });
+
+                // Draw crosshair if hovering
+                if (pCv._hoverX !== undefined && pCv._hoverX !== null) {
+                    const hx = pCv._hoverX;
+                    const hy = pCv._hoverY;
+                    const activeCv = pCv._hoverCanvas;
+
+                    pc.save();
+                    pc.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                    pc.lineWidth = 0.8;
+                    pc.setLineDash([4, 4]);
+
+                    // Vertical line (always drawn on pCv if any canvas is hovered)
+                    pc.beginPath();
+                    pc.moveTo(hx, PP.t);
+                    pc.lineTo(hx, PH - PP.b);
+                    pc.stroke();
+
+                    // Horizontal line and Price badge (only if hovering on price canvas)
+                    if (activeCv === pCv && hy !== undefined && hy !== null && hy >= PP.t && hy <= PH - PP.b) {
+                        pc.beginPath();
+                        pc.moveTo(PP.l, hy);
+                        pc.lineTo(W - PP.r, hy);
+                        pc.stroke();
+
+                        pc.setLineDash([]);
+                        
+                        // Right-axis price badge
+                        const valAtY = pMin + pR * (1 - (hy - PP.t) / pH);
+                        const priceTxt = fmtP(valAtY);
+                        pc.font = 'bold 8px "Lexend",monospace';
+                        const badgeW = pc.measureText(priceTxt).width + 6;
+                        let dby = hy;
+                        if (dby - 5 < PP.t) dby = PP.t + 5;
+                        if (dby + 5 > PH - PP.b) dby = PH - PP.b - 5;
+                        
+                        pc.fillStyle = '#475569'; // Slate-600
+                        pc.fillRect(W - badgeW - 1, dby - 5, badgeW, 10);
+                        pc.fillStyle = '#ffffff';
+                        pc.textAlign = 'right';
+                        pc.textBaseline = 'middle';
+                        pc.fillText(priceTxt, W - 3, dby);
+                    }
+
+                    pc.setLineDash([]);
+
+                    // Bottom-axis date badge (always drawn on pCv if any canvas is hovered)
+                    if (pCv._hoverIdx !== undefined && pCv._hoverIdx !== null) {
+                        const hoverCandle = raw[pCv._hoverIdx];
+                        if (hoverCandle) {
+                            const dateTxt = fmtChartDate(hoverCandle.date);
+                            pc.font = 'bold 8px "Lexend",monospace';
+                            const dBadgeW = pc.measureText(dateTxt).width + 6;
+                            let dbx = hx;
+                            if (dbx - dBadgeW / 2 < PP.l) dbx = PP.l + dBadgeW / 2;
+                            if (dbx + dBadgeW / 2 > W - PP.r) dbx = W - PP.r - dBadgeW / 2;
+                            
+                            pc.fillStyle = '#475569'; // Slate-600
+                            pc.fillRect(dbx - dBadgeW / 2, PH - PP.b + 1, dBadgeW, 10);
+                            pc.fillStyle = '#ffffff';
+                            pc.textAlign = 'center';
+                            pc.textBaseline = 'top';
+                            pc.fillText(dateTxt, dbx, PH - PP.b + 2);
+                        }
+                    }
+
+                    // Draw OHLC info text in top-left of the chart space (always drawn on pCv)
+                    if (pCv._hoverIdx !== undefined && pCv._hoverIdx !== null) {
+                        const ohlcCandle = raw[pCv._hoverIdx];
+                        if (ohlcCandle) {
+                            const changePct = ohlcCandle.open ? ((ohlcCandle.close - ohlcCandle.open) / ohlcCandle.open * 100).toFixed(2) : '0.00';
+                            const infoTxt = `O: ${fmtP(ohlcCandle.open)}  H: ${fmtP(ohlcCandle.high)}  L: ${fmtP(ohlcCandle.low)}  C: ${fmtP(ohlcCandle.close)}  (${changePct >= 0 ? '+' : ''}${changePct}%)`;
+                            pc.font = 'bold 8px "Lexend",monospace';
+                            pc.fillStyle = '#cbd5e1'; // light slate color
+                            pc.textAlign = 'left';
+                            pc.textBaseline = 'top';
+                            pc.fillText(infoTxt, PP.l + 4, PP.t + 2);
+                        }
+                    }
+
+                    pc.restore();
+                }
                 /* ════════════════════════════════════════
                    VOLUME CHART (bottom panel)
                 ════════════════════════════════════════ */
@@ -9419,6 +9586,52 @@
                 vc.strokeRect(bx, by, bw, 10);
                 vc.fillStyle = '#ffffff'; vc.textAlign = 'center'; vc.textBaseline = 'middle';
                 vc.fillText(badgeTxt, bx + bw / 2, by + 5);
+
+                // Draw crosshair on volume canvas if hovering
+                if (pCv._hoverX !== undefined && pCv._hoverX !== null) {
+                    const hx = pCv._hoverX;
+                    const hy = pCv._hoverY;
+                    const activeCv = pCv._hoverCanvas;
+
+                    vc.save();
+                    vc.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                    vc.lineWidth = 0.8;
+                    vc.setLineDash([4, 4]);
+
+                    // Vertical line on volume canvas
+                    vc.beginPath();
+                    vc.moveTo(hx, VP.t);
+                    vc.lineTo(hx, VH - VP.b);
+                    vc.stroke();
+
+                    // Horizontal line on volume canvas (only if hovered canvas is volume canvas)
+                    if (activeCv === vCv && hy !== undefined && hy !== null && hy >= VP.t && hy <= VH - VP.b) {
+                        vc.beginPath();
+                        vc.moveTo(VP.l, hy);
+                        vc.lineTo(W - VP.r, hy);
+                        vc.stroke();
+
+                        vc.setLineDash([]);
+
+                        // Volume badge on right-axis
+                        const volVal = maxV * (1 - (hy - VP.t) / vH2);
+                        const volTxt = fmtV(volVal);
+                        vc.font = 'bold 7.5px "Lexend",monospace';
+                        const badgeW = vc.measureText(volTxt).width + 6;
+                        let dby = hy;
+                        if (dby - 5 < VP.t) dby = VP.t + 5;
+                        if (dby + 5 > VH - VP.b) dby = VH - VP.b - 5;
+
+                        vc.fillStyle = '#475569'; // Slate-600
+                        vc.fillRect(W - badgeW - 1, dby - 5, badgeW, 10);
+                        vc.fillStyle = '#ffffff';
+                        vc.textAlign = 'right';
+                        vc.textBaseline = 'middle';
+                        vc.fillText(volTxt, W - 3, dby);
+                    }
+
+                    vc.restore();
+                }
 
                 /* ════════════════════════════════════════
                    INDICATORS PANEL (A/D and OBV)
@@ -9473,25 +9686,33 @@
                     });
                     ic.stroke();
 
+                    // Right-side indicators values for the last close
+                    const lastAd = raw[raw.length - 1].ad;
+                    const lastObv = raw[raw.length - 1].obv;
+
+                    const hoverIdx = pCv._hoverIdx;
+                    const displayAd = (hoverIdx !== undefined && hoverIdx !== null) ? raw[hoverIdx].ad : lastAd;
+                    const displayObv = (hoverIdx !== undefined && hoverIdx !== null) ? raw[hoverIdx].obv : lastObv;
+
+                    const adText = 'A/D: ' + fmtV(displayAd);
+                    const obvText = 'OBV: ' + fmtV(displayObv);
+
                     // Indicator labels / legend (A/D and OBV key in top left)
                     ic.font = 'bold 7.5px "Lexend",monospace';
                     ic.textAlign = 'left';
                     ic.textBaseline = 'top';
 
                     ic.fillStyle = '#ff00ff';
-                    ic.fillText('A/D', IP.l + 2, IP.t + 1);
+                    ic.fillText(adText, IP.l + 2, IP.t + 1);
 
-                    const adTextWidth = ic.measureText('A/D').width;
+                    const adTextWidth = ic.measureText(adText).width;
                     ic.fillStyle = 'rgba(255,255,255,0.25)';
                     ic.fillText(' | ', IP.l + 2 + adTextWidth, IP.t + 1);
 
                     const sepWidth = ic.measureText(' | ').width;
                     ic.fillStyle = '#00ccff';
-                    ic.fillText('OBV', IP.l + 2 + adTextWidth + sepWidth, IP.t + 1);
+                    ic.fillText(obvText, IP.l + 2 + adTextWidth + sepWidth, IP.t + 1);
 
-                    // Right-side indicators values for the last close
-                    const lastAd = raw[raw.length - 1].ad;
-                    const lastObv = raw[raw.length - 1].obv;
                     ic.font = 'bold 7px "Lexend",monospace';
                     ic.textAlign = 'right';
                     ic.textBaseline = 'middle';
@@ -9507,6 +9728,34 @@
                     }
                     ic.fillStyle = '#00ccff';
                     ic.fillText(fmtV(lastObv), W - 2, obvY);
+
+                    // Draw crosshair on indicator canvas if hovering
+                    if (pCv._hoverX !== undefined && pCv._hoverX !== null) {
+                        const hx = pCv._hoverX;
+                        const hy = pCv._hoverY;
+                        const activeCv = pCv._hoverCanvas;
+
+                        ic.save();
+                        ic.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                        ic.lineWidth = 0.8;
+                        ic.setLineDash([4, 4]);
+
+                        // Vertical line on indicator canvas
+                        ic.beginPath();
+                        ic.moveTo(hx, IP.t);
+                        ic.lineTo(hx, IH - IP.b);
+                        ic.stroke();
+
+                        // Horizontal line on indicator canvas (only if hovered canvas is indicator canvas)
+                        if (activeCv === indCv && hy !== undefined && hy !== null && hy >= IP.t && hy <= IH - IP.b) {
+                            ic.beginPath();
+                            ic.moveTo(IP.l, hy);
+                            ic.lineTo(W - IP.r, hy);
+                            ic.stroke();
+                        }
+
+                        ic.restore();
+                    }
                 }
 
                 /* ════════════════════════════════════════
