@@ -2421,10 +2421,11 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 6px 8px;
-            background: #f8f9fa;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.07);
-            gap: 6px;
+            padding: 5px 8px;
+            background: #000000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            gap: 4px;
+            flex-wrap: wrap;
         }
 
         .card-chart-title {
@@ -2437,6 +2438,32 @@
             white-space: nowrap;
         }
 
+        .card-chart-ret-strip {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+
+        .cch-ret-badge {
+            font-size: 11px;
+            font-family: 'Lexend', sans-serif;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            white-space: nowrap;
+        }
+
+        .cch-ret-lbl {
+            color: rgba(255,255,255,0.4);
+            font-size: 9px;
+            margin-right: 1px;
+        }
+
+        .cch-ret-pos { color: #00e676; }
+        .cch-ret-neg { color: #ff4d4f; }
+        .cch-ret-na  { color: rgba(255,255,255,0.3); }
+
         .card-chart-periods {
             display: flex;
             gap: 3px;
@@ -2447,12 +2474,12 @@
             font-size: 8.5px;
             font-family: 'Lexend', sans-serif;
             font-weight: 700;
-            padding: 2px 8px;
+            padding: 2px 7px;
             border-radius: 10px;
             cursor: pointer;
-            border: 1px solid rgba(0, 0, 0, 0.15);
-            background: rgba(0, 0, 0, 0.05);
-            color: #6b7280;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.07);
+            color: rgba(255,255,255,0.55);
             transition: all 0.15s;
             letter-spacing: 0.04em;
             user-select: none;
@@ -4037,20 +4064,23 @@
             z-index: 999999;
             pointer-events: auto;
             background: #0f0f14;
-            max-height: 50vh;
-            overflow-y: auto;
+            max-height: 45vh;
+            min-width: 180px;
+            max-width: min(90vw, 320px);
+            overflow-y: scroll;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
             color: #f4f4f5;
             font-size: 10px;
             font-weight: 500;
             font-family: 'Lexend', sans-serif;
             white-space: normal;
             word-wrap: break-word;
-            max-width: 90vw;
-            line-height: 1.5;
-            padding: 5px 9px;
-            border-radius: 6px;
-            border: 1px solid rgba(245, 158, 11, 0.4);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+            line-height: 1.6;
+            padding: 0;
+            border-radius: 8px;
+            border: 1px solid rgba(245, 158, 11, 0.5);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.8);
             display: none;
         }
 
@@ -6699,11 +6729,25 @@
            (see initCardCharts / drawCardChart below). ── */
         function buildCardChartSection(r) {
             const ticker = r._ticker;
+            // Build return badges for 1M 3M 6M 1Y 2Y
+            const retPairs = [
+                { lbl: '1M', v: isNaN(r._ret1m) ? NaN : r._ret1m },
+                { lbl: '3M', v: isNaN(r._ret3m) ? NaN : r._ret3m },
+                { lbl: '6M', v: isNaN(r._ret6m) ? NaN : r._ret6m },
+                { lbl: '1Y', v: isNaN(r._ret1y) ? NaN : r._ret1y },
+                { lbl: '2Y', v: isNaN(r._ret2y) ? NaN : r._ret2y }
+            ];
+            const retHtml = retPairs.map(p => {
+                if (isNaN(p.v)) return `<span class="cch-ret-badge cch-ret-na"><span class="cch-ret-lbl">${p.lbl}</span>—</span>`;
+                const cls = p.v >= 0 ? 'cch-ret-pos' : 'cch-ret-neg';
+                const sign = p.v >= 0 ? '+' : '';
+                return `<span class="cch-ret-badge ${cls}"><span class="cch-ret-lbl">${p.lbl}</span>${sign}${p.v.toFixed(1)}%</span>`;
+            }).join('');
             return `
     <div class="card-chart-wrap" data-ticker="${escHtml(ticker)}" data-period="1y" onclick="event.stopPropagation()">
       <div class="card-chart-inner">
         <div class="card-chart-head">
-          <span class="card-chart-title">Price Chart</span>
+          <div class="card-chart-ret-strip">${retHtml}</div>
           <div class="card-chart-periods">
             <span class="ccp-pill" data-period="6m" onclick="setCardChartPeriod(event,this,'6m')">6M</span>
             <span class="ccp-pill active" data-period="1y" onclick="setCardChartPeriod(event,this,'1y')">1Y</span>
@@ -8263,6 +8307,7 @@
             if (duration === '3m') return isNaN(row._ret3m) ? NaN : row._ret3m;
             if (duration === '6m') return isNaN(row._ret6m) ? NaN : row._ret6m;
             if (duration === '1y') return isNaN(row._ret1y) ? NaN : row._ret1y;
+            if (duration === '2y') return isNaN(row._ret2y) ? NaN : row._ret2y;
             return NaN;
         }
 
@@ -8276,7 +8321,8 @@
                 '1m': 30 * 24 * 3600 * 1000,
                 '3m': 91 * 24 * 3600 * 1000,
                 '6m': 182 * 24 * 3600 * 1000,
-                '1y': 365 * 24 * 3600 * 1000
+                '1y': 365 * 24 * 3600 * 1000,
+                '2y': 730 * 24 * 3600 * 1000
             };
 
             allData.forEach(r => {
@@ -8303,6 +8349,7 @@
                     else if (dur === '3m') r._ret3m = ret;
                     else if (dur === '6m') r._ret6m = ret;
                     else if (dur === '1y') r._ret1y = ret;
+                    else if (dur === '2y') r._ret2y = ret;
                 });
             });
 
@@ -8411,91 +8458,49 @@
                 return;
             }
 
-            // Run base filter first (search, existing filters) but with topState index override
-            const dc = _getDomCache();
-            const rawQ = dc.searchInput.value.trim();
-            const orGroups = rawQ.toLowerCase().split('|').map(g => tokenize(g)).filter(g => g.length);
+            // Run the full base filter first — this respects ALL active filters
+            // (search, sector, industry, scores, mcap, etc.)
+            _origDoFilter();
 
-            const qtrQ = dc.qtrFilter.value;
-            const indQ = dc.indFilter.value;
-            const minMcap = parseFloat(dc.minMcap.value);
-            const minEps = parseFloat(dc.minEps.value);
-            const minSmr = parseFloat(dc.minSmr.value);
-            const minStr = parseFloat(dc.minStr.value);
-            const minRoce = parseFloat(dc.minRoce.value);
-            const minMasterStr = dc.minMaster.value;
-            const minDemandStr = dc.minDemand.value;
-            const invQ = dc.invFilter ? dc.invFilter.value : 'all';
-            const baseStageQ = dc.baseStage ? dc.baseStage.value : 'all';
-            const baseStatusQ = dc.baseStatus ? dc.baseStatus.value : 'all';
-            const baseTypeQ = dc.baseType ? dc.baseType.value : 'all';
-            const grades = ['A', 'B', 'C', 'D', 'E'];
-
-            // Use the top index filter if set, else the main index filter
-            const idxQ = ts.indexFilter !== 'all' ? ts.indexFilter : dc.idxFilter.value;
-
-            let base = allData.filter(r => {
-                if (orGroups.length > 0) {
-                    const bestScore = orGroups.reduce((best, tokens) => Math.max(best, scoreSearchMatch(r, tokens)), 0);
-                    if (!bestScore) return false;
-                    r._matchScore = bestScore;
-                } else { r._matchScore = 0; }
-                if (idxQ !== 'all' && (!indexDataMap[idxQ] || !indexDataMap[idxQ].has(String(r._ticker).toUpperCase()))) return false;
-                if (qtrQ !== 'all' && r._qtr !== qtrQ) return false;
-                if (indQ !== 'all' && r._ind !== indQ) return false;
-                if (!isNaN(minMcap) && (isNaN(r._mcap) || r._mcap < minMcap)) return false;
-                if (!isNaN(minEps) && (isNaN(r._eps) || r._eps < minEps)) return false;
-                if (!isNaN(minSmr) && (isNaN(r._smr) || r._smr < minSmr)) return false;
-                if (!isNaN(minStr) && (isNaN(r._str) || r._str < minStr)) return false;
-                if (!isNaN(minRoce) && (isNaN(r._roce) || r._roce < minRoce)) return false;
-                if (minMasterStr !== 'all') { const mi = grades.indexOf(minMasterStr), vi = grades.indexOf(r._master); if (vi === -1 || vi > mi) return false; }
-                if (minDemandStr !== 'all') { const mi = grades.indexOf(minDemandStr), vi = grades.indexOf(r._demand); if (vi === -1 || vi > mi) return false; }
-                if (invQ !== 'all' && window.superStarMap) {
-                    const ssEntries = window.superStarMap[String(r._ticker).toUpperCase()] || [];
-                    if (invQ === 'superstar') { if (!ssEntries.length) return false; }
-                    else { if (!ssEntries.some(e => e.investor === invQ)) return false; }
-                }
-                // Base matrix filters (MarketSmith)
-                if (baseStageQ !== 'all' && String(r['Base_Stage_Weekly'] || '').trim() !== baseStageQ) return false;
-                if (baseStatusQ !== 'all' && String(r['Base_Status_Weekly'] || '').trim() !== baseStatusQ) return false;
-                if (baseTypeQ !== 'all' && String(r['Base_Type_Weekly'] || '').trim() !== baseTypeQ) return false;
-                return true;
-            });
-
-            let final = base;
-            if (activeFilter !== 'all') { const ts2 = { best: 4, good: 3, mod: 2, weak: 1, vweak: 0 }[activeFilter]; final = base.filter(r => r._score === ts2); }
-            // Note: topState doFilter sorts by return value only — no additional sort key caching needed here
-
-            // Attach return values for sorting
-            const dur = ts.duration;
-            final.forEach(r => { r._topRet = getReturnValue(r, dur); });
-
-            // Sort: stocks with return data first (high to low), then stocks without data (by score)
-            final.sort((a, b) => {
-                const aHas = !isNaN(a._topRet), bHas = !isNaN(b._topRet);
-                if (aHas && bHas) return b._topRet - a._topRet;
-                if (aHas) return -1;
-                if (bHas) return 1;
-                // Both no return data: sort by score (top scorer on list)
-                return b._score - a._score;
-            });
-
-            // Limit to top N
-            final = final.slice(0, ts.topN);
-
-            // Mark top rank on each
-            final.forEach((r, i) => { r._topRank = i + 1; });
-
-            currentFilteredData = final;
-            currentRenderLimit = RENDER_CHUNK;
-            renderCards();
-            // Defer summary + news to next frame — same pattern as base doFilter
+            // After base filter renders, layer the Top-N ranking on top
+            // We do this in the next frame so currentFilteredData is populated
             requestAnimationFrame(() => {
+                const base = currentFilteredData ? [...currentFilteredData] : [];
+
+                // Override index filter if top-panel has its own index selection
+                const dc = _getDomCache();
+                const idxQ = ts.indexFilter !== 'all' ? ts.indexFilter : null;
+                let ranked = idxQ
+                    ? base.filter(r => !indexDataMap[idxQ] || indexDataMap[idxQ].has(String(r._ticker).toUpperCase()))
+                    : base;
+
+                // Attach return values for sorting
+                const dur = ts.duration;
+                ranked.forEach(r => { r._topRet = getReturnValue(r, dur); });
+
+                // Sort: stocks with return data first (high → low), then no-data by score
+                ranked.sort((a, b) => {
+                    const aHas = !isNaN(a._topRet), bHas = !isNaN(b._topRet);
+                    if (aHas && bHas) return b._topRet - a._topRet;
+                    if (aHas) return -1;
+                    if (bHas) return 1;
+                    return b._score - a._score;
+                });
+
+                // Limit to top N
+                ranked = ranked.slice(0, ts.topN);
+
+                // Mark top rank on each
+                ranked.forEach((r, i) => { r._topRank = i + 1; });
+
+                currentFilteredData = ranked;
+                currentRenderLimit = RENDER_CHUNK;
+                renderCards();
+
+                // Update summary with the full pre-ranked base (shows true count context)
+                const rawQ = dc.searchInput.value.trim();
                 buildSummary(base);
                 if (window._sidebarTab !== 'deals') filterBothNews(rawQ);
-                const globalBtn = dc.globalClearBtn;
-                if (globalBtn) globalBtn.style.display = indQ !== 'all' ? 'flex' : 'none';
-                _filterInProgress = false;
             });
         };
 
@@ -10715,8 +10720,8 @@
      DEAL BLOCK ENGINE — modular, no existing code touched
 ══════════════════════════════════════════════════════ -->
     <div class="deal-ball-tooltip" id="deal-ball-tip" onmouseleave="this.style.display='none';">
-        <div id="deal-ball-tip-close" onclick="document.getElementById('deal-ball-tip').style.display='none';" style="position: sticky; top: 0; right: 0; text-align: right; font-size: 14px; cursor: pointer; color: #ff4d4f; padding-bottom: 4px; z-index: 10; background: #0f0f14; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 4px;">&times; Close</div>
-        <div id="deal-ball-tip-content"></div>
+        <div id="deal-ball-tip-close" onclick="document.getElementById('deal-ball-tip').style.display='none';" style="position: sticky; top: 0; text-align: right; font-size: 13px; cursor: pointer; color: #ff4d4f; padding: 5px 10px 4px; z-index: 10; background: #0f0f14; border-bottom: 1px solid rgba(255,255,255,0.1); font-family:'Lexend',sans-serif; font-weight:700; letter-spacing:0.04em;">✕ Close</div>
+        <div id="deal-ball-tip-content" style="padding: 6px 10px 8px;"></div>
     </div>
 
     <script>
