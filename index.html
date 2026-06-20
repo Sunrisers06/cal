@@ -5644,6 +5644,7 @@
                         <button class="font-sz-btn font-sz-inc" onclick="adjustNewsFontSize(1)"
                             title="Increase font size">A</button>
                     </div>
+                    <button class="deal-refresh-btn" onclick="refreshInsightsData(this)" title="Refresh Insights">↻</button>
                     <button class="fs-btn" onclick="toggleNewsFS('insights-section', this)"
                         title="Fullscreen">⛶</button>
                 </div>
@@ -5662,6 +5663,7 @@
                         <button class="font-sz-btn font-sz-inc" onclick="adjustNewsFontSize(1)"
                             title="Increase font size">A</button>
                     </div>
+                    <button class="deal-refresh-btn" onclick="refreshNewsData(this)" title="Refresh News">↻</button>
                     <button class="fs-btn" onclick="toggleNewsFS('general-news-section', this)"
                         title="Fullscreen">⛶</button>
                 </div>
@@ -5680,6 +5682,7 @@
                         <button class="font-sz-btn font-sz-inc" onclick="adjustNewsFontSize(1)"
                             title="Increase font size">A</button>
                     </div>
+                    <button class="deal-refresh-btn" onclick="refreshNSENewsData(this)" title="Refresh NSE News">↻</button>
                     <button class="fs-btn" onclick="toggleNewsFS('nsenews-section', this)" title="Fullscreen">⛶</button>
                 </div>
                 <div class="news-list" id="nsenews-list"></div>
@@ -6559,9 +6562,10 @@
             out.push(cur); return out;
         }
         function parseDateRobust(s) {
-            if (!s) return 0; let t = Date.parse(s); if (!isNaN(t)) return t;
+            if (!s) return 0;
             const m = String(s).match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
             if (m) { let d = +m[1], mo = +m[2] - 1, y = +m[3]; if (y < 100) y += 2000; return new Date(y, mo, d).getTime(); }
+            let t = Date.parse(s); if (!isNaN(t)) return t;
             return 0;
         }
         function parseNewsCSV(text) {
@@ -7295,7 +7299,8 @@
             document.getElementById('nsenews-list').insertAdjacentHTML('beforeend', html);
         }
 
-        async function fetchNseNewsData() {
+        async function fetchNseNewsData(btn) {
+            if (btn) btn.innerHTML = '⏳';
             try {
                 const res = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vQkut365u0X8AscEt0Zngenr1OxgnBmkewpd3fJHsT2XfI7O-Ufm-WsckHwWgah--QzcwRtxOY0UsEO/pub?gid=0&single=true&output=csv');
                 const text = await res.text();
@@ -7306,17 +7311,71 @@
                         const k = keys.find(k => regex.test(k));
                         return k ? String(r[k] || '').trim() : '';
                     };
+                    const dStr = getVal(/^date$/i);
                     return {
-                        date: getVal(/^date$/i),
+                        date: dStr,
+                        timestamp: parseDateRobust(dStr),
                         ticker: getVal(/^ticker$/i),
                         title: getVal(/^title$/i),
                         summary: getVal(/^summary$/i),
                         url: getVal(/^announcement_url$/i)
                     };
-                }).filter(r => r.title || r.summary);
+                }).filter(r => r.title || r.summary).sort((a, b) => b.timestamp - a.timestamp);
                 filterBothNews();
             } catch (e) {
                 console.error('Failed to fetch NSE News:', e);
+            } finally {
+                if (btn) btn.innerHTML = '↻';
+            }
+        }
+
+        function refreshNSENewsData(btn) {
+            fetchNseNewsData(btn);
+        }
+
+        async function refreshInsightsData(btn) {
+            if (btn) btn.innerHTML = '⏳';
+            try {
+                const text = await smartFetch(URLS.insights);
+                const ins = parseCSV(text);
+                allInsightsData = ins.map(r => {
+                    try {
+                        const getK = k => { const fk = Object.keys(r).find(x => String(x).toLowerCase() === k); return fk ? String(r[fk]) : ''; };
+                        const t = getK('timestamp');
+                        const ticker = String(r['Ticker'] || r['ticker'] || getK('ticker') || '');
+                        const text = getK('market_insight').trim();
+                        return {
+                            dateStr: t.trim(),
+                            timestamp: parseDateRobust(t),
+                            ticker,
+                            tag: getK('tag').trim(),
+                            text,
+                            link: getK('insight_url').trim(),
+                            // Pre-computed for filter performance
+                            _tickLow: String(ticker).toLowerCase(),
+                            _tok: tokenize(text + ' ' + ticker)
+                        };
+                    } catch (e) { return null; }
+                }).filter(n => n && n.text).sort((a, b) => b.timestamp - a.timestamp);
+                filterBothNews(null); // will just re-render current selection
+            } catch(e) {
+                console.error(e);
+            } finally {
+                if (btn) btn.innerHTML = '↻';
+            }
+        }
+
+        async function refreshNewsData(btn) {
+            if (btn) btn.innerHTML = '⏳';
+            try {
+                const text = await smartFetch(URLS.news);
+                allNewsData = parseNewsCSV(text).sort((a, b) => b.timestamp - a.timestamp);
+                allNewsData.forEach(n => { n._tok = tokenize(n.text + ' ' + (n.ticker || '') + ' ' + (n.date || '')); });
+                filterBothNews(null); // will just re-render current selection
+            } catch(e) {
+                console.error(e);
+            } finally {
+                if (btn) btn.innerHTML = '↻';
             }
         }
 
@@ -8117,19 +8176,55 @@
 
             try {
                 if (!loadedFromCache) {
-                    sb.textContent = '⏳ Fetching all data sources…';
+                    sb.innerHTML = `⏳ Fetching all data sources…
+                        <div style="font-size:12px; margin-top:10px; display:grid; grid-template-columns: 1fr 1fr; gap:6px; text-align:left;">
+                            <div id="prog-results">⏳ Results</div>
+                            <div id="prog-news">⏳ News</div>
+                            <div id="prog-insights">⏳ Insights</div>
+                            <div id="prog-superstar">⏳ SuperStar</div>
+                            <div id="prog-indices">⏳ Indices</div>
+                            <div id="prog-ohlcv">⏳ OHLCV</div>
+                            <div id="prog-epsales">⏳ EPS/Sales</div>
+                            <div id="prog-screener">⏳ Screener</div>
+                        </div>`;
+
+                    const fetchWithProg = async (id, name, promise) => {
+                        try {
+                            const res = await promise;
+                            const el = document.getElementById('prog-' + id);
+                            if (el) el.innerHTML = `✅ ${name}`;
+                            return res;
+                        } catch (e) {
+                            const el = document.getElementById('prog-' + id);
+                            if (el) el.innerHTML = `❌ ${name} <span style="font-size:9px;color:var(--pop-red);">(${e.message})</span>`;
+                            throw e;
+                        }
+                    };
+                    
+                    const fetchWithProgNoThrow = async (id, name, promise) => {
+                        try {
+                            const res = await promise;
+                            const el = document.getElementById('prog-' + id);
+                            if (el) el.innerHTML = `✅ ${name}`;
+                            return res;
+                        } catch (e) {
+                            const el = document.getElementById('prog-' + id);
+                            if (el) el.innerHTML = `❌ ${name} <span style="font-size:9px;color:var(--pop-red);">(${e.message})</span>`;
+                            return '';
+                        }
+                    };
 
                     // Fetch all CSVs in parallel — including OHLCV chart data
                     [resT, idxT, namesT, newsT, insT, ohlcvT, ssT, epSalesT, scrT] = await Promise.all([
-                        smartFetch(URLS.results),
-                        smartFetch(URLS.indices),
+                        fetchWithProg('results', 'Results', smartFetch(URLS.results)),
+                        fetchWithProg('indices', 'Indices', smartFetch(URLS.indices)),
                         smartFetch(URLS.namesMap),
-                        smartFetch(URLS.news),
-                        smartFetch(URLS.insights),
-                        smartFetch(OHLCV_URL),
-                        smartFetch(URLS.superstar).catch(e => { console.warn('SuperStar data unavailable:', e.message); return ''; }),
-                        smartFetch(URLS.epsales).catch(e => { console.warn('EPS/Sales data unavailable:', e.message); return ''; }),
-                        smartFetch(URLS.screener).catch(e => { console.warn('Screener data unavailable:', e.message); return ''; }),
+                        fetchWithProg('news', 'News', smartFetch(URLS.news)),
+                        fetchWithProg('insights', 'Insights', smartFetch(URLS.insights)),
+                        fetchWithProg('ohlcv', 'OHLCV', smartFetch(OHLCV_URL)),
+                        fetchWithProgNoThrow('superstar', 'SuperStar', smartFetch(URLS.superstar)),
+                        fetchWithProgNoThrow('epsales', 'EPS/Sales', smartFetch(URLS.epsales)),
+                        fetchWithProgNoThrow('screener', 'Screener', smartFetch(URLS.screener)),
                     ]);
 
                     // Save to IDB asynchronously (non-blocking — don’t await)
