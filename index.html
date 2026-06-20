@@ -9241,10 +9241,15 @@
 
                 // ── Compute MAs, A/D, and OBV on FULL history, then slice to selected period for display ──
                 const closes = allRaw.map(r => r.close);
+                const vols = allRaw.map(r => r.vol);
                 const s10full = sma(closes, 10);
                 const s20full = sma(closes, 20);
                 const s30full = sma(closes, 30);
                 const s40full = sma(closes, 40);
+                const volSma50full = sma(vols, 50);
+
+                const hUpV15full = new Array(allRaw.length).fill(0);
+                const hDnV15full = new Array(allRaw.length).fill(0);
 
                 let ad = 0;
                 let obv = 0;
@@ -9253,6 +9258,19 @@
 
                 for (let i = 0; i < allRaw.length; i++) {
                     const r = allRaw[i];
+                    
+                    let maxUp = 0, maxDn = 0;
+                    const start = Math.max(0, i - 15 + 1);
+                    for (let j = start; j <= i; j++) {
+                        const rj = allRaw[j];
+                        if (rj.close > rj.open) {
+                            if (rj.vol > maxUp) maxUp = rj.vol;
+                        } else if (rj.close < rj.open) {
+                            if (rj.vol > maxDn) maxDn = rj.vol;
+                        }
+                    }
+                    hUpV15full[i] = maxUp;
+                    hDnV15full[i] = maxDn;
                     let mfm = 0;
                     const range = r.high - r.low;
                     if (range > 0) {
@@ -9287,6 +9305,9 @@
                     ma40: s40full[startIdx + i],
                     ad: adFull[startIdx + i],
                     obv: obvFull[startIdx + i],
+                    volSma50: volSma50full[startIdx + i],
+                    hUpV15: hUpV15full[startIdx + i],
+                    hDnV15: hDnV15full[startIdx + i]
                 }));
 
                 if (!raw.length) {
@@ -9664,9 +9685,26 @@
                 raw.forEach((r, i) => {
                     const x = VP.l + (i + 0.5) * (vW2 / n);
                     const bh = Math.max(1, (r.vol / maxV) * vH2);
-                    const bull = r.close >= r.open;
-                    vc.fillStyle = bull ? '#1e6eff' : '#ff2d78';
-                    vc.globalAlpha = 0.75;
+                    const isUp = r.close > r.open;
+                    const isDown = r.close < r.open;
+                    const v = r.vol;
+                    
+                    let c = '#6b7280'; // Priority 6: Normal/Average Volume -> GREY
+
+                    if (isUp && v > r.hDnV15) {
+                        c = '#0ea5e9'; // Priority 1: Upside PPV -> SKY BLUE
+                    } else if (isDown && v > r.hUpV15) {
+                        c = '#a855f7'; // Priority 2: Downside PPV -> PURPLE
+                    } else if (v < 0.5 * r.volSma50) {
+                        c = '#fde047'; // Priority 3: Dryout Volume -> PALE YELLOW
+                    } else if (isUp && v > r.volSma50) {
+                        c = '#22c55e'; // Priority 4: RGV -> GREEN
+                    } else if (isDown && v > r.volSma50) {
+                        c = '#ef4444'; // Priority 5: RRV -> RED
+                    }
+
+                    vc.fillStyle = c;
+                    vc.globalAlpha = 0.85;
                     vc.fillRect(x - bW / 2, VP.t + vH2 - bh, bW, bh);
                     vc.globalAlpha = 1;
                 });
