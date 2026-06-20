@@ -8275,6 +8275,11 @@
                 if (typeof window._dealBlockInit === 'function') {
                     setTimeout(window._dealBlockInit, 2000);
                 }
+
+                // Pre-populate SuperStar pane so data is ready on first open
+                if (typeof window._superstarInit === 'function') {
+                    setTimeout(window._superstarInit, 500);
+                }
             } catch (err) {
                 document.getElementById('loading').style.display = 'none';
                 sb.className = 'sbox s-err'; sb.innerHTML = '❌ Error fetching data: ' + err.message;
