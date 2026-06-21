@@ -133,7 +133,7 @@
 
         /* Edge mobile full-screen support: when app-container scrolls, 
    allow browser chrome to collapse */
-        @media (max-width: 1024px) {
+        @media (max-width: 1400px) {
 
             html,
             body {
@@ -200,7 +200,7 @@
             border-color: rgba(255, 255, 255, 0.4);
         }
 
-        @media(max-width: 1024px) {
+        @media(max-width: 1400px) {
             #scroll-to-top {
                 bottom: 24px;
                 right: 16px;
@@ -1447,7 +1447,7 @@
             display: none;
         }
 
-        @media(max-width: 1024px) {
+        @media(max-width: 1400px) {
             .swipe-dots {
                 display: flex;
                 align-items: center;
@@ -2001,7 +2001,7 @@
             align-items: start;
         }
 
-        @media (min-width: 601px) and (max-width: 1024px) {
+        @media (min-width: 601px) and (max-width: 1400px) {
             #cards {
                 grid-template-columns: repeat(2, 1fr);
             }
@@ -2103,7 +2103,7 @@
         }
 
         /* Mobile: disable expensive hover effects that cause GPU jank */
-        @media(max-width: 1024px) {
+        @media(max-width: 1400px) {
             .stock-card:hover {
                 box-shadow: none !important;
                 transform: none !important;
@@ -2798,10 +2798,10 @@
         }
 
         /* ══════════════════════════════
-   DESKTOP CARD BUTTON LAYOUT (> 1024px)
+   DESKTOP CARD BUTTON LAYOUT (> 1400px)
    Investor + Chart horizontally
 ══════════════════════════════ */
-        @media(min-width: 1025px) {
+        @media(min-width: 1401px) {
             .card-action-btns {
                 position: static !important;
                 flex-direction: row !important;
@@ -2826,7 +2826,7 @@
         /* ══════════════════════════════
    MOBILE OVERRIDES (Fluid Design)
 ══════════════════════════════ */
-        @media(max-width: 1024px) {
+        @media(max-width: 1400px) {
 
             /* Let whole document scroll to support browser fullscreen (hide address bar) */
             html,
@@ -3404,7 +3404,7 @@
             background: rgba(59, 130, 246, 0.07);
         }
 
-        @media(max-width:1024px) {
+        @media(max-width:1400px) {
             #sidebar-resizer {
                 display: none;
             }
@@ -6118,7 +6118,7 @@
         ══════════════════════════════════════════════════════ */
         const RENDER_CHUNK = 100;
         /* Mobile gets a smaller first paint + shorter debounce for snappier interaction */
-        const IS_MOBILE = window.innerWidth <= 1024;
+        const IS_MOBILE = window.innerWidth <= 1400;
         const MOBILE_RENDER_CHUNK = 15;   // first paint: only 15 cards on mobile — faster FCP
         const MOBILE_DEBOUNCE = 150;      // snappier mobile search
         const NEWS_CHUNK = 100;
@@ -7664,7 +7664,7 @@
 
             renderSuperstarBlock();
 
-            if (window.innerWidth <= 1024) {
+            if (window.innerWidth <= 1400) {
                 if (!document.body.classList.contains('news-open-mobile')) {
                     // Properly capture the scroll position before hiding the main wrapper
                     mainScrollPos = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
@@ -10391,7 +10391,7 @@
                 hintLabel = document.getElementById('swipe-hint-label');
             }
 
-            function isMobile() { return window.innerWidth <= 1024; }
+            function isMobile() { return window.innerWidth <= 1400; }
             function isNewsOpen() { return document.body.classList.contains('news-open-mobile'); }
 
             function showHint(side, icon, label) {
@@ -11219,7 +11219,7 @@
             let _globalQ = '';
 
             /* ── Mobile detection (cached once) ── */
-            const _IS_MOBILE_DEAL = window.innerWidth <= 1024;
+            const _IS_MOBILE_DEAL = window.innerWidth <= 1400;
             /* ── Always load 100 rows per page in deal tables ── */
             const DEAL_PAGE_SIZE = 100;
 
@@ -13121,7 +13121,7 @@
            Clamp sidebar + body to viewport width on mobile.
            The swipe animation uses translateX which temporarily
            pushes content outside bounds — overflow:hidden clips it. */
-        @media (max-width: 1024px) {
+        @media (max-width: 1400px) {
 
             /* Kill the inline width on sidebar set by JS */
             .sidebar {
