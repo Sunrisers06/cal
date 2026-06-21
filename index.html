@@ -414,16 +414,19 @@
         #csph-canvas-price {
             display: none;
             width: 100%;
+            transition: opacity 0.2s ease;
         }
 
         #csph-canvas-vol {
             display: none;
             width: 100%;
+            transition: opacity 0.2s ease;
         }
 
         #csph-canvas-ind {
             display: none;
             width: 100%;
+            transition: opacity 0.2s ease;
         }
 
         /* ── Period pill selector ── */
@@ -2412,7 +2415,7 @@
         }
 
         .card-chart-inner {
-            background: #ffffff;
+            background: #000000;
             border-radius: 8px;
             overflow: hidden;
             border: 1px solid rgba(255, 255, 255, 0.06);
@@ -2503,7 +2506,7 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            background: #ffffff;
+            background: #000000;
             min-height: 0;
         }
 
@@ -2517,6 +2520,8 @@
             color: #9ca3af;
             font-size: 11px;
             font-family: 'Lexend', sans-serif;
+            background: #000000;
+            transition: opacity 0.2s ease;
         }
 
         .card-chart-canvas-price,
@@ -2524,6 +2529,7 @@
         .card-chart-canvas-ind {
             display: none;
             width: 100%;
+            transition: opacity 0.25s ease;
         }
 
         .metric-cell {
@@ -6551,21 +6557,67 @@
         }
 
         function parseCSV(text) {
-            const lines = text.replace(/\r/g, '').trim().split('\n');
+            const lines = [];
+            let curLine = '', inQ = false;
+            for (let i = 0; i < text.length; i++) {
+                const c = text[i];
+                if (c === '"') inQ = !inQ;
+                if (c === '\n' && !inQ) {
+                    if (curLine.trim() !== '') lines.push(curLine.replace(/\r/g, ''));
+                    curLine = '';
+                } else {
+                    curLine += c;
+                }
+            }
+            if (curLine.trim() !== '') lines.push(curLine.replace(/\r/g, ''));
+
             if (lines.length < 2) return [];
             const hdrs = parseLine(lines[0]).map(h => h.trim().replace(/^[\uFEFF\u200B\u00A0]+/, '').replace(/[\u2018\u2019\u201C\u201D]/g, '').replace(/\s+/g, ' ').trim());
-            return lines.slice(1).map(line => { const v = parseLine(line), o = {}; hdrs.forEach((h, i) => { o[h] = String(v[i] || '').trim(); }); return o; }).filter(r => Object.values(r).some(v => v));
+            return lines.slice(1).map(line => {
+                const v = parseLine(line);
+                const o = {};
+                hdrs.forEach((h, i) => { o[h] = String(v[i] || '').trim(); });
+                return o;
+            }).filter(r => Object.values(r).some(v => v));
         }
         function parseLine(line) {
             const out = []; let cur = '', inQ = false;
-            for (let i = 0; i < line.length; i++) { const c = line[i]; if (c === '"') inQ = !inQ; else if (c === ',' && !inQ) { out.push(cur); cur = ''; } else cur += c; }
-            out.push(cur); return out;
+            for (let i = 0; i < line.length; i++) {
+                const c = line[i];
+                if (c === '"') {
+                    if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+                    else { inQ = !inQ; }
+                } else if (c === ',' && !inQ) { out.push(cur.trim()); cur = ''; }
+                else { cur += c; }
+            }
+            out.push(cur.trim()); return out;
         }
         function parseDateRobust(s) {
             if (!s) return 0;
-            const m = String(s).match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-            if (m) { let d = +m[1], mo = +m[2] - 1, y = +m[3]; if (y < 100) y += 2000; return new Date(y, mo, d).getTime(); }
-            let t = Date.parse(s); if (!isNaN(t)) return t;
+            const str = String(s).trim();
+            // 1) ISO format: YYYY-MM-DD or YYYY/MM/DD
+            const iso = str.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+            if (iso) { return new Date(+iso[1], +iso[2] - 1, +iso[3]).getTime(); }
+            // 2) DD-Mon-YYYY or DD Mon YYYY (e.g. "20-Jun-2026", "20 June 2026")
+            const monNames = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+            const txtM = str.match(/^(\d{1,2})[\/\-\s]+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*[\/\-\s,]+(\d{2,4})/i);
+            if (txtM) { let y = +txtM[3]; if (y < 100) y += 2000; return new Date(y, monNames[txtM[2].slice(0,3).toLowerCase()], +txtM[1]).getTime(); }
+            // 3) Mon DD, YYYY (e.g. "June 20, 2026")
+            const txtM2 = str.match(/^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*[\s]+(\d{1,2})[,\s]+(\d{2,4})/i);
+            if (txtM2) { let y = +txtM2[3]; if (y < 100) y += 2000; return new Date(y, monNames[txtM2[1].slice(0,3).toLowerCase()], +txtM2[2]).getTime(); }
+            // 4) Numeric DD/MM/YYYY or MM/DD/YYYY — heuristic: if first > 12, it's DD/MM; otherwise treat as DD/MM (Indian convention)
+            const m = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+            if (m) {
+                let a = +m[1], b = +m[2], y = +m[3];
+                if (y < 100) y += 2000;
+                let day, mo;
+                if (a > 12 && b <= 12) { day = a; mo = b - 1; }       // First > 12 → must be day (DD/MM)
+                else if (b > 12 && a <= 12) { day = b; mo = a - 1; }   // Second > 12 → must be day (MM/DD)
+                else { day = a; mo = b - 1; }                           // Ambiguous — default DD/MM (Indian)
+                return new Date(y, mo, day).getTime();
+            }
+            // 5) Fallback: native Date.parse
+            let t = Date.parse(str); if (!isNaN(t)) return t;
             return 0;
         }
         function parseNewsCSV(text) {
@@ -7320,7 +7372,7 @@
                         summary: getVal(/^summary$/i),
                         url: getVal(/^announcement_url$/i)
                     };
-                }).filter(r => r.title || r.summary).sort((a, b) => b.timestamp - a.timestamp);
+                }).filter(r => (r.title || r.summary) && r.timestamp > 0).sort((a, b) => b.timestamp - a.timestamp);
                 filterBothNews();
             } catch (e) {
                 console.error('Failed to fetch NSE News:', e);
@@ -7911,10 +7963,18 @@
         window.setViewMode = function (mode) {
             mode = (mode === 'chart') ? 'chart' : 'latest';
             if (window._cardViewMode === mode) return;
-            window._cardViewMode = mode;
             const sel = document.getElementById('view-mode-filter');
             if (sel && sel.value !== mode) sel.value = mode;
-            renderCards();
+            const cardsEl = document.getElementById('cards');
+            // Smooth fade transition
+            cardsEl.style.transition = 'opacity 0.18s ease';
+            cardsEl.style.opacity = '0';
+            setTimeout(() => {
+                window._cardViewMode = mode;
+                renderCards();
+                cardsEl.style.opacity = '1';
+                setTimeout(() => { cardsEl.style.transition = ''; }, 200);
+            }, 180);
         };
 
         /* ── Switch the period (6M/1Y/2Y) for a single card's chart ── */
@@ -7937,9 +7997,12 @@
             const widthEl = wrap.querySelector('.card-chart-inner') || wrap;
             if (!ticker || !pCv || !vCv || !loadEl) return;
             loadEl.style.display = 'flex';
+            loadEl.style.opacity = '1';
             loadEl.innerHTML = '<div class="csph-spinner"></div><span>Loading…</span>';
             pCv.style.display = 'none';
+            pCv.style.opacity = '0';
             vCv.style.display = 'none';
+            vCv.style.opacity = '0';
             if (typeof window._renderCardCandleChart === 'function') {
                 window._renderCardCandleChart(ticker, period, pCv, vCv, loadEl, widthEl);
             }
@@ -9317,8 +9380,14 @@
                     return;
                 }
 
-                loadEl.style.display = 'none'; pCv.style.display = 'block'; vCv.style.display = 'block';
+                loadEl.style.opacity = '0';
+                setTimeout(() => { loadEl.style.display = 'none'; }, 200);
+                pCv.style.display = 'block'; vCv.style.display = 'block';
                 if (indCv) indCv.style.display = 'block';
+                requestAnimationFrame(() => {
+                    pCv.style.opacity = '1'; vCv.style.opacity = '1';
+                    if (indCv) indCv.style.opacity = '1';
+                });
 
                 const isMobile = window.innerWidth < 600;
                 // Full container width; price chart uses 16:9-ish ratio, volume ~1/5 of price height, indicators ~18%
