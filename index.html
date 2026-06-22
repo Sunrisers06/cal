@@ -9365,6 +9365,9 @@
                 let startIdx = 0;
                 while (startIdx < allRaw.length && allRaw[startIdx].date.getTime() < cutTs) startIdx++;
 
+                const adSmaFull = sma(adFull, 9);
+                const obvSmaFull = sma(obvFull, 9);
+
                 // Display slice with attached MA, A/D, and OBV values
                 const raw = allRaw.slice(startIdx).map((r, i) => ({
                     ...r,
@@ -9374,6 +9377,8 @@
                     ma40: s40full[startIdx + i],
                     ad: adFull[startIdx + i],
                     obv: obvFull[startIdx + i],
+                    adSma: adSmaFull[startIdx + i],
+                    obvSma: obvSmaFull[startIdx + i],
                     volSma50: volSma50full[startIdx + i],
                     hUpV15: hUpV15full[startIdx + i],
                     hDnV15: hDnV15full[startIdx + i]
@@ -9887,9 +9892,22 @@
                     let stAD = false;
                     raw.forEach((r, i) => {
                         const x = toX(i), y = toYAD(r.ad);
-                        stAD ? ic.lineTo(x, y) : (pc.moveTo(x, y), stAD = true);
+                        stAD ? ic.lineTo(x, y) : (ic.moveTo(x, y), stAD = true);
                     });
                     ic.stroke();
+
+                    // Draw A/D 9 SMA: Bright Pink, 50% opacity, dashed
+                    ic.strokeStyle = 'rgba(255, 0, 255, 0.5)'; ic.lineWidth = 1.2; ic.setLineDash([4, 4]);
+                    ic.beginPath();
+                    let stADSma = false;
+                    raw.forEach((r, i) => {
+                        if (r.adSma !== null && r.adSma !== undefined) {
+                            const x = toX(i), y = toYAD(r.adSma);
+                            stADSma ? ic.lineTo(x, y) : (ic.moveTo(x, y), stADSma = true);
+                        }
+                    });
+                    ic.stroke();
+                    ic.setLineDash([]);
 
                     // Draw OBV line: Bright Blue
                     ic.strokeStyle = '#00ccff'; ic.lineWidth = 1.2; ic.lineJoin = 'round'; ic.lineCap = 'round';
@@ -9897,9 +9915,22 @@
                     let stOBV = false;
                     raw.forEach((r, i) => {
                         const x = toX(i), y = toYOBV(r.obv);
-                        stOBV ? ic.lineTo(x, y) : (pc.moveTo(x, y), stOBV = true);
+                        stOBV ? ic.lineTo(x, y) : (ic.moveTo(x, y), stOBV = true);
                     });
                     ic.stroke();
+
+                    // Draw OBV 9 SMA: Bright Blue, 50% opacity, dashed
+                    ic.strokeStyle = 'rgba(0, 204, 255, 0.5)'; ic.lineWidth = 1.2; ic.setLineDash([4, 4]);
+                    ic.beginPath();
+                    let stOBVSma = false;
+                    raw.forEach((r, i) => {
+                        if (r.obvSma !== null && r.obvSma !== undefined) {
+                            const x = toX(i), y = toYOBV(r.obvSma);
+                            stOBVSma ? ic.lineTo(x, y) : (ic.moveTo(x, y), stOBVSma = true);
+                        }
+                    });
+                    ic.stroke();
+                    ic.setLineDash([]);
 
                     // Right-side indicators values for the last close
                     const lastAd = raw[raw.length - 1].ad;
