@@ -9316,6 +9316,7 @@
                 const s30full = sma(closes, 30);
                 const s40full = sma(closes, 40);
                 const volSma50full = sma(vols, 50);
+                const volSma9full = sma(vols, 9);
 
                 const hUpV15full = new Array(allRaw.length).fill(0);
                 const hDnV15full = new Array(allRaw.length).fill(0);
@@ -9380,6 +9381,7 @@
                     adSma: adSmaFull[startIdx + i],
                     obvSma: obvSmaFull[startIdx + i],
                     volSma50: volSma50full[startIdx + i],
+                    volSma9: volSma9full[startIdx + i],
                     hUpV15: hUpV15full[startIdx + i],
                     hDnV15: hDnV15full[startIdx + i]
                 }));
@@ -9788,6 +9790,20 @@
                     vc.fillRect(x - bW / 2, VP.t + vH2 - bh, bW, bh);
                     vc.globalAlpha = 1;
                 });
+
+                // Draw 9 SMA for Volume: White, 50% opacity, dashed
+                vc.strokeStyle = 'rgba(255, 255, 255, 0.5)'; vc.lineWidth = 1.2; vc.setLineDash([4, 4]);
+                vc.beginPath();
+                let stVolSma = false;
+                raw.forEach((r, i) => {
+                    if (r.volSma9 !== null && r.volSma9 !== undefined) {
+                        const x = VP.l + (i + 0.5) * (vW2 / n);
+                        const y = VP.t + vH2 - (r.volSma9 / maxV) * vH2;
+                        stVolSma ? vc.lineTo(x, y) : (vc.moveTo(x, y), stVolSma = true);
+                    }
+                });
+                vc.stroke();
+                vc.setLineDash([]);
 
                 // Volume right-side labels — full white bold, right-aligned
                 vc.font = 'bold 7.5px "Lexend",monospace'; vc.fillStyle = '#ffffff';
