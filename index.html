@@ -2465,14 +2465,22 @@
         }
 
         .cch-ret-lbl {
-            color: rgba(255,255,255,0.4);
+            color: rgba(255, 255, 255, 0.4);
             font-size: 9px;
             margin-right: 1px;
         }
 
-        .cch-ret-pos { color: #00e676; }
-        .cch-ret-neg { color: #ff4d4f; }
-        .cch-ret-na  { color: rgba(255,255,255,0.3); }
+        .cch-ret-pos {
+            color: #00e676;
+        }
+
+        .cch-ret-neg {
+            color: #ff4d4f;
+        }
+
+        .cch-ret-na {
+            color: rgba(255, 255, 255, 0.3);
+        }
 
         .card-chart-periods {
             display: flex;
@@ -2487,9 +2495,9 @@
             padding: 2px 7px;
             border-radius: 10px;
             cursor: pointer;
-            border: 1px solid rgba(255,255,255,0.15);
-            background: rgba(255,255,255,0.07);
-            color: rgba(255,255,255,0.55);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.07);
+            color: rgba(255, 255, 255, 0.55);
             transition: all 0.15s;
             letter-spacing: 0.04em;
             user-select: none;
@@ -4269,57 +4277,142 @@
    FAVORITE TYPE MODAL
 ══════════════════════════════════════════════════════ */
         #fav-type-modal-overlay {
-            position: fixed; inset: 0; z-index: 500000;
+            position: fixed;
+            inset: 0;
+            z-index: 500000;
             background: rgba(0, 0, 0, 0.65);
-            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-            display: none; align-items: center; justify-content: center;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
         }
-        #fav-type-modal-overlay.open { display: flex; }
+
+        #fav-type-modal-overlay.open {
+            display: flex;
+        }
+
         #fav-type-modal {
             background: rgba(18, 18, 26, 0.95);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 16px;
             width: min(320px, 90vw);
-            display: flex; flex-direction: column;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
             font-family: 'Lexend', sans-serif;
             animation: urScaleIn 0.2s ease-out;
         }
+
         #fav-type-modal-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
-        #fav-type-modal-title { font-weight: 600; font-size: 1.1rem; color: #fff; }
+
+        #fav-type-modal-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #fff;
+        }
+
         #fav-type-modal-close {
-            background: none; border: none; color: #a1a1aa; font-size: 1.2rem;
-            cursor: pointer; padding: 4px; border-radius: 4px;
+            background: none;
+            border: none;
+            color: #a1a1aa;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
         }
-        #fav-type-modal-close:hover { color: #fff; background: rgba(255,255,255,0.1); }
+
+        #fav-type-modal-close:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
         #fav-type-modal-body {
-            display: flex; flex-direction: column; gap: 12px; padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 20px;
         }
+
         .fav-checkbox-label {
-            display: flex; align-items: center; gap: 12px; font-size: 1.1rem; color: #fff; cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.1rem;
+            color: #fff;
+            cursor: pointer;
             padding: 8px 0;
         }
-        .fav-checkbox-label input { width: 18px; height: 18px; cursor: pointer; }
-        .fav-save-btn {
-            margin-top: 10px; background: #3b82f6; color: #fff; border: none; padding: 10px; border-radius: 8px; font-size: 1rem; cursor: pointer; font-weight: 600; transition: all 0.2s;
-        }
-        .fav-save-btn:hover { background: #2563eb; transform: translateY(-1px); }
 
-        .fav-dropdown-wrap { position: relative; display: inline-block; }
+        .fav-checkbox-label input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .fav-save-btn {
+            margin-top: 10px;
+            background: #3b82f6;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .fav-save-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .fav-dropdown-wrap {
+            position: relative;
+            display: inline-block;
+        }
+
         .fav-dropdown-menu {
-            display: none; position: absolute; top: 110%; left: 0; background: rgba(18, 18, 26, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; flex-direction: column;
-            min-width: 140px; z-index: 10000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); overflow: hidden;
+            display: none;
+            position: absolute;
+            top: 110%;
+            left: 0;
+            background: rgba(18, 18, 26, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            flex-direction: column;
+            min-width: 140px;
+            z-index: 10000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
             backdrop-filter: blur(8px);
         }
-        .fav-dropdown-menu.show { display: flex; animation: urScaleIn 0.15s ease-out; }
-        .fav-dd-item {
-            padding: 10px 16px; color: #a1a1aa; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; font-weight: 500;
+
+        .fav-dropdown-menu.show {
+            display: flex;
+            animation: urScaleIn 0.15s ease-out;
         }
-        .fav-dd-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+
+        .fav-dd-item {
+            padding: 10px 16px;
+            color: #a1a1aa;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .fav-dd-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
 
         /* ══════════════════════════════════════════════════════
    UPCOMING RESULTS MODAL
@@ -5712,7 +5805,8 @@
                         <button class="font-sz-btn font-sz-inc" onclick="adjustNewsFontSize(1)"
                             title="Increase font size">A</button>
                     </div>
-                    <button class="deal-refresh-btn" onclick="refreshInsightsData(this)" title="Refresh Insights">↻</button>
+                    <button class="deal-refresh-btn" onclick="refreshInsightsData(this)"
+                        title="Refresh Insights">↻</button>
                     <button class="fs-btn" onclick="toggleNewsFS('insights-section', this)"
                         title="Fullscreen">⛶</button>
                 </div>
@@ -5750,7 +5844,8 @@
                         <button class="font-sz-btn font-sz-inc" onclick="adjustNewsFontSize(1)"
                             title="Increase font size">A</button>
                     </div>
-                    <button class="deal-refresh-btn" onclick="refreshNSENewsData(this)" title="Refresh NSE News">↻</button>
+                    <button class="deal-refresh-btn" onclick="refreshNSENewsData(this)"
+                        title="Refresh NSE News">↻</button>
                     <button class="fs-btn" onclick="toggleNewsFS('nsenews-section', this)" title="Fullscreen">⛶</button>
                 </div>
                 <div class="news-list" id="nsenews-list"></div>
@@ -6654,7 +6749,7 @@
             for (let i = 0; i < line.length; i++) {
                 const c = line[i];
                 if (c === '"') {
-                    if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+                    if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
                     else { inQ = !inQ; }
                 } else if (c === ',' && !inQ) { out.push(cur.trim()); cur = ''; }
                 else { cur += c; }
@@ -6668,12 +6763,12 @@
             const iso = str.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
             if (iso) { return new Date(+iso[1], +iso[2] - 1, +iso[3]).getTime(); }
             // 2) DD-Mon-YYYY or DD Mon YYYY (e.g. "20-Jun-2026", "20 June 2026")
-            const monNames = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+            const monNames = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
             const txtM = str.match(/^(\d{1,2})[\/\-\s]+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*[\/\-\s,]+(\d{2,4})/i);
-            if (txtM) { let y = +txtM[3]; if (y < 100) y += 2000; return new Date(y, monNames[txtM[2].slice(0,3).toLowerCase()], +txtM[1]).getTime(); }
+            if (txtM) { let y = +txtM[3]; if (y < 100) y += 2000; return new Date(y, monNames[txtM[2].slice(0, 3).toLowerCase()], +txtM[1]).getTime(); }
             // 3) Mon DD, YYYY (e.g. "June 20, 2026")
             const txtM2 = str.match(/^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*[\s]+(\d{1,2})[,\s]+(\d{2,4})/i);
-            if (txtM2) { let y = +txtM2[3]; if (y < 100) y += 2000; return new Date(y, monNames[txtM2[1].slice(0,3).toLowerCase()], +txtM2[2]).getTime(); }
+            if (txtM2) { let y = +txtM2[3]; if (y < 100) y += 2000; return new Date(y, monNames[txtM2[1].slice(0, 3).toLowerCase()], +txtM2[2]).getTime(); }
             // 4) Numeric DD/MM/YYYY or MM/DD/YYYY — heuristic: if first > 12, it's DD/MM; otherwise treat as DD/MM (Indian convention)
             const m = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
             if (m) {
@@ -7479,7 +7574,7 @@
                     } catch (e) { return null; }
                 }).filter(n => n && n.text).sort((a, b) => b.timestamp - a.timestamp);
                 filterBothNews(null); // will just re-render current selection
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
             } finally {
                 if (btn) btn.innerHTML = '↻';
@@ -7493,7 +7588,7 @@
                 allNewsData = parseNewsCSV(text).sort((a, b) => b.timestamp - a.timestamp);
                 allNewsData.forEach(n => { n._tok = tokenize(n.text + ' ' + (n.ticker || '') + ' ' + (n.date || '')); });
                 filterBothNews(null); // will just re-render current selection
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
             } finally {
                 if (btn) btn.innerHTML = '↻';
@@ -8332,7 +8427,7 @@
                             throw e;
                         }
                     };
-                    
+
                     const fetchWithProgNoThrow = async (id, name, promise) => {
                         try {
                             const res = await promise;
@@ -8789,15 +8884,15 @@
                     for (let i = 1; i < lines.length; i++) {
                         const cols = lines[i].split(',').map(c => c.replace(/^"|"$/g, '').trim().toUpperCase());
                         const funfav = cols[0] || '';
-                        const hold   = cols[1] || '';
+                        const hold = cols[1] || '';
                         const techfav = cols[2] || '';
                         if (funfav && funfav !== 'FUNFAV' && funfav !== 'FAVORITES') ffSet.add(funfav);
-                        if (hold   && hold   !== 'HOLDING' && hold   !== 'HOLDINGS') holdSet.add(hold);
+                        if (hold && hold !== 'HOLDING' && hold !== 'HOLDINGS') holdSet.add(hold);
                         if (techfav && techfav !== 'TECHFAV') tfSet.add(techfav);
                     }
-                    window._sheetFF    = ffSet;
-                    window._sheetTF    = tfSet;
-                    window._sheetFavs  = new Set([...ffSet, ...tfSet]); // combined for backward compat
+                    window._sheetFF = ffSet;
+                    window._sheetTF = tfSet;
+                    window._sheetFavs = new Set([...ffSet, ...tfSet]); // combined for backward compat
                     window._sheetHolds = holdSet;
                     console.log(`[SundarX] CSV: FunFav=${ffSet.size}, TechFav=${tfSet.size}, Hold=${holdSet.size}`);
 
@@ -8806,10 +8901,10 @@
                         const resp = await fetch(SYNC_URL);
                         const remoteData = await resp.json();
                         console.log('[SundarX] Remote sync data received:', remoteData);
-                        if (Array.isArray(remoteData.FF))  window._remoteFF    = new Set(remoteData.FF.map(t => String(t).toUpperCase()));
-                        if (Array.isArray(remoteData.TF))  window._remoteTF    = new Set(remoteData.TF.map(t => String(t).toUpperCase()));
-                        if (Array.isArray(remoteData.F))   window._remoteFavs  = new Set(remoteData.F.map(t  => String(t).toUpperCase()));
-                        if (Array.isArray(remoteData.H))   window._remoteHolds = new Set(remoteData.H.map(t  => String(t).toUpperCase()));
+                        if (Array.isArray(remoteData.FF)) window._remoteFF = new Set(remoteData.FF.map(t => String(t).toUpperCase()));
+                        if (Array.isArray(remoteData.TF)) window._remoteTF = new Set(remoteData.TF.map(t => String(t).toUpperCase()));
+                        if (Array.isArray(remoteData.F)) window._remoteFavs = new Set(remoteData.F.map(t => String(t).toUpperCase()));
+                        if (Array.isArray(remoteData.H)) window._remoteHolds = new Set(remoteData.H.map(t => String(t).toUpperCase()));
                         window._remoteSyncSuccess = true;
                     } catch (re) {
                         console.warn('[SundarX] Remote sync fetch failed, using CSV fallback:', re.message);
@@ -8829,50 +8924,50 @@
             window.recomputeFHTickers = function () {
                 if (window._remoteSyncSuccess) {
                     // Remote Apps Script is source of truth
-                    window._fhTickers.FF = new Set(window._remoteFF    || []);
-                    window._fhTickers.TF = new Set(window._remoteTF    || []);
-                    window._fhTickers.F  = new Set(window._remoteFavs  || []);
-                    window._fhTickers.H  = new Set(window._remoteHolds || []);
+                    window._fhTickers.FF = new Set(window._remoteFF || []);
+                    window._fhTickers.TF = new Set(window._remoteTF || []);
+                    window._fhTickers.F = new Set(window._remoteFavs || []);
+                    window._fhTickers.H = new Set(window._remoteHolds || []);
                 } else {
                     // CSV fallback — all three columns now populated
-                    window._fhTickers.FF = new Set(window._sheetFF    || []);
-                    window._fhTickers.TF = new Set(window._sheetTF    || []);
-                    window._fhTickers.F  = new Set(window._sheetFavs  || []);
-                    window._fhTickers.H  = new Set(window._sheetHolds || []);
+                    window._fhTickers.FF = new Set(window._sheetFF || []);
+                    window._fhTickers.TF = new Set(window._sheetTF || []);
+                    window._fhTickers.F = new Set(window._sheetFavs || []);
+                    window._fhTickers.H = new Set(window._sheetHolds || []);
                 }
             };
 
 
-        let _favTypeResolve = null;
-        window.promptFavType = function(tk, isFF, isTF) {
-            return new Promise(resolve => {
-                _favTypeResolve = resolve;
-                document.getElementById('fav-modal-ticker').textContent = tk;
-                document.getElementById('cb-fun-fav').checked = isFF;
-                document.getElementById('cb-tech-fav').checked = isTF;
-                document.getElementById('fav-type-modal-overlay').classList.add('open');
+            let _favTypeResolve = null;
+            window.promptFavType = function (tk, isFF, isTF) {
+                return new Promise(resolve => {
+                    _favTypeResolve = resolve;
+                    document.getElementById('fav-modal-ticker').textContent = tk;
+                    document.getElementById('cb-fun-fav').checked = isFF;
+                    document.getElementById('cb-tech-fav').checked = isTF;
+                    document.getElementById('fav-type-modal-overlay').classList.add('open');
+                });
+            };
+            window.closeFavTypeModal = function (e) {
+                if (e && e.target !== document.getElementById('fav-type-modal-overlay')) return;
+                document.getElementById('fav-type-modal-overlay').classList.remove('open');
+                if (_favTypeResolve) { _favTypeResolve(null); _favTypeResolve = null; }
+            };
+            window.submitFavType = function () {
+                const ff = document.getElementById('cb-fun-fav').checked;
+                const tf = document.getElementById('cb-tech-fav').checked;
+                document.getElementById('fav-type-modal-overlay').classList.remove('open');
+                if (_favTypeResolve) { _favTypeResolve({ ff, tf }); _favTypeResolve = null; }
+            };
+
+            window.toggleFavMenu = function (e) {
+                e.stopPropagation();
+                document.getElementById('fav-dropdown-menu').classList.toggle('show');
+            };
+            document.addEventListener('click', () => {
+                const menu = document.getElementById('fav-dropdown-menu');
+                if (menu) menu.classList.remove('show');
             });
-        };
-        window.closeFavTypeModal = function(e) {
-            if (e && e.target !== document.getElementById('fav-type-modal-overlay')) return;
-            document.getElementById('fav-type-modal-overlay').classList.remove('open');
-            if (_favTypeResolve) { _favTypeResolve(null); _favTypeResolve = null; }
-        };
-        window.submitFavType = function() {
-            const ff = document.getElementById('cb-fun-fav').checked;
-            const tf = document.getElementById('cb-tech-fav').checked;
-            document.getElementById('fav-type-modal-overlay').classList.remove('open');
-            if (_favTypeResolve) { _favTypeResolve({ ff, tf }); _favTypeResolve = null; }
-        };
-        
-        window.toggleFavMenu = function(e) {
-            e.stopPropagation();
-            document.getElementById('fav-dropdown-menu').classList.toggle('show');
-        };
-        document.addEventListener('click', () => {
-            const menu = document.getElementById('fav-dropdown-menu');
-            if (menu) menu.classList.remove('show');
-        });
 
             window._syncLocks = new Set();
             window.toggleRemoteFH = async function (ticker, type, event) {
@@ -8889,7 +8984,7 @@
                     const isTF = window._fhTickers.TF ? window._fhTickers.TF.has(tk) : false;
                     const result = await window.promptFavType(tk, isFF, isTF);
                     if (!result) { window._syncLocks.delete(lockKey); return; }
-                    
+
                     try {
                         const resp = await fetch(`${SYNC_URL}?action=update_fav&ticker=${tk}&ff=${result.ff}&tf=${result.tf}`);
                         const data = await resp.json();
@@ -9370,9 +9465,778 @@
                 return out;
             }
 
+            function rsiSeries(values, period) {
+                const out = new Array(values.length).fill(null);
+                if (!values.length || values.length <= period) return out;
+                let gain = 0, loss = 0;
+                for (let i = 1; i <= period; i++) {
+                    const ch = values[i] - values[i - 1];
+                    if (ch >= 0) gain += ch;
+                    else loss -= ch;
+                }
+                let avgGain = gain / period;
+                let avgLoss = loss / period;
+                out[period] = avgLoss === 0 ? 100 : 100 - (100 / (1 + avgGain / avgLoss));
+                for (let i = period + 1; i < values.length; i++) {
+                    const ch = values[i] - values[i - 1];
+                    const g = ch > 0 ? ch : 0;
+                    const l = ch < 0 ? -ch : 0;
+                    avgGain = ((avgGain * (period - 1)) + g) / period;
+                    avgLoss = ((avgLoss * (period - 1)) + l) / period;
+                    out[i] = avgLoss === 0 ? 100 : 100 - (100 / (1 + avgGain / avgLoss));
+                }
+                return out;
+            }
+
             /* ─── Formatters ─── */
             function fmtP(v) { if (Math.abs(v) >= 1e4) return (v / 1e3).toFixed(0) + 'K'; if (Math.abs(v) >= 1e3) return (v / 1e3).toFixed(1) + 'K'; return v.toFixed(v < 10 ? 2 : 0); }
             function fmtV(v) { if (v >= 1e7) return (v / 1e7).toFixed(1) + 'Cr'; if (v >= 1e5) return (v / 1e5).toFixed(1) + 'L'; return (v / 1e3).toFixed(0) + 'K'; }
+            function fmtPct(v, digits) {
+                if (!isFinite(v)) return '0.0%';
+                const d = digits !== undefined ? digits : (Math.abs(v) >= 10 ? 1 : 2);
+                return (v > 0 ? '+' : '') + v.toFixed(d) + '%';
+            }
+            function pctFrom(v, base) { return base ? ((v - base) / base) * 100 : 0; }
+            function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+            function rollingLevel(arr, idx, lookback, field, mode) {
+                const start = Math.max(0, idx - lookback);
+                const end = idx - 1;
+                if (end < start) return null;
+                let out = mode === 'max' ? -Infinity : Infinity;
+                for (let j = start; j <= end; j++) {
+                    const v = arr[j] && arr[j][field];
+                    if (!isFinite(v)) continue;
+                    if (mode === 'max') out = Math.max(out, v);
+                    else out = Math.min(out, v);
+                }
+                if (out === -Infinity || out === Infinity) return null;
+                return out;
+            }
+
+            function nearestLevel(candidates, price, direction) {
+                let best = null, bestDist = Infinity;
+                candidates.forEach(v => {
+                    if (!isFinite(v) || v <= 0) return;
+                    if (direction === 'above' && v < price * 0.995) return;
+                    if (direction === 'below' && v > price * 1.005) return;
+                    const d = Math.abs(v - price);
+                    if (d < bestDist) { best = v; bestDist = d; }
+                });
+                return best;
+            }
+
+            function getVolumeSignal(r) {
+                const isUp = r.close > r.open;
+                const isDown = r.close < r.open;
+                const v = r.vol || 0;
+                const avgV = r.volSma50 || 0;
+                const spread = r.high - r.low;
+                const body = Math.abs(r.close - r.open);
+                const atr = r.atr14 || 0;
+                const ratio = avgV ? v / avgV : null;
+                const ratio9 = r.volSma9 ? v / r.volSma9 : null;
+
+                let color = '#6b7280';
+                let label = 'Average Vol';
+                let bias = 'neutral';
+
+                if (avgV && v > 2.5 * avgV) {
+                    color = isUp ? '#fbbf24' : '#991b1b';
+                    label = isUp ? 'Massive Accumulation' : 'Massive Distribution';
+                    bias = isUp ? 'bull' : 'bear';
+                } else if (avgV && v > 1.5 * avgV && ((atr && spread < atr * 0.6) || (spread && body < spread * 0.2))) {
+                    color = '#f97316';
+                    label = 'Churning (Effort no Result)';
+                    bias = 'caution';
+                } else if (isUp && v > r.hDnV15) {
+                    color = '#0ea5e9';
+                    label = 'Pocket Pivot (Bullish)';
+                    bias = 'bull';
+                } else if (isDown && v > r.hUpV15) {
+                    color = '#a855f7';
+                    label = 'Pocket Pivot (Bearish)';
+                    bias = 'bear';
+                } else if (avgV && v < 0.25 * avgV) {
+                    color = '#1e3a8a';
+                    label = 'Extreme Dryout (<25%)';
+                    bias = 'dryup';
+                } else if (avgV && v < 0.5 * avgV) {
+                    color = '#cbd5e1';
+                    label = 'Volume Dryout (<50%)';
+                    bias = 'dryup';
+                } else if (avgV && isUp && v > avgV) {
+                    color = '#22c55e';
+                    label = 'Above Avg (Bull)';
+                    bias = 'bull';
+                } else if (avgV && isDown && v > avgV) {
+                    color = '#ef4444';
+                    label = 'Above Avg (Bear)';
+                    bias = 'bear';
+                }
+
+                return { color, label, bias, ratio, ratio9 };
+            }
+
+            function buildPriceActionAnalysis(raw) {
+                const i = raw.length - 1;
+                const r = raw[i];
+                if (!r) return null;
+                const prev = raw[i - 1] || null;
+                const prev2 = raw[i - 2] || null;
+                const prev5 = raw[Math.max(0, i - 5)] || null;
+                const first = raw[0] || r;
+                const range = Math.max(0, r.high - r.low);
+                const body = Math.abs(r.close - r.open);
+                const upperWick = Math.max(0, r.high - Math.max(r.open, r.close));
+                const lowerWick = Math.max(0, Math.min(r.open, r.close) - r.low);
+                const closeLoc = range ? ((r.close - r.low) / range) * 100 : 50;
+                const bodyPct = range ? (body / range) * 100 : 0;
+                const upperWickPct = range ? (upperWick / range) * 100 : 0;
+                const lowerWickPct = range ? (lowerWick / range) * 100 : 0;
+                const intradayPct = pctFrom(r.close, r.open);
+                const dayPct = prev ? pctFrom(r.close, prev.close) : intradayPct;
+                const gapPct = prev ? pctFrom(r.open, prev.close) : 0;
+                const tr = prev ? Math.max(range, Math.abs(r.high - prev.close), Math.abs(r.low - prev.close)) : range;
+                const atrMult = r.atr14 ? tr / r.atr14 : 0;
+                const vol = getVolumeSignal(r);
+
+                const start10 = Math.max(0, i - 9);
+                const start20 = Math.max(0, i - 19);
+                const start50 = Math.max(0, i - 49);
+                const recent10 = raw.slice(start10, i + 1);
+                const recent20 = raw.slice(start20, i + 1);
+                const recent50 = raw.slice(start50, i + 1);
+                const avg = (arr, fn) => arr.length ? arr.reduce((s, x) => s + fn(x), 0) / arr.length : 0;
+                const maxOf = (arr, fn) => arr.reduce((m, x) => Math.max(m, fn(x)), -Infinity);
+                const minOf = (arr, fn) => arr.reduce((m, x) => Math.min(m, fn(x)), Infinity);
+                const extremeIdx = (start, end, field, mode) => {
+                    let bestIdx = -1;
+                    let bestVal = mode === 'max' ? -Infinity : Infinity;
+                    for (let k = Math.max(0, start); k <= Math.min(i, end); k++) {
+                        const v = raw[k] && raw[k][field];
+                        if (!isFinite(v)) continue;
+                        if ((mode === 'max' && v > bestVal) || (mode === 'min' && v < bestVal)) {
+                            bestVal = v;
+                            bestIdx = k;
+                        }
+                    }
+                    return { idx: bestIdx, val: bestVal };
+                };
+
+                const prior20High = rollingLevel(raw, i, 20, 'high', 'max');
+                const prior50High = rollingLevel(raw, i, 50, 'high', 'max');
+                const prior20Low = rollingLevel(raw, i, 20, 'low', 'min');
+                const chartHigh = maxOf(raw, x => x.high);
+                const chartLow = minOf(raw, x => x.low);
+                const chartPos = (chartHigh > chartLow) ? ((r.close - chartLow) / (chartHigh - chartLow)) * 100 : 50;
+                const baseWeeks = Math.min(raw.length, 52);
+                const baseStartIdx = Math.max(0, i - baseWeeks + 1);
+                const baseSlice = raw.slice(baseStartIdx, i + 1);
+                const baseHigh = maxOf(baseSlice, x => x.high);
+                const baseLow = minOf(baseSlice, x => x.low);
+                const baseDepth = baseHigh > 0 ? ((baseHigh - baseLow) / baseHigh) * 100 : 0;
+                const baseLowInfo = extremeIdx(baseStartIdx, i, 'low', 'min');
+                const baseHighInfo = extremeIdx(baseStartIdx, i, 'high', 'max');
+                const leftHighInfo = baseLowInfo.idx > baseStartIdx + 2 ? extremeIdx(baseStartIdx, baseLowInfo.idx - 1, 'high', 'max') : { idx: -1, val: null };
+                const rightHighInfo = baseLowInfo.idx >= 0 && baseLowInfo.idx < i - 2 ? extremeIdx(baseLowInfo.idx + 1, i, 'high', 'max') : { idx: -1, val: null };
+                const closeAbove20 = !!(prior20High && r.close > prior20High);
+                const closeAbove50 = !!(prior50High && r.close > prior50High);
+                const failedBreakout = !!(prior20High && r.high > prior20High && r.close < prior20High);
+
+                const above10 = !!(r.ma10 && r.close >= r.ma10);
+                const above20 = !!(r.ma20 && r.close >= r.ma20);
+                const above40 = !!(r.ma40 && r.close >= r.ma40);
+                const maStackBull = !!(r.ma10 && r.ma20 && r.ma40 && r.ma10 > r.ma20 && r.ma20 > r.ma40);
+                const maStackBear = !!(r.ma10 && r.ma20 && r.ma40 && r.ma10 < r.ma20 && r.ma20 < r.ma40);
+                const extended20 = r.ma20 ? pctFrom(r.close, r.ma20) : 0;
+                const support = nearestLevel([r.ma10, r.ma20, r.ma40, prior20Low], r.close, 'below');
+                const resistance = nearestLevel([prior20High, prior50High], r.close, 'above');
+                const nearSupport = !!(support && r.low <= support * 1.025 && r.close >= support * 0.985);
+                const reversal = lowerWickPct >= 32 && closeLoc >= 60;
+                const pullbackDry = vol.bias === 'dryup' && nearSupport;
+                const adGood = (r.adSma !== null && r.adSma !== undefined && r.ad >= r.adSma) || (prev5 && r.ad > prev5.ad);
+                const obvGood = (r.obvSma !== null && r.obvSma !== undefined && r.obv >= r.obvSma) || (prev5 && r.obv > prev5.obv);
+                const ma20Slope = (r.ma20 && prev5 && prev5.ma20) ? pctFrom(r.ma20, prev5.ma20) : 0;
+                const ma40Slope = (r.ma40 && raw[Math.max(0, i - 10)] && raw[Math.max(0, i - 10)].ma40) ? pctFrom(r.ma40, raw[Math.max(0, i - 10)].ma40) : 0;
+                const ret20 = recent20.length > 1 ? pctFrom(r.close, recent20[0].close) : pctFrom(r.close, first.close);
+                const ret50 = recent50.length > 1 ? pctFrom(r.close, recent50[0].close) : pctFrom(r.close, first.close);
+                const rsiVals = rsiSeries(raw.map(x => x.close), 14);
+                const lastRsi = rsiVals[i] || 50;
+                const recentHigh20 = maxOf(recent20, x => x.high);
+                const recentLow20 = minOf(recent20, x => x.low);
+                const baseTight = recent20.length >= 12 && recentHigh20 > 0 && ((recentHigh20 - recentLow20) / recentHigh20) * 100 <= 14;
+                const tight5 = recent10.length >= 5 && (maxOf(recent10.slice(-5), x => x.close) - minOf(recent10.slice(-5), x => x.close)) / r.close * 100 <= 4;
+
+                let accumulationDays = 0, distributionDays = 0, dryDays = 0, churnDays = 0;
+                let upVol = 0, upCount = 0, downVol = 0, downCount = 0;
+                for (let k = Math.max(1, i - 19); k <= i; k++) {
+                    const cur = raw[k], p = raw[k - 1];
+                    const sig = getVolumeSignal(cur);
+                    if (cur.close > p.close) { upVol += cur.vol; upCount++; }
+                    if (cur.close < p.close) { downVol += cur.vol; downCount++; }
+                    if (cur.close > p.close && cur.vol > p.vol && cur.close > cur.open) accumulationDays++;
+                    if (cur.close < p.close && cur.vol > p.vol && cur.close < cur.open) distributionDays++;
+                    if (sig.bias === 'dryup') dryDays++;
+                    if (sig.bias === 'caution') churnDays++;
+                }
+                const upDownVolRatio = downCount ? (upVol / Math.max(1, upCount)) / (downVol / downCount) : (upCount ? 2 : 1);
+                const volumePressure = accumulationDays - distributionDays;
+
+                const bodyPctPrev = prev ? ((Math.abs(prev.close - prev.open) / Math.max(0.0001, prev.high - prev.low)) * 100) : 0;
+                const bullishEngulf = !!(prev && prev.close < prev.open && r.close > r.open && r.open <= prev.close && r.close >= prev.open);
+                const bearishEngulf = !!(prev && prev.close > prev.open && r.close < r.open && r.open >= prev.close && r.close <= prev.open);
+                const insideDay = !!(prev && r.high < prev.high && r.low > prev.low);
+                const outsideDay = !!(prev && r.high > prev.high && r.low < prev.low);
+                const doji = bodyPct <= 12;
+                const hammer = lowerWickPct >= 45 && upperWickPct <= 25 && closeLoc >= 55;
+                const shootingStar = upperWickPct >= 45 && lowerWickPct <= 25 && closeLoc <= 45;
+                const bullishPin = lowerWickPct >= 35 && closeLoc >= 70;
+                const bearishPin = upperWickPct >= 35 && closeLoc <= 35;
+                const bullishMarubozu = bodyPct >= 70 && closeLoc >= 80 && r.close > r.open;
+                const bearishMarubozu = bodyPct >= 70 && closeLoc <= 20 && r.close < r.open;
+                const threeWhite = !!(prev2 && prev && prev2.close > prev2.open && prev.close > prev.open && r.close > r.open && prev.close > prev2.close && r.close > prev.close);
+                const threeBlack = !!(prev2 && prev && prev2.close < prev2.open && prev.close < prev.open && r.close < r.open && prev.close < prev2.close && r.close < prev.close);
+                const morningStar = !!(prev2 && prev && prev2.close < prev2.open && bodyPctPrev <= 35 && r.close > r.open && r.close > ((prev2.open + prev2.close) / 2));
+                const eveningStar = !!(prev2 && prev && prev2.close > prev2.open && bodyPctPrev <= 35 && r.close < r.open && r.close < ((prev2.open + prev2.close) / 2));
+                const avgRange7 = avg(raw.slice(Math.max(0, i - 6), i + 1), x => x.high - x.low);
+                const nr7 = avgRange7 && range <= minOf(raw.slice(Math.max(0, i - 6), i + 1), x => x.high - x.low);
+                const wideRange = avgRange7 && range > avgRange7 * 1.45;
+
+                const tweezerBottom = !!(prev && Math.abs(r.low - prev.low) / prev.low < 0.005 && lowerWickPct >= 30);
+                const tweezerTop = !!(prev && Math.abs(r.high - prev.high) / prev.high < 0.005 && upperWickPct >= 30);
+                const bullHarami = !!(prev && prev.close < prev.open && r.close > r.open && r.high < prev.open && r.low > prev.close && bodyPct <= 35);
+                const bearHarami = !!(prev && prev.close > prev.open && r.close < r.open && r.high < prev.close && r.low > prev.open && bodyPct <= 35);
+                const dragonflyDoji = doji && lowerWickPct >= 65 && upperWickPct <= 10;
+                const gravestoneDoji = doji && upperWickPct >= 65 && lowerWickPct <= 10;
+                const bullKicker = !!(prev && prev.close < prev.open && r.open > prev.high && r.close > r.open);
+                const bearKicker = !!(prev && prev.close > prev.open && r.open < prev.low && r.close < r.open);
+                const bullAbandonedBaby = !!(prev2 && prev && prev2.close < prev2.open && prev.high < prev2.low && r.open > prev.high && r.close > r.open);
+                const bearAbandonedBaby = !!(prev2 && prev && prev2.close > prev2.open && prev.low > prev2.high && r.open < prev.low && r.close < r.open);
+
+                const cPats = [];
+                const addCp = (name, bias, weight) => {
+                    let w = weight;
+                    if (vol.ratio > 1.2 && weight !== 0) w = w * 1.5;
+                    cPats.push({name, bias, weight: w});
+                };
+
+                if (bullKicker) addCp('Bullish Kicker', 'bull', 8);
+                if (bearKicker) addCp('Bearish Kicker', 'bear', -8);
+                if (bullAbandonedBaby) addCp('Bullish Abandoned Baby', 'bull', 7);
+                if (bearAbandonedBaby) addCp('Bearish Abandoned Baby', 'bear', -7);
+                if (threeWhite) addCp('Three white soldiers', 'bull', 6);
+                if (threeBlack) addCp('Three black crows', 'bear', -6);
+                if (morningStar) addCp('Morning star reversal', 'bull', 6);
+                if (eveningStar) addCp('Evening star reversal', 'bear', -6);
+                if (bullishEngulf) addCp('Bullish engulfing', 'bull', 5);
+                if (bearishEngulf) addCp('Bearish engulfing', 'bear', -5);
+                if (dragonflyDoji) addCp('Dragonfly Doji', 'bull', 4);
+                if (gravestoneDoji) addCp('Gravestone Doji', 'bear', -4);
+                if (tweezerBottom) addCp('Tweezer Bottom', 'bull', 4);
+                if (tweezerTop) addCp('Tweezer Top', 'bear', -4);
+                if (hammer) addCp('Hammer / demand tail', 'bull', 4);
+                if (shootingStar) addCp('Shooting star', 'bear', -4);
+                if (bullishPin) addCp('Bullish pin bar', 'bull', 3);
+                if (bearishPin) addCp('Bearish pin bar', 'bear', -3);
+                if (bullHarami) addCp('Bullish Harami', 'bull', 3);
+                if (bearHarami) addCp('Bearish Harami', 'bear', -3);
+                if (bullishMarubozu) addCp('Strong bullish body', 'bull', 3);
+                if (bearishMarubozu) addCp('Strong bearish body', 'bear', -3);
+                if (outsideDay && r.close > r.open) addCp('Bullish outside week', 'bull', 2);
+                if (outsideDay && r.close < r.open) addCp('Bearish outside week', 'bear', -2);
+                if (insideDay) addCp('Inside week', 'neutral', 1);
+                if (nr7) addCp('NR7', 'neutral', 1);
+                if (doji && !dragonflyDoji && !gravestoneDoji) addCp('Doji', 'neutral', 0);
+
+                cPats.sort((a, b) => Math.abs(b.weight) - Math.abs(a.weight));
+                let candlePattern = cPats.length > 0 ? cPats.map(p => p.name).slice(0, 2).join(' + ') : 'No strong reversal pattern';
+                let patternBias = cPats.length > 0 && cPats[0].weight !== 0 ? cPats[0].bias : 'neutral';
+
+                let trendLabel = 'SIDEWAYS';
+                let trendBias = 'neutral';
+                if (above20 && above40 && ma20Slope > 0 && ret20 > 0 && chartPos >= 55) {
+                    trendLabel = maStackBull ? 'CONFIRMED UPTREND' : 'UPTREND';
+                    trendBias = 'bull';
+                } else if (!above20 && !above40 && ma20Slope < 0 && ret20 < 0) {
+                    trendLabel = maStackBear ? 'CONFIRMED DOWNTREND' : 'DOWNTREND';
+                    trendBias = 'bear';
+                } else if (baseTight || tight5) {
+                    trendLabel = 'BASE / COMPRESSION';
+                    trendBias = 'neutral';
+                } else if (above40 && !above20) {
+                    trendLabel = 'PULLBACK IN UPTREND';
+                    trendBias = 'neutral';
+                }
+
+                const pivotCandidates = [prior50High, prior20High, baseHigh].filter(v => v && v > r.close * 0.85);
+                const basePivot = pivotCandidates.length ? Math.min(...pivotCandidates) : (prior50High || prior20High || baseHigh);
+                const nearPivot = !!(basePivot && r.close >= basePivot * 0.90 && r.close <= basePivot * 1.04);
+                const failedBreakoutFull = !!(basePivot && r.high > basePivot && r.close < basePivot && vol.bias !== 'dryup');
+                const avgVolRange = (start, end) => avg(raw.slice(Math.max(0, start), Math.min(raw.length, end)), x => x.vol);
+                let breakout = {
+                    idx: -1,
+                    pivot: basePivot,
+                    volRatio: null,
+                    weeksSince: null,
+                    failed: false,
+                    pullbackHeld: false,
+                    canBuy: false,
+                    tone: 'neutral',
+                    text: basePivot ? 'No confirmed breakout: wait for weekly close above pivot with avg volume.' : 'No valid pivot found yet.'
+                };
+                for (let k = Math.max(1, i - 12); k <= i; k++) {
+                    const rk = raw[k];
+                    const pivotK = Math.max(
+                        rollingLevel(raw, k, 20, 'high', 'max') || 0,
+                        rollingLevel(raw, k, 50, 'high', 'max') || 0
+                    );
+                    if (!pivotK) continue;
+                    const kRange = Math.max(0.0001, rk.high - rk.low);
+                    const kCloseLoc = ((rk.close - rk.low) / kRange) * 100;
+                    const priorAvgVol = avgVolRange(k - 10, k) || rk.volSma50 || 1;
+                    const breakoutWeekVol = rk.vol || 0;
+                    const avgVolRatio = breakoutWeekVol / priorAvgVol;
+                    if (rk.close > pivotK * 1.005 && kCloseLoc >= 55) {
+                        breakout = {
+                            ...breakout,
+                            idx: k,
+                            pivot: pivotK,
+                            volRatio: avgVolRatio
+                        };
+                    }
+                }
+                if (breakout.idx >= 0) {
+                    const sinceBreakout = raw.slice(breakout.idx, i + 1);
+                    const minSinceBreakout = minOf(sinceBreakout, x => x.low);
+                    const pullbackTouched = minSinceBreakout <= breakout.pivot * 1.04;
+                    const pivotRecovered = r.close >= breakout.pivot * 0.99;
+                    const failedPivot = r.close < breakout.pivot * 0.97 || minSinceBreakout < breakout.pivot * 0.90;
+                    const weeksSince = i - breakout.idx;
+                    const extendedFromPivot = pctFrom(r.close, breakout.pivot) > 15 || extended20 > 18;
+                    const avgBreakoutVolOk = breakout.volRatio >= 1.15;
+                    const avgBreakoutVolWeak = breakout.volRatio < 1.0;
+                    const pullbackHeld = pullbackTouched && pivotRecovered && !failedPivot;
+                    const canBuyBreakout = !failedPivot && avgBreakoutVolOk && above20 && above40 && !extendedFromPivot && (weeksSince <= 2 || pullbackHeld);
+                    let boStatus = 'Holding breakout';
+                    let boTone = 'neutral';
+                    if (failedPivot) {
+                        boStatus = 'Failed breakout';
+                        boTone = 'bear';
+                    } else if (extendedFromPivot) {
+                        boStatus = 'Breakout extended';
+                        boTone = 'warning';
+                    } else if (avgBreakoutVolWeak) {
+                        boStatus = 'Weak-volume breakout';
+                        boTone = 'bear';
+                    } else if (pullbackHeld) {
+                        boStatus = 'Breakout pullback held';
+                        boTone = canBuyBreakout ? 'bull' : 'neutral';
+                    } else if (weeksSince <= 2 && avgBreakoutVolOk) {
+                        boStatus = 'Fresh avg-volume breakout';
+                        boTone = 'bull';
+                    }
+                    breakout = {
+                        ...breakout,
+                        weeksSince,
+                        failed: failedPivot,
+                        pullbackHeld,
+                        canBuy: canBuyBreakout,
+                        tone: boTone,
+                        text: boStatus + ': pivot ' + fmtP(breakout.pivot) +
+                            ' | avg BO vol ' + breakout.volRatio.toFixed(1) + 'x prior 10W' +
+                            ' | pullback ' + (pullbackHeld ? 'held' : pullbackTouched ? 'testing' : 'none') +
+                            ' | Can buy: ' + (canBuyBreakout ? 'YES' : failedPivot || extendedFromPivot || avgBreakoutVolWeak ? 'NO' : 'WATCH')
+                    };
+                }
+                const avgBreakoutConfirmed = breakout.idx >= 0 && breakout.volRatio >= 1.15 && !breakout.failed;
+                const firstHalf = raw.slice(baseStartIdx, Math.max(baseStartIdx + 1, Math.floor((baseStartIdx + i) / 2)));
+                const secondHalf = raw.slice(Math.floor((baseStartIdx + i) / 2), i + 1);
+                const firstRangePct = maxOf(firstHalf, x => x.high) > 0 ? ((maxOf(firstHalf, x => x.high) - minOf(firstHalf, x => x.low)) / maxOf(firstHalf, x => x.high)) * 100 : baseDepth;
+                const secondRangePct = maxOf(secondHalf, x => x.high) > 0 ? ((maxOf(secondHalf, x => x.high) - minOf(secondHalf, x => x.low)) / maxOf(secondHalf, x => x.high)) * 100 : baseDepth;
+                const recentRangePct = recent10.length && maxOf(recent10, x => x.high) > 0 ? ((maxOf(recent10, x => x.high) - minOf(recent10, x => x.low)) / maxOf(recent10, x => x.high)) * 100 : baseDepth;
+                const contraction = firstRangePct > secondRangePct * 1.08 && secondRangePct > recentRangePct * 1.05;
+                const handleStartInfo = extremeIdx(Math.max(baseStartIdx, i - 12), i, 'high', 'max');
+                const handleLowInfo = handleStartInfo.idx >= 0 && handleStartInfo.idx < i ? extremeIdx(handleStartInfo.idx, i, 'low', 'min') : { idx: -1, val: null };
+                const handleDepth = handleStartInfo.val ? ((handleStartInfo.val - handleLowInfo.val) / handleStartInfo.val) * 100 : 0;
+                const handleValid = handleStartInfo.idx >= 0 && handleStartInfo.idx <= i - 2 && handleDepth > 2 && handleDepth <= 15 && r.close >= handleStartInfo.val * 0.90;
+                const leftHigh = leftHighInfo.val || baseHigh;
+                const cupLowMiddle = baseLowInfo.idx > baseStartIdx + baseWeeks * 0.18 && baseLowInfo.idx < i - baseWeeks * 0.15;
+                const cupRecovery = leftHigh ? r.close >= leftHigh * 0.84 : false;
+                const cupShape = baseWeeks >= 14 && baseDepth >= 12 && baseDepth <= 45 && cupLowMiddle && cupRecovery && rightHighInfo.idx > baseLowInfo.idx;
+                const flatBase = baseWeeks >= 5 && baseDepth <= 16 && nearPivot && above40;
+                const vcp = baseWeeks >= 8 && contraction && nearPivot && baseDepth <= 35;
+                const lowA = minOf(raw.slice(Math.max(0, i - 18), Math.max(0, i - 12)), x => x.low);
+                const lowB = minOf(raw.slice(Math.max(0, i - 12), Math.max(0, i - 6)), x => x.low);
+                const lowC = minOf(raw.slice(Math.max(0, i - 6), i + 1), x => x.low);
+                const highA = maxOf(raw.slice(Math.max(0, i - 18), Math.max(0, i - 12)), x => x.high);
+                const highB = maxOf(raw.slice(Math.max(0, i - 12), Math.max(0, i - 6)), x => x.high);
+                const highC = maxOf(raw.slice(Math.max(0, i - 6), i + 1), x => x.high);
+
+                const ascendingBase = isFinite(lowA) && isFinite(lowB) && isFinite(lowC) && lowB > lowA * 0.98 && lowC > lowB * 0.98 && nearPivot && above20;
+
+                const headAndShoulders = isFinite(highA) && isFinite(highB) && isFinite(highC) && highB > highA && highB > highC && Math.abs(highA - highC) / highA < 0.08 && r.close < minOf(raw.slice(Math.max(0, i - 6), i + 1), x => x.low);
+                const invHeadAndShoulders = isFinite(lowA) && isFinite(lowB) && isFinite(lowC) && lowB < lowA && lowB < lowC && Math.abs(lowA - lowC) / lowA < 0.08 && r.close > maxOf(raw.slice(Math.max(0, i - 6), i + 1), x => x.high);
+                const roundingBottom = baseWeeks >= 15 && baseDepth <= 35 && !cupShape && Math.abs(r.close - maxOf(raw.slice(baseStartIdx, baseStartIdx + 3), x => x.high)) / r.close < 0.10 && minOf(raw.slice(baseStartIdx + 5, i - 5), x => x.low) < minOf(raw.slice(baseStartIdx, baseStartIdx + 3), x => x.low);
+                const powerPlay = above20 && chartPos > 80 && baseWeeks >= 3 && baseWeeks <= 6 && baseDepth <= 12 && avgBreakoutConfirmed;
+                const risingWedge = isFinite(highA) && isFinite(highB) && isFinite(highC) && highC > highB && highB > highA && lowC > lowB && lowB > lowA && (highC - highA) < (lowC - lowA) && vol.ratio < 0.8;
+                const fallingWedge = isFinite(lowA) && isFinite(lowB) && isFinite(lowC) && lowC < lowB && lowB < lowA && highC < highB && highB < highA && (lowA - lowC) < (highA - highC) && vol.ratio < 0.8;
+                const ascChannel = isFinite(highA) && isFinite(highB) && isFinite(highC) && highC > highB && highB > highA && lowC > lowB && lowB > lowA && Math.abs((highC - highA) - (lowC - lowA)) / (highC - highA) < 0.2;
+                const descChannel = isFinite(lowA) && isFinite(lowB) && isFinite(lowC) && lowC < lowB && lowB < lowA && highC < highB && highB < highA && Math.abs((lowA - lowC) - (highA - highC)) / (lowA - lowC) < 0.2;
+                const firstLow = extremeIdx(baseStartIdx, Math.max(baseStartIdx, i - Math.floor(baseWeeks * 0.45)), 'low', 'min');
+                const secondLow = extremeIdx(Math.min(i, firstLow.idx + 3), i, 'low', 'min');
+                const middleHigh = firstLow.idx >= 0 && secondLow.idx > firstLow.idx ? maxOf(raw.slice(firstLow.idx, secondLow.idx + 1), x => x.high) : null;
+                const doubleBottom = !!(firstLow.idx >= 0 && secondLow.idx >= 0 && secondLow.idx > firstLow.idx + 2 && Math.abs(pctFrom(secondLow.val, firstLow.val)) <= 8 && middleHigh && middleHigh > Math.max(firstLow.val, secondLow.val) * 1.10 && r.close >= middleHigh * 0.92);
+                const oldHigh = extremeIdx(baseStartIdx, Math.max(baseStartIdx, i - Math.floor(baseWeeks * 0.35)), 'high', 'max');
+                const recentHigh = extremeIdx(Math.max(baseStartIdx, i - Math.floor(baseWeeks * 0.35)), i, 'high', 'max');
+                const rsiAt = idx => idx >= 0 ? (rsiVals[idx] || null) : null;
+                const firstLowRsi = rsiAt(firstLow.idx);
+                const secondLowRsi = rsiAt(secondLow.idx);
+                const oldHighRsi = rsiAt(oldHigh.idx);
+                const recentHighRsi = rsiAt(recentHigh.idx);
+                const bullishRsiDiv = !!(firstLowRsi && secondLowRsi && secondLow.idx > firstLow.idx + 2 &&
+                    secondLow.val <= firstLow.val * 1.03 && secondLowRsi >= firstLowRsi + 4);
+                const bearishRsiDiv = !!(oldHighRsi && recentHighRsi && recentHigh.idx > oldHigh.idx + 2 &&
+                    recentHigh.val >= oldHigh.val * 0.98 && recentHighRsi <= oldHighRsi - 4);
+                const lowerHighs = secondHalf.length && firstHalf.length && maxOf(secondHalf, x => x.high) < maxOf(firstHalf, x => x.high) * 0.97;
+                const lowerLows = secondHalf.length && firstHalf.length && minOf(secondHalf, x => x.low) < minOf(firstHalf, x => x.low) * 0.97;
+                const extendedFromBase = extended20 > 22 && chartPos > 82 && !baseTight;
+
+                const patternCandidates = [];
+                const addPattern = (ok, name, bias, score, detail) => {
+                    if (ok) patternCandidates.push({ name, bias, score, detail });
+                };
+                addPattern((trendBias === 'bear' && lowerHighs && lowerLows) || (distributionDays >= accumulationDays + 3 && !above40),
+                    'Weekly downtrend / distribution', 'bear', -30, 'Lower highs/lows with distribution pressure.');
+                addPattern(failedBreakoutFull || breakout.failed,
+                    'Failed weekly breakout', 'bear', -28, 'Price moved above pivot but closed back below it.');
+                
+                addPattern(headAndShoulders,
+                    'Head & Shoulders Top', 'bear', -25, 'Three peaks with the middle being highest; neckline breaking.');
+                addPattern(invHeadAndShoulders,
+                    'Inverse Head & Shoulders', 'bull', 25, 'Three troughs with the middle being lowest; clearing neckline.');
+                addPattern(powerPlay,
+                    'Power Play / High Tight Flag', 'bull', 35, 'Short, tight compression after a massive run-up.');
+                addPattern(roundingBottom && avgBreakoutConfirmed,
+                    'Rounding Bottom Breakout', 'bull', 24, 'Gradual accumulation resolving above pivot.');
+                addPattern(roundingBottom && !avgBreakoutConfirmed,
+                    'Rounding Bottom Forming', 'bull', 16, 'Gradual, saucer-like accumulation base.');
+                addPattern(risingWedge,
+                    'Rising Wedge', 'bear', -15, 'Higher highs and lows converging on declining volume.');
+                addPattern(fallingWedge,
+                    'Falling Wedge', 'bull', 15, 'Lower highs and lows converging on declining volume.');
+                addPattern(descChannel && !fallingWedge,
+                    'Descending Channel', 'bear', -10, 'Controlled lower highs and lower lows.');
+                addPattern(ascChannel && !risingWedge,
+                    'Ascending Channel', 'bull', 10, 'Controlled higher highs and higher lows.');
+
+                addPattern(bearishRsiDiv,
+                    'Bearish RSI divergence', 'bear', -20, 'Price made a similar/higher high while weekly RSI made a lower high.');
+                addPattern(bullishRsiDiv,
+                    'Bullish RSI divergence', 'bull', 18, 'Price retested/lowered the base low while weekly RSI made a higher low.');
+                addPattern(avgBreakoutConfirmed && cupShape && handleValid,
+                    'Cup-with-handle breakout', 'bull', 32, 'Cup recovery, controlled handle, and breakout volume.');
+                addPattern(avgBreakoutConfirmed && flatBase,
+                    'Flat-base breakout', 'bull', 28, 'Shallow base resolved above pivot with volume.');
+                addPattern(avgBreakoutConfirmed && vcp,
+                    'VCP breakout', 'bull', 28, 'Contractions resolved above pivot with volume.');
+                addPattern(avgBreakoutConfirmed && doubleBottom,
+                    'Double-bottom breakout', 'bull', 26, 'Second low held and price cleared the middle pivot.');
+                addPattern(avgBreakoutConfirmed && ascendingBase,
+                    'Ascending-base breakout', 'bull', 24, 'Higher lows resolved above pivot with volume.');
+                addPattern(cupShape && handleValid && nearPivot,
+                    'Cup with handle forming', 'bull', 20, 'Recovered near old high; handle pullback is controlled.');
+                addPattern(vcp,
+                    'VCP / volatility contraction', 'bull', 18, 'Weekly ranges contract from wide to tight near pivot.');
+                addPattern(flatBase,
+                    'Flat base near pivot', 'bull', 16, 'Shallow weekly base above key moving averages.');
+                addPattern(doubleBottom,
+                    'Double-bottom base', 'bull', 15, 'Second low held near first low and price recovered.');
+                addPattern(ascendingBase,
+                    'Ascending base', 'bull', 14, 'Higher weekly lows with price close to pivot.');
+                addPattern(baseTight || tight5,
+                    'Tight weekly base', 'neutral', 9, 'Constructive compression, but breakout trigger is pending.');
+                addPattern(extendedFromBase,
+                    'Extended advance', 'neutral', -12, 'Trend is up, but price is stretched from the 20-week average.');
+                addPattern(trendBias === 'bull' && !extendedFromBase,
+                    'Weekly uptrend, no fresh base trigger', 'bull', 8, 'Trend is positive, but setup quality depends on volume/pivot.');
+
+                if (!patternCandidates.length) {
+                    patternCandidates.push({
+                        name: 'No clean weekly pattern',
+                        bias: 'neutral',
+                        score: 0,
+                        detail: 'Pattern is mixed; wait for clearer base or breakout.'
+                    });
+                }
+
+                patternCandidates.sort((a, b) => Math.abs(b.score) - Math.abs(a.score) || b.score - a.score);
+                const patternBullScore = patternCandidates.filter(p => p.score > 0).reduce((s, p) => s + p.score, 0);
+                const patternBearScore = patternCandidates.filter(p => p.score < 0).reduce((s, p) => s + Math.abs(p.score), 0);
+                const primaryPattern = patternCandidates[0];
+                const chartPattern = primaryPattern.name;
+                const chartPatternScore = clamp(patternBullScore - patternBearScore, -34, 34);
+                const chartPatternBias = patternBearScore >= patternBullScore + 10 ? 'bear'
+                    : patternBullScore >= patternBearScore + 10 ? 'bull'
+                        : 'neutral';
+                const criticalBearPattern = patternCandidates.some(p => p.bias === 'bear' && Math.abs(p.score) >= 28);
+                const cleanBullBreakout = patternCandidates.some(p => p.bias === 'bull' && /breakout/i.test(p.name) && p.score >= 24);
+                const chartPatternDetail = primaryPattern.detail;
+                const patternSummary = patternCandidates
+                    .map(p => p.name + ' (' + (p.score > 0 ? '+' : '') + p.score + ')')
+                    .join(' | ');
+
+                let score = 50;
+                const reasons = [];
+                const add = (pts, reason) => { score += pts; if (reason) reasons.push(reason); };
+
+                add(chartPatternScore, chartPattern);
+                if (trendBias === 'bull') add(14, trendLabel.toLowerCase());
+                if (trendBias === 'bear') add(-18, trendLabel.toLowerCase());
+                if (above20) add(6, 'above MA20'); else add(-7, 'below MA20');
+                if (above40) add(8, 'above MA40'); else add(-11, 'below MA40');
+                if (maStackBull) add(8, 'bull MA stack');
+                if (maStackBear) add(-10, 'bear MA stack');
+                if (ma20Slope > 0) add(5, 'rising MA20'); else if (ma20Slope < -0.5) add(-6, 'falling MA20');
+                if (ma40Slope > 0) add(3, 'rising MA40'); else if (ma40Slope < -0.5) add(-4, 'falling MA40');
+                if (closeLoc >= 75) add(3, 'latest weekly close near high');
+                else if (closeLoc < 40) add(-4, 'latest weekly close weak');
+                if (patternBias === 'bull') add(4, candlePattern);
+                if (patternBias === 'bear') add(-6, candlePattern);
+                let breakoutPoints = 0;
+                let boReasons = [];
+                if (closeAbove50) { breakoutPoints += 15; boReasons.push('50W breakout'); }
+                else if (closeAbove20) { breakoutPoints += 10; boReasons.push('20W breakout'); }
+                if (breakout.canBuy) { breakoutPoints += 12; boReasons.push('buyable breakout'); }
+                else if (avgBreakoutConfirmed) { breakoutPoints += 7; boReasons.push('avg-vol breakout'); }
+                if (breakoutPoints > 0) {
+                    breakoutPoints = Math.min(breakoutPoints, 20); // Cap breakout points to avoid double-counting
+                    add(breakoutPoints, boReasons.join(' + '));
+                }
+                
+                if (bullishRsiDiv) add(12, 'bullish RSI divergence');
+                if (bearishRsiDiv) add(-15, 'bearish RSI divergence');
+
+                if (failedBreakout) add(-14, 'failed breakout');
+                if (breakout.failed) add(-16, 'breakout failed after pullback');
+                if (breakout.idx >= 0 && breakout.volRatio !== null && breakout.volRatio < 1.0) add(-8, 'breakout average volume weak');
+                if (vol.bias === 'bull') add(vol.label.indexOf('Pocket Pivot') !== -1 ? 7 : 5, vol.label);
+                if (vol.bias === 'bear') add(vol.label.indexOf('Massive') !== -1 ? -12 : -8, vol.label);
+                if (vol.bias === 'caution') add(-6, vol.label);
+                if (volumePressure >= 3) add(9, 'accumulation > distribution');
+                if (volumePressure <= -3) add(-12, 'distribution > accumulation');
+                if (upDownVolRatio >= 1.25) add(6, 'up volume leads');
+                if (upDownVolRatio <= 0.8) add(-7, 'down volume leads');
+                if (pullbackDry) add(10, 'dry-up at support');
+                if (adGood) add(4, 'A/D supportive'); else add(-4, 'A/D weak');
+                if (obvGood) add(4, 'OBV supportive'); else add(-4, 'OBV weak');
+                if (extended20 > 15) add(-12, 'extended from MA20');
+                if (extended20 > 25) add(-10, 'very extended');
+                if (prior20Low && r.close < prior20Low) add(-18, '20W support break');
+                if (wideRange && r.close < r.open && vol.ratio && vol.ratio > 1.2) add(-10, 'wide bearish volume');
+                if (wideRange && r.close > r.open && closeLoc >= 70 && vol.ratio && vol.ratio > 1.2) add(8, 'wide bullish volume');
+                score = Math.round(clamp(score, 0, 100));
+
+                let action = 'WAIT';
+                let actionColor = '#fbbf24';
+                let setup = 'No clean weekly pattern. Wait for a base, breakout, or support reclaim.';
+                if (criticalBearPattern || chartPatternBias === 'bear' || score <= 34 || (trendBias === 'bear' && volumePressure < 0) || (prior20Low && r.close < prior20Low)) {
+                    action = 'SELL / AVOID';
+                    actionColor = '#ef4444';
+                    setup = 'Weekly pattern and volume are bearish. Avoid fresh buy; protect capital.';
+                } else if (breakout.canBuy && chartPatternBias === 'bull' && score >= 68 && volumePressure >= 0) {
+                    action = 'BUY';
+                    actionColor = '#22c55e';
+                    setup = 'Buyable breakout: average volume confirms and pullback risk is controlled.';
+                } else if (chartPatternBias === 'bull' && nearPivot && score >= 64 && above20 && above40 && volumePressure >= 0) {
+                    action = 'BUY WATCH';
+                    actionColor = '#22c55e';
+                    setup = 'Constructive weekly pattern near pivot. Buy needs average-volume breakout or held pullback.';
+                } else if ((chartPattern === 'Tight weekly base' || chartPattern === 'VCP / volatility contraction' || chartPattern === 'Flat base near pivot') && score >= 58) {
+                    action = 'WATCH';
+                    actionColor = '#fbbf24';
+                    setup = 'Weekly base is building. Wait for pivot breakout with volume.';
+                } else if (score >= 60 && pullbackDry && above40) {
+                    action = 'LOW-RISK WATCH';
+                    actionColor = '#38bdf8';
+                    setup = 'Volume dry-up near weekly support. Needs bullish reversal/volume.';
+                } else if (score >= 58 && (reversal || patternBias === 'bull') && nearSupport && trendBias !== 'bear') {
+                    action = 'REVERSAL WATCH';
+                    actionColor = '#38bdf8';
+                    setup = 'Demand appeared near weekly support, but wait for follow-through.';
+                } else if (score >= 60 && breakout.idx >= 0 && !breakout.failed && r.ma10 && r.low <= r.ma10 * 1.02 && r.close >= r.ma10 && vol.bias === 'dryup') {
+                    action = 'ADD-ON / BUY WATCH';
+                    actionColor = '#38bdf8';
+                    setup = 'Pullback to 10W line after breakout on dry volume. Classic add-on entry.';
+                } else if (score >= 58 && trendBias === 'bull') {
+                    action = 'HOLD / WATCH';
+                    actionColor = '#fbbf24';
+                    setup = 'Weekly trend is positive, but no clean pattern trigger yet.';
+                } else if (score >= 52) {
+                    action = 'WATCH';
+                    actionColor = '#fbbf24';
+                    setup = 'Mixed weekly chart. Wait for stronger pattern and volume.';
+                }
+
+                let invalid = null;
+                if (closeAbove20 || closeAbove50) {
+                    const pivotSupport = Math.max(closeAbove20 ? (prior20High || 0) : 0, closeAbove50 ? (prior50High || 0) : 0);
+                    invalid = pivotSupport ? pivotSupport * 0.985 : null;
+                }
+                if (!invalid && support) invalid = support * 0.985;
+                if (!invalid) invalid = r.low;
+                if (!isFinite(invalid) || invalid <= 0 || invalid >= r.close) invalid = r.low;
+                const resTxt = resistance ? (fmtP(resistance) + ' ' + fmtPct(pctFrom(resistance, r.close), 1)) : 'clear';
+                const supTxt = support ? (fmtP(support) + ' ' + fmtPct(pctFrom(support, r.close), 1)) : 'n/a';
+                const singleStatement = chartPattern + ': ' + setup;
+                const rsiTone = bullishRsiDiv ? 'bull' : bearishRsiDiv ? 'bear' : lastRsi >= 60 ? 'bull' : lastRsi <= 40 ? 'bear' : 'neutral';
+                const maVolTone = (above20 && above40 && volumePressure >= 0 && upDownVolRatio >= 1) ? 'bull'
+                    : (!above40 || volumePressure < 0 || upDownVolRatio < 0.85) ? 'bear'
+                        : 'neutral';
+                const candleTone = patternBias !== 'neutral' ? patternBias : rsiTone;
+                const breakoutTone = breakout.tone || 'neutral';
+                const whyTone = chartPatternBias === 'bear' || maVolTone === 'bear' || breakoutTone === 'bear' ? 'bear'
+                    : chartPatternBias === 'bull' && maVolTone === 'bull' && breakoutTone !== 'bear' ? 'bull'
+                        : 'neutral';
+                const rsiDivTxt = bullishRsiDiv ? 'Bullish RSI Div' : bearishRsiDiv ? 'Bearish RSI Div' : 'No RSI Div';
+                const patternLine = 'Patterns: ' + patternSummary + ' | primary: ' + chartPatternDetail + ' | depth ' + baseDepth.toFixed(0) + '%' + (bullishRsiDiv || bearishRsiDiv ? ' | ' + rsiDivTxt : '');
+                const candleLine = 'Candles: ' + candlePattern + ' | close ' + closeLoc.toFixed(0) + '% | RSI ' + lastRsi.toFixed(0);
+                const breakoutLine = 'Breakout: ' + breakout.text;
+                const whyLine = 'Why: ' + (reasons.slice(0, 4).join(' + ') || 'neutral chart') +
+                    ' | avg vol focus: accum ' + accumulationDays + 'w vs dist ' + distributionDays + 'w' +
+                    ' | R ' + resTxt + ' | S ' + supTxt;
+
+                return {
+                    score,
+                    action,
+                    actionColor,
+                    setup,
+                    volume: vol,
+                    lines: [
+                        { text: singleStatement, tone: chartPatternBias },
+                        { text: patternLine, tone: chartPatternBias },
+                        { text: candleLine, tone: candleTone },
+                        { text: breakoutLine, tone: breakoutTone },
+                        { text: whyLine, tone: whyTone }
+                    ]
+                };
+            }
+
+            function fitCanvasText(ctx, text, maxW) {
+                if (ctx.measureText(text).width <= maxW) return text;
+                let out = text;
+                while (out.length > 8 && ctx.measureText(out + '...').width > maxW) {
+                    out = out.slice(0, -4);
+                }
+                return out + '...';
+            }
+
+            function wrapCanvasText(ctx, text, maxW) {
+                const words = String(text || '').split(/\s+/).filter(Boolean);
+                const lines = [];
+                let line = '';
+                words.forEach(word => {
+                    const test = line ? line + ' ' + word : word;
+                    if (ctx.measureText(test).width <= maxW) {
+                        line = test;
+                        return;
+                    }
+                    if (line) lines.push(line);
+                    if (ctx.measureText(word).width <= maxW) {
+                        line = word;
+                        return;
+                    }
+                    let chunk = '';
+                    for (let i = 0; i < word.length; i++) {
+                        const testChunk = chunk + word[i];
+                        if (ctx.measureText(testChunk).width > maxW && chunk) {
+                            lines.push(chunk);
+                            chunk = word[i];
+                        } else {
+                            chunk = testChunk;
+                        }
+                    }
+                    line = chunk;
+                });
+                if (line) lines.push(line);
+                return lines.length ? lines : [''];
+            }
+
+            function drawRoundedPanel(ctx, x, y, w, h, r) {
+                ctx.beginPath();
+                if (ctx.roundRect) {
+                    ctx.roundRect(x, y, w, h, r);
+                } else {
+                    ctx.moveTo(x + r, y);
+                    ctx.lineTo(x + w - r, y);
+                    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+                    ctx.lineTo(x + w, y + h - r);
+                    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                    ctx.lineTo(x + r, y + h);
+                    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+                    ctx.lineTo(x, y + r);
+                    ctx.quadraticCurveTo(x, y, x + r, y);
+                }
+            }
+
+            function drawPriceActionHoverPanel(ctx, pa, hx, W, PH, PP) {
+                if (!pa) return;
+                const compact = W < 360;
+                const pad = 8;
+                const lineH = compact ? 11 : 12;
+                const rows = pa.lines.slice(0, 5);
+                const maxPanelW = Math.max(210, W - PP.l - PP.r - 12);
+                let panelW = compact ? Math.min(maxPanelW, 270) : Math.min(maxPanelW, 330);
+                const textW = panelW - pad * 2;
+                const bodyFont = compact ? '700 8.4px "Lexend",monospace' : '700 9.2px "Lexend",monospace';
+                ctx.save();
+                ctx.font = bodyFont;
+                const wrappedRows = [];
+                rows.forEach((row, idx) => {
+                    const text = typeof row === 'string' ? row : row.text;
+                    const tone = typeof row === 'string' ? 'neutral' : (row.tone || 'neutral');
+                    const wrapped = wrapCanvasText(ctx, text, textW);
+                    wrapped.forEach((part, partIdx) => wrappedRows.push({ text: part, sourceIdx: idx, tone, cont: partIdx > 0 }));
+                });
+                ctx.restore();
+                let panelH = pad * 2 + 13 + wrappedRows.length * lineH + 2;
+                if (panelH > PH - PP.t - PP.b - 6) panelH = PH - PP.t - PP.b - 6;
+                let x = hx > W / 2 ? PP.l + 6 : W - PP.r - panelW - 6;
+                x = clamp(x, PP.l + 2, W - PP.r - panelW - 2);
+                const y = PP.t + 14;
+
+                ctx.save();
+                ctx.shadowColor = 'rgba(0,0,0,0.65)';
+                ctx.shadowBlur = 12;
+                ctx.fillStyle = 'rgba(8, 10, 18, 0.94)';
+                drawRoundedPanel(ctx, x, y, panelW, panelH, 6);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                ctx.strokeStyle = pa.actionColor;
+                ctx.lineWidth = 0.9;
+                ctx.stroke();
+
+                ctx.font = 'bold 10.5px "Lexend",monospace';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'top';
+                ctx.fillStyle = pa.actionColor;
+                ctx.fillText(fitCanvasText(ctx, pa.action + ' | Score ' + pa.score + '/100', panelW - pad * 2), x + pad, y + pad);
+
+                ctx.font = bodyFont;
+                let ty = y + pad + 13;
+                wrappedRows.forEach((line) => {
+                    if (ty > y + panelH - pad - lineH + 2) return;
+                    const txt = line.cont ? '  ' + line.text : line.text;
+                    ctx.fillStyle = line.sourceIdx === 0 ? pa.actionColor
+                        : line.tone === 'bull' ? '#22c55e'
+                            : line.tone === 'bear' ? '#ef4444'
+                                : line.tone === 'warning' ? '#fbbf24'
+                                    : '#e2e8f0';
+                    ctx.fillText(txt, x + pad, ty);
+                    ty += lineH;
+                });
+                ctx.restore();
+            }
 
             /* ─── Position popup ─── */
             function positionPopup(rect) {
@@ -9466,7 +10330,7 @@
 
                 for (let i = 0; i < allRaw.length; i++) {
                     const r = allRaw[i];
-                    
+
                     let maxUp = 0, maxDn = 0;
                     const start = Math.max(0, i - 15 + 1);
                     for (let j = start; j <= i; j++) {
@@ -9503,7 +10367,7 @@
                     if (i === 0) {
                         trFull[i] = r.high - r.low;
                     } else {
-                        const pc = allRaw[i-1].close;
+                        const pc = allRaw[i - 1].close;
                         trFull[i] = Math.max(r.high - r.low, Math.abs(r.high - pc), Math.abs(r.low - pc));
                     }
                 }
@@ -9842,7 +10706,7 @@
                         pc.stroke();
 
                         pc.setLineDash([]);
-                        
+
                         // Right-axis price badge
                         const valAtY = pMin + pR * (1 - (hy - PP.t) / pH);
                         const priceTxt = fmtP(valAtY);
@@ -9851,7 +10715,7 @@
                         let dby = hy;
                         if (dby - 5 < PP.t) dby = PP.t + 5;
                         if (dby + 5 > PH - PP.b) dby = PH - PP.b - 5;
-                        
+
                         pc.fillStyle = '#475569'; // Slate-600
                         pc.fillRect(W - badgeW - 1, dby - 5, badgeW, 10);
                         pc.fillStyle = '#ffffff';
@@ -9872,7 +10736,7 @@
                             let dbx = hx;
                             if (dbx - dBadgeW / 2 < PP.l) dbx = PP.l + dBadgeW / 2;
                             if (dbx + dBadgeW / 2 > W - PP.r) dbx = W - PP.r - dBadgeW / 2;
-                            
+
                             pc.fillStyle = '#475569'; // Slate-600
                             pc.fillRect(dbx - dBadgeW / 2, PH - PP.b + 1, dBadgeW, 10);
                             pc.fillStyle = '#ffffff';
@@ -9893,6 +10757,7 @@
                             pc.textAlign = 'left';
                             pc.textBaseline = 'top';
                             pc.fillText(infoTxt, PP.l + 4, PP.t + 2);
+                            drawPriceActionHoverPanel(pc, buildPriceActionAnalysis(raw), hx, W, PH, PP);
                         }
                     }
 
@@ -9918,41 +10783,9 @@
                 raw.forEach((r, i) => {
                     const x = VP.l + (i + 0.5) * (vW2 / n);
                     const bh = Math.max(1, (r.vol / maxV) * vH2);
-                    const isUp = r.close > r.open;
-                    const isDown = r.close < r.open;
-                    const v = r.vol;
-                    const avgV = r.volSma50;
-                    const spread = r.high - r.low;
-                    const body = Math.abs(r.close - r.open);
-                    
-                    let c = '#6b7280'; // Priority 9: Normal/Average Volume -> GREY
-                    let vDesc = "Average Vol";
-
-                    if (avgV && v > 2.5 * avgV) {
-                        c = isUp ? '#fbbf24' : '#991b1b'; // Priority 1: Massive Volume
-                        vDesc = isUp ? "Massive Accumulation" : "Massive Distribution";
-                    } else if (avgV && v > 1.5 * avgV && (spread < r.atr14 * 0.6 || body < spread * 0.2)) {
-                        c = '#f97316'; // Priority 2: Churning / Squat
-                        vDesc = "Churning (Effort no Result)";
-                    } else if (isUp && v > r.hDnV15) {
-                        c = '#0ea5e9'; // Priority 3: Upside PPV
-                        vDesc = "Pocket Pivot (Bullish)";
-                    } else if (isDown && v > r.hUpV15) {
-                        c = '#a855f7'; // Priority 4: Downside PPV
-                        vDesc = "Pocket Pivot (Bearish)";
-                    } else if (avgV && v < 0.25 * avgV) {
-                        c = '#1e3a8a'; // Priority 5: Extreme Dryout
-                        vDesc = "Extreme Dryout (<25%)";
-                    } else if (avgV && v < 0.5 * avgV) {
-                        c = '#cbd5e1'; // Priority 6: Dryout Volume (Pale Silver)
-                        vDesc = "Volume Dryout (<50%)";
-                    } else if (avgV && isUp && v > avgV) {
-                        c = '#22c55e'; // Priority 7: Above Avg Green
-                        vDesc = "Above Avg (Bull)";
-                    } else if (avgV && isDown && v > avgV) {
-                        c = '#ef4444'; // Priority 8: Above Avg Red
-                        vDesc = "Above Avg (Bear)";
-                    }
+                    const volSig = getVolumeSignal(r);
+                    let c = volSig.color;
+                    let vDesc = volSig.label;
 
                     r._vColor = c;
                     r._vDesc = vDesc;
@@ -10047,15 +10880,15 @@
                                 const isLeft = hx > W / 2;
                                 const bx = isLeft ? hx - dtW - 8 : hx + 8;
                                 const by = Math.max(VP.t + 2, hy - 10);
-                                
+
                                 vc.fillStyle = 'rgba(18, 18, 26, 0.9)';
                                 vc.beginPath(); vc.roundRect(bx, by, dtW, 18, 4); vc.fill();
                                 vc.strokeStyle = hr._vColor || 'rgba(255,255,255,0.2)';
                                 vc.lineWidth = 1; vc.stroke();
-                                
+
                                 vc.fillStyle = '#ffffff';
                                 vc.textAlign = 'center';
-                                vc.fillText(descTxt, bx + dtW/2, by + 9);
+                                vc.fillText(descTxt, bx + dtW / 2, by + 9);
                             }
                         }
                     }
@@ -10172,7 +11005,7 @@
                     ic.font = 'bold 7px "Lexend",monospace';
                     ic.textAlign = 'right';
                     ic.textBaseline = 'middle';
-                    
+
                     // Draw A/D value at the mapped Y position of the last point
                     ic.fillStyle = '#ff00ff';
                     ic.fillText(fmtV(lastAd), W - 2, toYAD(lastAd));
@@ -10386,7 +11219,7 @@
 
                         dealCv._balls = balls;
                         if (!dealCv._hasHoverEvent) {
-                            dealCv.addEventListener('mousemove', function(e) {
+                            dealCv.addEventListener('mousemove', function (e) {
                                 const rect = this.getBoundingClientRect();
                                 const mx = e.clientX - rect.left;
                                 const my = e.clientY - rect.top;
@@ -10413,7 +11246,7 @@
                                     this.style.cursor = 'crosshair';
                                 }
                             });
-                            dealCv.addEventListener('mouseleave', function(e) {
+                            dealCv.addEventListener('mouseleave', function (e) {
                                 const tip = document.getElementById('deal-ball-tip');
                                 if (!tip) return;
                                 if (e.relatedTarget && (e.relatedTarget === tip || tip.contains(e.relatedTarget))) return;
@@ -11425,7 +12258,9 @@
      DEAL BLOCK ENGINE — modular, no existing code touched
 ══════════════════════════════════════════════════════ -->
     <div class="deal-ball-tooltip" id="deal-ball-tip" onmouseleave="this.style.display='none';">
-        <div id="deal-ball-tip-close" onclick="document.getElementById('deal-ball-tip').style.display='none';" style="position: sticky; top: 0; text-align: right; font-size: 13px; cursor: pointer; color: #ff4d4f; padding: 5px 10px 4px; z-index: 10; background: #0f0f14; border-bottom: 1px solid rgba(255,255,255,0.1); font-family:'Lexend',sans-serif; font-weight:700; letter-spacing:0.04em;">✕ Close</div>
+        <div id="deal-ball-tip-close" onclick="document.getElementById('deal-ball-tip').style.display='none';"
+            style="position: sticky; top: 0; text-align: right; font-size: 13px; cursor: pointer; color: #ff4d4f; padding: 5px 10px 4px; z-index: 10; background: #0f0f14; border-bottom: 1px solid rgba(255,255,255,0.1); font-family:'Lexend',sans-serif; font-weight:700; letter-spacing:0.04em;">
+            ✕ Close</div>
         <div id="deal-ball-tip-content" style="padding: 6px 10px 8px;"></div>
     </div>
 
