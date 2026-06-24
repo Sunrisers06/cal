@@ -4266,6 +4266,62 @@
         }
 
         /* ══════════════════════════════════════════════════════
+   FAVORITE TYPE MODAL
+══════════════════════════════════════════════════════ */
+        #fav-type-modal-overlay {
+            position: fixed; inset: 0; z-index: 500000;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center;
+        }
+        #fav-type-modal-overlay.open { display: flex; }
+        #fav-type-modal {
+            background: rgba(18, 18, 26, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            width: min(320px, 90vw);
+            display: flex; flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            font-family: 'Lexend', sans-serif;
+            animation: urScaleIn 0.2s ease-out;
+        }
+        #fav-type-modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        #fav-type-modal-title { font-weight: 600; font-size: 1.1rem; color: #fff; }
+        #fav-type-modal-close {
+            background: none; border: none; color: #a1a1aa; font-size: 1.2rem;
+            cursor: pointer; padding: 4px; border-radius: 4px;
+        }
+        #fav-type-modal-close:hover { color: #fff; background: rgba(255,255,255,0.1); }
+        #fav-type-modal-body {
+            display: flex; flex-direction: column; gap: 12px; padding: 20px;
+        }
+        .fav-checkbox-label {
+            display: flex; align-items: center; gap: 12px; font-size: 1.1rem; color: #fff; cursor: pointer;
+            padding: 8px 0;
+        }
+        .fav-checkbox-label input { width: 18px; height: 18px; cursor: pointer; }
+        .fav-save-btn {
+            margin-top: 10px; background: #3b82f6; color: #fff; border: none; padding: 10px; border-radius: 8px; font-size: 1rem; cursor: pointer; font-weight: 600; transition: all 0.2s;
+        }
+        .fav-save-btn:hover { background: #2563eb; transform: translateY(-1px); }
+
+        .fav-dropdown-wrap { position: relative; display: inline-block; }
+        .fav-dropdown-menu {
+            display: none; position: absolute; top: 110%; left: 0; background: rgba(18, 18, 26, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; flex-direction: column;
+            min-width: 140px; z-index: 10000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); overflow: hidden;
+            backdrop-filter: blur(8px);
+        }
+        .fav-dropdown-menu.show { display: flex; animation: urScaleIn 0.15s ease-out; }
+        .fav-dd-item {
+            padding: 10px 16px; color: #a1a1aa; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; font-weight: 500;
+        }
+        .fav-dd-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+
+        /* ══════════════════════════════════════════════════════
    UPCOMING RESULTS MODAL
 ══════════════════════════════════════════════════════ */
         #ur-modal-overlay {
@@ -5933,8 +5989,15 @@
                 </div>
 
                 <div class="top-right">
-                    <button class="fh-filter-btn" id="fav-filter-btn" onclick="toggleFHFilter('F')"
-                        title="Favorite Tickers">F</button>
+                    <div class="fav-dropdown-wrap">
+                        <button class="fh-filter-btn" id="fav-filter-btn" onclick="toggleFavMenu(event)"
+                            title="Favorite Tickers">F</button>
+                        <div id="fav-dropdown-menu" class="fav-dropdown-menu">
+                            <div class="fav-dd-item" onclick="toggleFHFilter('F')">All Favorites</div>
+                            <div class="fav-dd-item" onclick="toggleFHFilter('FF')">FunFav Only</div>
+                            <div class="fav-dd-item" onclick="toggleFHFilter('TF')">TechFav Only</div>
+                        </div>
+                    </div>
                     <button class="fh-filter-btn" id="hold-filter-btn" onclick="toggleFHFilter('H')"
                         title="Holding Tickers">H</button>
                     <button class="fh-filter-btn" id="upcoming-results-btn" onclick="openUpcomingResults()"
@@ -8706,8 +8769,8 @@
 
             const SYNC_URL = 'https://script.google.com/macros/s/AKfycbzGitT82ELDNGnkLd55q5d2YCHoDwqDFmgKLpdbD7PGss7AjkTrQ-IgDNcYh9YV5VrqXw/exec';
 
-            window._fhState = { active: null }; // null | 'F' | 'H'
-            window._fhTickers = { F: new Set(), H: new Set() };
+            window._fhState = { active: null }; // null | 'F' | 'FF' | 'TF' | 'H'
+            window._fhTickers = { F: new Set(), FF: new Set(), TF: new Set(), H: new Set() };
             window._sheetFavs = new Set(); // Static favs from CSV
             window._remoteFavs = new Set(); // Dynamic favs from Sync URL
             window._remoteSyncSuccess = false; // Source of truth flag
@@ -8719,37 +8782,42 @@
                 window._fhLoading = true;
                 console.log('[SundarX] Syncing F/H tickers...');
                 try {
-                    // 1. Fetch static CSV (Holdings + Default Favs)
+                    // 1. Fetch static CSV — columns: A=FunFav, B=Holding, C=TechFav
                     const text = await window._smartFetch(FH_CSV_URL);
                     const lines = text.replace(/\r/g, '').trim().split('\n');
-                    const favSet = new Set(), holdSet = new Set();
+                    const ffSet = new Set(), holdSet = new Set(), tfSet = new Set();
                     for (let i = 1; i < lines.length; i++) {
-                        // Split by comma but handle potential quotes
                         const cols = lines[i].split(',').map(c => c.replace(/^"|"$/g, '').trim().toUpperCase());
-                        const fav = cols[0] || '';
-                        const hold = cols[1] || '';
-                        if (fav && fav !== 'FAVORITES') favSet.add(fav);
-                        if (hold && hold !== 'HOLDINGS') holdSet.add(hold);
+                        const funfav = cols[0] || '';
+                        const hold   = cols[1] || '';
+                        const techfav = cols[2] || '';
+                        if (funfav && funfav !== 'FUNFAV' && funfav !== 'FAVORITES') ffSet.add(funfav);
+                        if (hold   && hold   !== 'HOLDING' && hold   !== 'HOLDINGS') holdSet.add(hold);
+                        if (techfav && techfav !== 'TECHFAV') tfSet.add(techfav);
                     }
-                    window._sheetFavs = favSet;
+                    window._sheetFF    = ffSet;
+                    window._sheetTF    = tfSet;
+                    window._sheetFavs  = new Set([...ffSet, ...tfSet]); // combined for backward compat
                     window._sheetHolds = holdSet;
-                    console.log(`[SundarX] CSV loaded: ${favSet.size} Favs, ${holdSet.size} Holds`);
+                    console.log(`[SundarX] CSV: FunFav=${ffSet.size}, TechFav=${tfSet.size}, Hold=${holdSet.size}`);
 
-                    // 2. Fetch dynamic Remote Favs/Holds (Cross-device)
+                    // 2. Fetch dynamic data from Apps Script (cross-device sync)
                     try {
                         const resp = await fetch(SYNC_URL);
                         const remoteData = await resp.json();
                         console.log('[SundarX] Remote sync data received:', remoteData);
-                        if (remoteData.F) window._remoteFavs = new Set(remoteData.F.map(t => String(t).toUpperCase()));
-                        if (remoteData.H) window._remoteHolds = new Set(remoteData.H.map(t => String(t).toUpperCase()));
+                        if (Array.isArray(remoteData.FF))  window._remoteFF    = new Set(remoteData.FF.map(t => String(t).toUpperCase()));
+                        if (Array.isArray(remoteData.TF))  window._remoteTF    = new Set(remoteData.TF.map(t => String(t).toUpperCase()));
+                        if (Array.isArray(remoteData.F))   window._remoteFavs  = new Set(remoteData.F.map(t  => String(t).toUpperCase()));
+                        if (Array.isArray(remoteData.H))   window._remoteHolds = new Set(remoteData.H.map(t  => String(t).toUpperCase()));
                         window._remoteSyncSuccess = true;
                     } catch (re) {
-                        console.warn('[SundarX] Remote sync fetch failed:', re.message);
+                        console.warn('[SundarX] Remote sync fetch failed, using CSV fallback:', re.message);
                     }
 
                     recomputeFHTickers();
                     window._fhLoaded = true;
-                    console.log(`[SundarX] Final Sync Ready: ${window._fhTickers.F.size} Favs, ${window._fhTickers.H.size} Holds`);
+                    console.log(`[SundarX] Ready — F=${window._fhTickers.F.size}, FF=${window._fhTickers.FF.size}, TF=${window._fhTickers.TF.size}, H=${window._fhTickers.H.size}`);
                 } catch (e) {
                     console.error('[SundarX] F/H load critical failure:', e.message);
                     recomputeFHTickers();
@@ -8760,15 +8828,51 @@
 
             window.recomputeFHTickers = function () {
                 if (window._remoteSyncSuccess) {
-                    // If remote sync succeeded, it is the absolute source of truth (allows removals)
-                    window._fhTickers.F = new Set(window._remoteFavs);
-                    window._fhTickers.H = new Set(window._remoteHolds);
+                    // Remote Apps Script is source of truth
+                    window._fhTickers.FF = new Set(window._remoteFF    || []);
+                    window._fhTickers.TF = new Set(window._remoteTF    || []);
+                    window._fhTickers.F  = new Set(window._remoteFavs  || []);
+                    window._fhTickers.H  = new Set(window._remoteHolds || []);
                 } else {
-                    // Fallback to static CSV if dynamic sync failed or hasn't completed
-                    window._fhTickers.F = new Set(window._sheetFavs);
-                    window._fhTickers.H = new Set(window._sheetHolds);
+                    // CSV fallback — all three columns now populated
+                    window._fhTickers.FF = new Set(window._sheetFF    || []);
+                    window._fhTickers.TF = new Set(window._sheetTF    || []);
+                    window._fhTickers.F  = new Set(window._sheetFavs  || []);
+                    window._fhTickers.H  = new Set(window._sheetHolds || []);
                 }
             };
+
+
+        let _favTypeResolve = null;
+        window.promptFavType = function(tk, isFF, isTF) {
+            return new Promise(resolve => {
+                _favTypeResolve = resolve;
+                document.getElementById('fav-modal-ticker').textContent = tk;
+                document.getElementById('cb-fun-fav').checked = isFF;
+                document.getElementById('cb-tech-fav').checked = isTF;
+                document.getElementById('fav-type-modal-overlay').classList.add('open');
+            });
+        };
+        window.closeFavTypeModal = function(e) {
+            if (e && e.target !== document.getElementById('fav-type-modal-overlay')) return;
+            document.getElementById('fav-type-modal-overlay').classList.remove('open');
+            if (_favTypeResolve) { _favTypeResolve(null); _favTypeResolve = null; }
+        };
+        window.submitFavType = function() {
+            const ff = document.getElementById('cb-fun-fav').checked;
+            const tf = document.getElementById('cb-tech-fav').checked;
+            document.getElementById('fav-type-modal-overlay').classList.remove('open');
+            if (_favTypeResolve) { _favTypeResolve({ ff, tf }); _favTypeResolve = null; }
+        };
+        
+        window.toggleFavMenu = function(e) {
+            e.stopPropagation();
+            document.getElementById('fav-dropdown-menu').classList.toggle('show');
+        };
+        document.addEventListener('click', () => {
+            const menu = document.getElementById('fav-dropdown-menu');
+            if (menu) menu.classList.remove('show');
+        });
 
             window._syncLocks = new Set();
             window.toggleRemoteFH = async function (ticker, type, event) {
@@ -8780,11 +8884,42 @@
                 if (window._syncLocks.has(lockKey)) return;
                 window._syncLocks.add(lockKey);
 
+                if (type === 'F') {
+                    const isFF = window._fhTickers.FF ? window._fhTickers.FF.has(tk) : false;
+                    const isTF = window._fhTickers.TF ? window._fhTickers.TF.has(tk) : false;
+                    const result = await window.promptFavType(tk, isFF, isTF);
+                    if (!result) { window._syncLocks.delete(lockKey); return; }
+                    
+                    try {
+                        const resp = await fetch(`${SYNC_URL}?action=update_fav&ticker=${tk}&ff=${result.ff}&tf=${result.tf}`);
+                        const data = await resp.json();
+                        if (data.F) window._remoteFavs = new Set(data.F.map(t => String(t).toUpperCase()));
+                        if (data.FF) window._remoteFF = new Set(data.FF.map(t => String(t).toUpperCase()));
+                        if (data.TF) window._remoteTF = new Set(data.TF.map(t => String(t).toUpperCase()));
+                        if (data.H) window._remoteHolds = new Set(data.H.map(t => String(t).toUpperCase()));
+                        window._remoteSyncSuccess = true;
+
+                        recomputeFHTickers();
+
+                        const finalSet = window._fhTickers.F;
+                        const finalState = finalSet.has(tk);
+                        const btns = document.querySelectorAll(`.fav-toggle-${tk}`);
+                        btns.forEach(b => b.classList.toggle('is-fav', finalState));
+
+                        if (window._fhState.active === 'F' || window._fhState.active === 'FF' || window._fhState.active === 'TF') doFilter();
+                    } catch (e) {
+                        console.error('[SundarX] Sync failed:', e.message);
+                    } finally {
+                        window._syncLocks.delete(lockKey);
+                    }
+                    return;
+                }
+
                 const set = (type === 'H') ? window._fhTickers.H : window._fhTickers.F;
                 const isSet = set.has(tk);
                 const action = isSet ? 'remove' : 'add';
-                const cls = (type === 'H') ? 'is-hold' : 'is-fav';
-                const selector = (type === 'H') ? `.hold-toggle-${tk}` : `.fav-toggle-${tk}`;
+                const cls = 'is-hold';
+                const selector = `.hold-toggle-${tk}`;
 
                 // Optimistic UI update
                 const btns = document.querySelectorAll(selector);
@@ -8793,15 +8928,13 @@
                 try {
                     const resp = await fetch(`${SYNC_URL}?action=${action}&ticker=${tk}&type=${type}`);
                     const result = await resp.json();
-                    // Result is { F: [...], H: [...] }
-                    if (result.F) window._remoteFavs = new Set(result.F.map(t => String(t).toUpperCase()));
                     if (result.H) window._remoteHolds = new Set(result.H.map(t => String(t).toUpperCase()));
                     window._remoteSyncSuccess = true;
 
                     recomputeFHTickers();
 
                     // Final UI sync
-                    const finalSet = (type === 'H') ? window._fhTickers.H : window._fhTickers.F;
+                    const finalSet = window._fhTickers.H;
                     const finalState = finalSet.has(tk);
                     btns.forEach(b => b.classList.toggle(cls, finalState));
 
@@ -8818,8 +8951,11 @@
                 const favBtn = document.getElementById('fav-filter-btn');
                 const holdBtn = document.getElementById('hold-filter-btn');
                 if (!favBtn || !holdBtn) return;
-                favBtn.classList.toggle('fh-active', window._fhState.active === 'F');
+                favBtn.classList.toggle('fh-active', ['F', 'FF', 'TF'].includes(window._fhState.active));
                 holdBtn.classList.toggle('fh-active', window._fhState.active === 'H');
+                if (window._fhState.active === 'FF') favBtn.textContent = 'FF';
+                else if (window._fhState.active === 'TF') favBtn.textContent = 'TF';
+                else favBtn.textContent = 'F';
             }
             window._updateFHBtnState = _updateFHBtnState;
 
@@ -8842,7 +8978,9 @@
                 const active = window._fhState.active;
                 if (!active) return true;
                 const ticker = String(r._ticker || '').toUpperCase();
-                return window._fhTickers[active].has(ticker);
+                const set = window._fhTickers[active];
+                if (!set) return true; // unknown mode – show all
+                return set.has(ticker);
             };
 
             // Now patch both doFilter variants to respect _fhFilter.
@@ -9359,6 +9497,18 @@
                     obvFull[i] = obv;
                 }
 
+                const trFull = new Array(allRaw.length).fill(0);
+                for (let i = 0; i < allRaw.length; i++) {
+                    const r = allRaw[i];
+                    if (i === 0) {
+                        trFull[i] = r.high - r.low;
+                    } else {
+                        const pc = allRaw[i-1].close;
+                        trFull[i] = Math.max(r.high - r.low, Math.abs(r.high - pc), Math.abs(r.low - pc));
+                    }
+                }
+                const atr14full = sma(trFull, 14);
+
                 const months = period === '2y' ? 24 : period === '1y' ? 12 : 6;
                 const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - months);
                 const cutTs = cutoff.getTime();
@@ -9383,7 +9533,8 @@
                     volSma50: volSma50full[startIdx + i],
                     volSma9: volSma9full[startIdx + i],
                     hUpV15: hUpV15full[startIdx + i],
-                    hDnV15: hDnV15full[startIdx + i]
+                    hDnV15: hDnV15full[startIdx + i],
+                    atr14: atr14full[startIdx + i]
                 }));
 
                 if (!raw.length) {
@@ -9554,8 +9705,8 @@
                 }
 
                 // ── MA lines ──
-                // MA10: Bright Orange Bold line
-                pc.strokeStyle = '#ff6600'; pc.lineWidth = 2.0; pc.lineJoin = 'round'; pc.lineCap = 'round'; pc.setLineDash([]);
+                // MA10: Gold Bold line
+                pc.strokeStyle = '#ffd700'; pc.lineWidth = 2.0; pc.lineJoin = 'round'; pc.lineCap = 'round'; pc.setLineDash([]);
                 pc.beginPath(); let st = false;
                 raw.forEach((r, i) => {
                     if (!r.ma10) return;
@@ -9770,20 +9921,41 @@
                     const isUp = r.close > r.open;
                     const isDown = r.close < r.open;
                     const v = r.vol;
+                    const avgV = r.volSma50;
+                    const spread = r.high - r.low;
+                    const body = Math.abs(r.close - r.open);
                     
-                    let c = '#6b7280'; // Priority 6: Normal/Average Volume -> GREY
+                    let c = '#6b7280'; // Priority 9: Normal/Average Volume -> GREY
+                    let vDesc = "Average Vol";
 
-                    if (isUp && v > r.hDnV15) {
-                        c = '#0ea5e9'; // Priority 1: Upside PPV -> SKY BLUE
+                    if (avgV && v > 2.5 * avgV) {
+                        c = isUp ? '#fbbf24' : '#991b1b'; // Priority 1: Massive Volume
+                        vDesc = isUp ? "Massive Accumulation" : "Massive Distribution";
+                    } else if (avgV && v > 1.5 * avgV && (spread < r.atr14 * 0.6 || body < spread * 0.2)) {
+                        c = '#f97316'; // Priority 2: Churning / Squat
+                        vDesc = "Churning (Effort no Result)";
+                    } else if (isUp && v > r.hDnV15) {
+                        c = '#0ea5e9'; // Priority 3: Upside PPV
+                        vDesc = "Pocket Pivot (Bullish)";
                     } else if (isDown && v > r.hUpV15) {
-                        c = '#a855f7'; // Priority 2: Downside PPV -> PURPLE
-                    } else if (v < 0.5 * r.volSma50) {
-                        c = '#fde047'; // Priority 3: Dryout Volume -> PALE YELLOW
-                    } else if (isUp && v > r.volSma50) {
-                        c = '#22c55e'; // Priority 4: RGV -> GREEN
-                    } else if (isDown && v > r.volSma50) {
-                        c = '#ef4444'; // Priority 5: RRV -> RED
+                        c = '#a855f7'; // Priority 4: Downside PPV
+                        vDesc = "Pocket Pivot (Bearish)";
+                    } else if (avgV && v < 0.25 * avgV) {
+                        c = '#1e3a8a'; // Priority 5: Extreme Dryout
+                        vDesc = "Extreme Dryout (<25%)";
+                    } else if (avgV && v < 0.5 * avgV) {
+                        c = '#cbd5e1'; // Priority 6: Dryout Volume (Pale Silver)
+                        vDesc = "Volume Dryout (<50%)";
+                    } else if (avgV && isUp && v > avgV) {
+                        c = '#22c55e'; // Priority 7: Above Avg Green
+                        vDesc = "Above Avg (Bull)";
+                    } else if (avgV && isDown && v > avgV) {
+                        c = '#ef4444'; // Priority 8: Above Avg Red
+                        vDesc = "Above Avg (Bear)";
                     }
+
+                    r._vColor = c;
+                    r._vDesc = vDesc;
 
                     vc.fillStyle = c;
                     vc.globalAlpha = 0.85;
@@ -9864,6 +10036,28 @@
                         vc.textAlign = 'right';
                         vc.textBaseline = 'middle';
                         vc.fillText(volTxt, W - 3, dby);
+
+                        // Institutional Volume Tooltip
+                        if (pCv._hoverIdx !== undefined && pCv._hoverIdx !== null) {
+                            const hr = raw[pCv._hoverIdx];
+                            if (hr && hr._vDesc) {
+                                const descTxt = hr._vDesc;
+                                vc.font = '600 9px "Lexend",monospace';
+                                const dtW = vc.measureText(descTxt).width + 12;
+                                const isLeft = hx > W / 2;
+                                const bx = isLeft ? hx - dtW - 8 : hx + 8;
+                                const by = Math.max(VP.t + 2, hy - 10);
+                                
+                                vc.fillStyle = 'rgba(18, 18, 26, 0.9)';
+                                vc.beginPath(); vc.roundRect(bx, by, dtW, 18, 4); vc.fill();
+                                vc.strokeStyle = hr._vColor || 'rgba(255,255,255,0.2)';
+                                vc.lineWidth = 1; vc.stroke();
+                                
+                                vc.fillStyle = '#ffffff';
+                                vc.textAlign = 'center';
+                                vc.fillText(descTxt, bx + dtW/2, by + 9);
+                            }
+                        }
                     }
 
                     vc.restore();
@@ -12278,6 +12472,29 @@
 
         })();
     </script>
+
+    <!-- ══════════════════════════════════════════════════════
+     FAVORITE TYPE SELECTION MODAL
+══════════════════════════════════════════════════════ -->
+    <div id="fav-type-modal-overlay" onclick="closeFavTypeModal(event)">
+        <div id="fav-type-modal">
+            <div id="fav-type-modal-header">
+                <div id="fav-type-modal-title">Manage Favorites (<span id="fav-modal-ticker"></span>)</div>
+                <button id="fav-type-modal-close" onclick="closeFavTypeModal(null)" title="Close">✕</button>
+            </div>
+            <div id="fav-type-modal-body">
+                <label class="fav-checkbox-label">
+                    <input type="checkbox" id="cb-fun-fav">
+                    <span>FunFav</span>
+                </label>
+                <label class="fav-checkbox-label">
+                    <input type="checkbox" id="cb-tech-fav">
+                    <span>TechFav</span>
+                </label>
+                <button class="fav-save-btn" onclick="submitFavType()">Save</button>
+            </div>
+        </div>
+    </div>
 
     <!-- ══════════════════════════════════════════════════════
      UPCOMING RESULTS MODAL
