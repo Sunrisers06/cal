@@ -11013,7 +11013,9 @@
                             pc.textAlign = 'left';
                             pc.textBaseline = 'top';
                             pc.fillText(infoTxt, PP.l + 4, PP.t + 2);
-                            drawPriceActionHoverPanel(pc, buildPriceActionAnalysis(raw), hx, W, PH, PP);
+                            if (pCv._hoverCanvas === pCv) {
+                                drawPriceActionHoverPanel(pc, buildPriceActionAnalysis(raw), hx, W, PH, PP);
+                            }
                         }
                     }
 
