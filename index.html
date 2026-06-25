@@ -10646,9 +10646,16 @@
                 }
                 const pad = (pMax - pMin) * 0.08;
                 pMin -= pad; pMax += pad * 1.5;
-                const pR = pMax - pMin || 1;
+                if (pMin <= 0.01) pMin = 0.01;
+                
+                const logMin = Math.log(pMin);
+                const logMax = Math.log(pMax);
+                const logR = logMax - logMin || 1;
 
-                const toY = v => PP.t + pH * (1 - (v - pMin) / pR);
+                const toY = v => {
+                    if (v <= 0) return PP.t + pH;
+                    return PP.t + pH * (1 - (Math.log(v) - logMin) / logR);
+                };
                 const toX = i => PP.l + (i + 0.5) * (pW / n);
                 const bW = Math.max(1.2, pW / n * 0.55);
 
@@ -10747,7 +10754,7 @@
                 pc.font = 'bold 8px "Lexend",monospace'; pc.textAlign = 'right'; pc.textBaseline = 'middle';
                 for (let g = 0; g <= nGridLines; g++) {
                     const frac = g / nGridLines;
-                    const val = pMax - frac * pR;
+                    const val = Math.exp(logMax - frac * logR);
                     const y = PP.t + pH * frac;
                     // Dashed grid line
                     pc.strokeStyle = 'rgba(255,255,255,0.08)';
@@ -10899,8 +10906,8 @@
 
                         pc.setLineDash([]);
 
-                        // Right-axis price badge
-                        const valAtY = pMin + pR * (1 - (hy - PP.t) / pH);
+                        // Right-axis price badge (logarithmic mapping)
+                        const valAtY = Math.exp(logMin + logR * (1 - (hy - PP.t) / pH));
                         const priceTxt = fmtP(valAtY);
                         pc.font = 'bold 8px "Lexend",monospace';
                         const badgeW = pc.measureText(priceTxt).width + 6;
