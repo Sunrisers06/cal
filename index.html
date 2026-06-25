@@ -9653,11 +9653,11 @@
 
                 const ma10Slope = (r.ma10 && prev5 && prev5.ma10) ? pctFrom(r.ma10, prev5.ma10) : (prev ? pctFrom(r.close, prev.close) : 0);
                 const maStackBull = r.ma40 ? !!(r.ma10 && r.ma20 && r.ma10 > r.ma20 && r.ma20 > r.ma40)
-                                  : r.ma20 ? !!(r.ma10 && r.ma20 && r.ma10 > r.ma20)
-                                  : !!(r.ma10 && above10 && ma10Slope > 0);
+                    : r.ma20 ? !!(r.ma10 && r.ma20 && r.ma10 > r.ma20)
+                        : !!(r.ma10 && above10 && ma10Slope > 0);
                 const maStackBear = r.ma40 ? !!(r.ma10 && r.ma20 && r.ma10 < r.ma20 && r.ma20 < r.ma40)
-                                  : r.ma20 ? !!(r.ma10 && r.ma20 && r.ma10 < r.ma20)
-                                  : !!(r.ma10 && !above10 && ma10Slope < 0);
+                    : r.ma20 ? !!(r.ma10 && r.ma20 && r.ma10 < r.ma20)
+                        : !!(r.ma10 && !above10 && ma10Slope < 0);
 
                 const extended20 = r.ma20 ? pctFrom(r.close, r.ma20) : (r.ma10 ? pctFrom(r.close, r.ma10) * 1.5 : 0);
                 const support = nearestLevel([r.ma10, r.ma20, r.ma40, prior20Low], r.close, 'below');
@@ -9731,7 +9731,7 @@
                     if (vol.ratio > 1.2 && weight !== 0) w = w * 1.5;
                     if (bias === 'bull' && nearSupport && weight !== 0) w = w * 1.3;
                     if (bias === 'bear' && (resistance && r.high >= resistance * 0.985) && weight !== 0) w = w * 1.3;
-                    cPats.push({name, bias, weight: w});
+                    cPats.push({ name, bias, weight: w });
                 };
 
                 if (bullKicker) addCp('Bullish Kicker', 'bull', 8);
@@ -9808,7 +9808,7 @@
                         }
                     }
                     if (majorPivotIdx === -1) continue;
-                    
+
                     let handlePivotIdx = -1;
                     let handlePivotVal = 0;
                     for (let j = Math.max(majorPivotIdx + 5, k - 8); j < k; j++) {
@@ -9817,21 +9817,21 @@
                             handlePivotIdx = j;
                         }
                     }
-                    
+
                     let actionablePivot = majorPivotVal;
                     let isHandleBreakout = false;
                     if (handlePivotIdx !== -1 && handlePivotVal >= majorPivotVal * 0.85 && handlePivotVal < majorPivotVal) {
                         actionablePivot = handlePivotVal;
                         isHandleBreakout = true;
                     }
-                    
+
                     let baseLow = majorPivotVal;
                     for (let j = majorPivotIdx; j < k; j++) {
                         if (raw[j].low < baseLow) baseLow = raw[j].low;
                     }
                     const baseDepthPct = ((majorPivotVal - baseLow) / majorPivotVal) * 100;
                     if (baseDepthPct < 8 || baseDepthPct > 55) continue;
-                    
+
                     let validResistance = true;
                     for (let j = isHandleBreakout ? handlePivotIdx + 1 : majorPivotIdx + 1; j < k; j++) {
                         if (raw[j].high > actionablePivot * 1.02) {
@@ -9850,10 +9850,10 @@
                                 const priorAvgVol = avgVolRange(Math.max(0, k - 10), k) || rk.volSma50 || 1;
                                 const avgVolRatio = (rk.vol || 0) / priorAvgVol;
                                 if (avgVolRatio > 0.75) {
-                                    breakout = { 
-                                        ...breakout, 
-                                        idx: k, 
-                                        pivot: actionablePivot, 
+                                    breakout = {
+                                        ...breakout,
+                                        idx: k,
+                                        pivot: actionablePivot,
                                         volRatio: avgVolRatio,
                                         isHandle: isHandleBreakout
                                     };
@@ -9893,7 +9893,7 @@
                         boStatus = 'Fresh breakout';
                         boTone = 'bull';
                     }
-                    
+
                     let breakoutGrade = 'D';
                     if (breakout.volRatio !== null) {
                         let scoreG = 0;
@@ -9913,7 +9913,7 @@
                         else if (scoreG >= 6) breakoutGrade = 'B';
                         else if (scoreG >= 4) breakoutGrade = 'C';
                     }
-                    
+
                     const pivotType = breakout.isHandle ? 'handle pivot ' : 'major pivot ';
                     breakout = {
                         ...breakout,
@@ -9934,22 +9934,22 @@
                 let currentRunHigh = raw[0] ? raw[0].high : 0;
                 let inBase = false;
                 let hasHadSevereDrop = false;
-                
+
                 for (let k = 0; k <= i; k++) {
                     const rk = raw[k];
-                    
+
                     if (rk.high > currentRunHigh) {
                         currentRunHigh = rk.high;
                     }
-                    
+
                     if (!inBase && currentRunHigh > 0 && rk.low < currentRunHigh * 0.88) {
                         inBase = true;
                     } else if (inBase) {
                         const isSevereDrop = (rk.low < currentRunHigh * 0.60) || (rk.ma40 && rk.low < rk.ma40 * 0.80);
                         if (isSevereDrop) {
                             baseCount = 1;
-                            inBase = false; 
-                            currentRunHigh = rk.high; 
+                            inBase = false;
+                            currentRunHigh = rk.high;
                             hasHadSevereDrop = true;
                         } else if (rk.close > currentRunHigh * 0.98) {
                             inBase = false;
@@ -9958,7 +9958,7 @@
                         }
                     }
                 }
-                
+
                 const isIpoBase = raw.length < 100 && baseCount === 1 && !hasHadSevereDrop;
                 const baseStage = isIpoBase ? 'IPO Base' : 'Stage ' + Math.min(baseCount, 5) + (baseCount >= 5 ? '+' : '');
 
@@ -10021,6 +10021,15 @@
                 const fallingWedge = isFinite(lowA) && isFinite(lowB) && isFinite(lowC) && lowC < lowB && lowB < lowA && highC < highB && highB < highA && (lowA - lowC) < (highA - highC) && vol.ratio < 0.8;
                 const ascChannel = isFinite(highA) && isFinite(highB) && isFinite(highC) && highC > highB && highB > highA && lowC > lowB && lowB > lowA && Math.abs((highC - highA) - (lowC - lowA)) / (highC - highA) < 0.2;
                 const descChannel = isFinite(lowA) && isFinite(lowB) && isFinite(lowC) && lowC < lowB && lowB < lowA && highC < highB && highB < highA && Math.abs((lowA - lowC) - (highA - highC)) / (lowA - lowC) < 0.2;
+                
+                const isEq = (a, b) => Math.abs(a - b) / a < 0.035;
+                const ascTriangle = isFinite(highA) && isFinite(highB) && isFinite(highC) && isEq(highA, highB) && isEq(highB, highC) && lowC > lowB && lowB > lowA && vol.ratio < 0.9;
+                const descTriangle = isFinite(lowA) && isFinite(lowB) && isFinite(lowC) && isEq(lowA, lowB) && isEq(lowB, lowC) && highC < highB && highB < highA && vol.ratio < 0.9;
+                const megaphone = isFinite(highA) && isFinite(highB) && isFinite(highC) && isFinite(lowA) && isFinite(lowB) && isFinite(lowC) && highC > highB && highB > highA && lowC < lowB && lowB < lowA;
+                const doubleTop = isFinite(highB) && isFinite(highC) && isFinite(lowC) && isEq(highB, highC) && lowC < highB * 0.90 && r.close < highC * 0.95;
+                const tripleTop = isFinite(highA) && isFinite(highB) && isFinite(highC) && isEq(highA, highB) && isEq(highB, highC) && r.close < highC * 0.95;
+                const tripleBottom = isFinite(lowA) && isFinite(lowB) && isFinite(lowC) && isEq(lowA, lowB) && isEq(lowB, lowC) && r.close > lowC * 1.05;
+                const roundingTop = baseWeeks >= 15 && baseDepth <= 35 && Math.abs(r.close - minOf(raw.slice(baseStartIdx, baseStartIdx + 3), x => x.low)) / r.close < 0.10 && maxOf(raw.slice(baseStartIdx + 5, i - 5), x => x.high) > maxOf(raw.slice(baseStartIdx, baseStartIdx + 3), x => x.high);
                 const firstLow = extremeIdx(baseStartIdx, Math.max(baseStartIdx, i - Math.floor(baseWeeks * 0.45)), 'low', 'min');
                 const secondLow = extremeIdx(Math.min(i, firstLow.idx + 3), i, 'low', 'min');
                 const middleHigh = firstLow.idx >= 0 && secondLow.idx > firstLow.idx ? maxOf(raw.slice(firstLow.idx, secondLow.idx + 1), x => x.high) : null;
@@ -10036,7 +10045,7 @@
                     secondLow.val <= firstLow.val * 1.03 && secondLowRsi >= firstLowRsi + 4);
                 const bearishRsiDiv = !!(oldHighRsi && recentHighRsi && recentHigh.idx > oldHigh.idx + 2 &&
                     recentHigh.val >= oldHigh.val * 0.98 && recentHighRsi <= oldHighRsi - 4);
-                
+
                 const firstHalf = raw.slice(baseStartIdx, Math.max(baseStartIdx + 1, Math.floor((baseStartIdx + i) / 2)));
                 const secondHalf = raw.slice(Math.floor((baseStartIdx + i) / 2), i + 1);
 
@@ -10052,7 +10061,7 @@
                     'Weekly downtrend / distribution', 'bear', -30, 'Lower highs/lows with distribution pressure.');
                 addPattern(breakout.failed,
                     'Failed weekly breakout', 'bear', -28, 'Price broke out but has now failed below the pivot.');
-                
+
                 addPattern(headAndShoulders,
                     'Head & Shoulders Top', 'bear', -25, 'Three peaks with the middle being highest; neckline breaking.');
                 addPattern(invHeadAndShoulders,
@@ -10063,13 +10072,13 @@
                     'Rounding Bottom Breakout', 'bull', 24, 'Gradual accumulation resolving above pivot.');
                 addPattern(roundingBottom && !avgBreakoutConfirmed,
                     'Rounding Bottom Forming', 'bull', 16, 'Gradual, saucer-like accumulation base.');
-                
+
                 const symTriangle = isFinite(highA) && isFinite(highB) && isFinite(highC) && highC < highB && highB < highA && lowC > lowB && lowB > lowA && vol.ratio < 0.9;
                 const bullFlag = above20 && chartPos > 70 && baseWeeks >= 3 && baseWeeks <= 7 && baseTight && baseDepth <= 15 && vol.ratio < 0.85 && maxOf(raw.slice(Math.max(0, i - 3), i + 1), x => x.high) < baseHigh;
                 const bearFlag = !above40 && chartPos < 30 && baseWeeks >= 3 && baseWeeks <= 7 && baseTight && baseDepth <= 15 && vol.ratio < 0.85 && minOf(raw.slice(Math.max(0, i - 3), i + 1), x => x.low) > (baseLowInfo ? baseLowInfo.val : 0);
-                const rectangleBull = above40 && baseWeeks >= 6 && baseDepth <= 15 && isFinite(highB) && isFinite(highC) && Math.abs(highC - highB)/highB < 0.05 && Math.abs(lowC - lowB)/lowB < 0.05;
-                const rectangleBear = !above40 && baseWeeks >= 6 && baseDepth <= 15 && isFinite(highB) && isFinite(highC) && Math.abs(highC - highB)/highB < 0.05 && Math.abs(lowC - lowB)/lowB < 0.05;
-                
+                const rectangleBull = above40 && baseWeeks >= 6 && baseDepth <= 15 && isFinite(highB) && isFinite(highC) && Math.abs(highC - highB) / highB < 0.05 && Math.abs(lowC - lowB) / lowB < 0.05;
+                const rectangleBear = !above40 && baseWeeks >= 6 && baseDepth <= 15 && isFinite(highB) && isFinite(highC) && Math.abs(highC - highB) / highB < 0.05 && Math.abs(lowC - lowB) / lowB < 0.05;
+
                 addPattern(symTriangle, 'Symmetrical Triangle', 'neutral', 5, 'Highs and lows converging symmetrically.');
                 addPattern(bullFlag, 'Bull Flag', 'bull', 18, 'Short, tight downward/sideways drift in an uptrend.');
                 addPattern(bearFlag, 'Bear Flag', 'bear', -18, 'Short, tight upward/sideways drift in a downtrend.');
@@ -10084,6 +10093,14 @@
                     'Descending Channel', 'bear', -10, 'Controlled lower highs and lower lows.');
                 addPattern(ascChannel && !risingWedge,
                     'Ascending Channel', 'bull', 10, 'Controlled higher highs and higher lows.');
+
+                addPattern(ascTriangle, 'Ascending Triangle', 'bull', 15, 'Flat resistance with rising support levels.');
+                addPattern(descTriangle, 'Descending Triangle', 'bear', -15, 'Flat support with descending resistance levels.');
+                addPattern(megaphone, 'Broadening Formation', 'neutral', -10, 'Expanding volatility with higher highs and lower lows.');
+                addPattern(doubleTop && !tripleTop, 'Double Top', 'bear', -18, 'Two distinct peaks failing to break overhead resistance.');
+                addPattern(tripleTop, 'Triple Top', 'bear', -22, 'Three distinct peaks failing to break overhead resistance.');
+                addPattern(tripleBottom, 'Triple Bottom', 'bull', 18, 'Three distinct troughs forming a strong support base.');
+                addPattern(roundingTop, 'Rounding Top', 'bear', -16, 'Gradual, dome-like distribution pattern.');
 
                 const ftdWeek = (trendBias === 'bear' || (prev && prev.ma40 && prev.close < prev.ma40)) && r.close > r.open && prev && r.close > prev.high && vol.ratio > 1.3 && pctFrom(r.close, r.low) > 4;
                 const lowCheat = baseWeeks >= 4 && r.ma10 && r.close > r.ma10 && prev && prev.close < r.ma10 && vol.ratio > 1.2 && r.close <= baseHigh * 0.95;
@@ -10173,7 +10190,7 @@
                     if (above10) add(14, 'IPO above MA10 (proxy)'); else add(-18, 'IPO below MA10 (proxy)');
                     if (ma10Slope > 0) add(8, 'IPO rising MA10 (proxy)'); else if (ma10Slope < -0.5) add(-10, 'IPO falling MA10 (proxy)');
                 }
-                
+
                 if (maStackBull) add(8, 'bull MA stack');
                 if (maStackBear) add(-10, 'bear MA stack');
                 if (closeLoc >= 75) add(3, 'latest weekly close near high');
@@ -10190,7 +10207,7 @@
                     breakoutPoints = Math.min(breakoutPoints, 20); // Cap breakout points to avoid double-counting
                     add(breakoutPoints, boReasons.join(' + '));
                 }
-                
+
                 if (bullishRsiDiv) add(12, 'bullish RSI divergence');
                 if (bearishRsiDiv) add(-15, 'bearish RSI divergence');
 
@@ -10217,7 +10234,7 @@
                 let action = 'WAIT';
                 let actionColor = '#fbbf24';
                 let setup = 'No clean weekly pattern. Wait for a base, breakout, or support reclaim.';
-                
+
                 const brokenSupport = (prior20Low && r.close < prior20Low);
                 if (criticalBearPattern || score <= 36 || (trendBias === 'bear' && chartPatternBias === 'bear') || brokenSupport) {
                     action = 'SELL / AVOID';
@@ -10301,24 +10318,23 @@
                 const invalidPct = invalidation ? pctFrom(invalidation, r.close) : null;
                 const invalidStr = invalidation ? invalidation.toFixed(2) + ' (' + invalidPct.toFixed(1) + '%)' : 'N/A';
                 const levelLine = 'S: ' + supTxt + ' | R: ' + resTxt;
-                
+
                 const rsiDivTxt = bullishRsiDiv ? 'Bullish RSI Div' : bearishRsiDiv ? 'Bearish RSI Div' : 'No RSI Div';
                 const rsiDisplay = (bullishRsiDiv || bearishRsiDiv) ? ' | ' + rsiDivTxt : '';
+
+                const outLines = patternCandidates.map(p => ({
+                    label: '',
+                    text: p.name,
+                    tone: p.bias
+                }));
 
                 return {
                     score,
                     action,
                     actionColor,
-                    setup,
+                    setup: null,
                     volume: vol,
-                    lines: [
-                        { label: 'Pattern', text: patternSummary + ' | ' + chartPatternDetail, tone: chartPatternBias },
-                        { label: 'Base Info', text: baseStage + ' | depth ' + baseDepth.toFixed(0) + '%' + (isVcpExact ? ' | VCP: ' + vcpText : ''), tone: 'neutral' },
-                        { label: 'Candle', text: candlePattern + ' | close ' + closeLoc.toFixed(0) + '% | RSI ' + lastRsi.toFixed(0) + rsiDisplay, tone: candleTone },
-                        { label: 'Breakout', text: breakout.text, tone: breakoutTone },
-                        { label: 'Levels', text: levelLine, tone: 'neutral' },
-                        { label: 'Risk', text: 'Invalid below ' + invalidStr, tone: 'warning' }
-                    ]
+                    lines: outLines
                 };
             }
 
@@ -10380,117 +10396,37 @@
             }
 
             function drawPriceActionHoverPanel(ctx, pa, hx, W, PH, PP) {
-                if (!pa) return;
+                if (!pa || !pa.lines) return;
                 const compact = W < 360;
-                const pad = 12;
-                const lineH = compact ? 13 : 15;
-                const maxW = W - PP.l - PP.r - 20;
-                let panelW = compact ? Math.min(maxW, 300) : Math.min(maxW, 360);
-                const textW = panelW - pad * 2 - 8; 
-                const titleFont = compact ? 'bold 11px "Lexend",sans-serif' : 'bold 12px "Lexend",sans-serif';
-                const bodyFont = compact ? '500 9.5px "Lexend",sans-serif' : '500 10.5px "Lexend",sans-serif';
-                const labelFont = compact ? '700 9.5px "Lexend",sans-serif' : '700 10.5px "Lexend",sans-serif';
-                
+                const bodyFont = compact ? '500 11px "Lexend",sans-serif' : '500 12px "Lexend",sans-serif';
+                const labelFont = compact ? '700 11px "Lexend",sans-serif' : '700 12px "Lexend",sans-serif';
+
                 ctx.save();
-                
-                const rows = [];
-                if (pa.setup) {
-                    ctx.font = bodyFont;
-                    rows.push({ isSetup: true, text: pa.setup, lines: wrapCanvasText(ctx, pa.setup, textW + 8) });
-                }
-                
+
+                let px = hx > W / 2 ? PP.l + 10 : W - PP.r - (compact ? 220 : 280);
+                px = clamp(px, PP.l + 10, W - PP.r - 200);
+                let py = PP.t + 20;
+
+                ctx.shadowColor = 'rgba(0,0,0,0.9)';
+                ctx.shadowBlur = 4;
+                ctx.shadowOffsetY = 1;
+                ctx.textBaseline = 'top';
+
                 pa.lines.forEach(line => {
                     ctx.font = labelFont;
-                    const labelW = line.label ? ctx.measureText(line.label + ': ').width : 0;
-                    ctx.font = bodyFont;
-                    const wrapped = wrapCanvasText(ctx, line.text, textW - labelW);
-                    rows.push({ ...line, lines: wrapped, labelW });
-                });
-                
-                let panelH = pad * 2 + 18; 
-                rows.forEach(r => {
-                    panelH += (r.lines.length * lineH) + 4; 
-                });
-                
-                if (panelH > PH - PP.t - PP.b - 10) panelH = PH - PP.t - PP.b - 10;
-                let px = hx > W / 2 ? PP.l + 10 : W - PP.r - panelW - 10;
-                px = clamp(px, PP.l + 4, W - PP.r - panelW - 4);
-                const py = PP.t + 15;
-                
-                ctx.shadowColor = 'rgba(0,0,0,0.8)';
-                ctx.shadowBlur = 15;
-                ctx.shadowOffsetY = 4;
-                ctx.fillStyle = 'rgba(10, 14, 23, 0.96)';
-                drawRoundedPanel(ctx, px, py, panelW, panelH, 8);
-                ctx.fill();
-                ctx.shadowBlur = 0;
-                ctx.shadowOffsetY = 0;
-                
-                ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-                ctx.lineWidth = 1;
-                ctx.stroke();
-                
-                ctx.fillStyle = pa.actionColor + '22';
-                ctx.beginPath();
-                if (ctx.roundRect) ctx.roundRect(px, py, panelW, 28, [8, 8, 0, 0]);
-                else ctx.rect(px, py, panelW, 28);
-                ctx.fill();
-                
-                ctx.fillStyle = pa.actionColor;
-                ctx.beginPath();
-                if (ctx.roundRect) ctx.roundRect(px, py, panelW, 3, [8, 8, 0, 0]);
-                else ctx.rect(px, py, panelW, 3);
-                ctx.fill();
-                
-                ctx.font = titleFont;
-                ctx.fillStyle = pa.actionColor;
-                ctx.textAlign = 'left';
-                ctx.textBaseline = 'top';
-                ctx.fillText(pa.action + ' | Score ' + pa.score + '/100', px + pad, py + 9);
-                
-                let ty = py + 34; 
-                
-                rows.forEach(r => {
-                    if (ty + lineH > py + panelH - pad) return;
-                    
-                    if (r.isSetup) {
-                        ctx.font = bodyFont;
-                        ctx.fillStyle = '#94a3b8';
-                        r.lines.forEach(l => {
-                            ctx.fillText(l, px + pad, ty);
-                            ty += lineH;
-                        });
-                        ty += 6; 
-                        return;
-                    }
-                    
-                    const toneColor = r.tone === 'bull' ? '#22c55e' : r.tone === 'bear' ? '#ef4444' : r.tone === 'warning' ? '#fbbf24' : '#64748b';
+                    const toneColor = line.tone === 'bull' ? '#22c55e' : line.tone === 'bear' ? '#ef4444' : '#cbd5e1';
                     ctx.fillStyle = toneColor;
-                    ctx.beginPath();
-                    if (ctx.roundRect) ctx.roundRect(px + pad, ty, 3, r.lines.length * lineH, 2);
-                    else ctx.rect(px + pad, ty, 3, r.lines.length * lineH);
-                    ctx.fill();
-                    
-                    const textX = px + pad + 10;
-                    
-                    r.lines.forEach((line, idx) => {
-                        if (idx === 0 && r.label) {
-                            ctx.font = labelFont;
-                            ctx.fillStyle = '#e2e8f0';
-                            ctx.fillText(r.label + ': ', textX, ty);
-                            ctx.font = bodyFont;
-                            ctx.fillStyle = '#cbd5e1';
-                            ctx.fillText(line, textX + r.labelW, ty);
-                        } else {
-                            ctx.font = bodyFont;
-                            ctx.fillStyle = '#cbd5e1';
-                            ctx.fillText(line, textX + (idx === 0 ? 0 : r.labelW), ty);
-                        }
-                        ty += lineH;
-                    });
-                    ty += 4; 
+
+                    const labelStr = line.label ? line.label + ': ' : '';
+                    ctx.fillText(labelStr, px, py);
+
+                    const labelW = line.label ? ctx.measureText(labelStr).width : 0;
+                    ctx.font = bodyFont;
+                    ctx.fillText(line.text, px + labelW, py);
+
+                    py += 18;
                 });
-                
+
                 ctx.restore();
             }
 
