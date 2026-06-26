@@ -2007,6 +2007,10 @@
             }
         }
 
+        #cards.col-1 { grid-template-columns: 1fr !important; }
+        #cards.col-2 { grid-template-columns: repeat(2, 1fr) !important; }
+        #cards.col-3 { grid-template-columns: repeat(3, 1fr) !important; }
+
         /* ══════════════════════════════
    STOCK CARD & COLOR INDICATORS
 ══════════════════════════════ */
@@ -6126,6 +6130,12 @@
                     <option value="latest" selected>Latest Result</option>
                     <option value="chart">Chart</option>
                 </select>
+                <select id="col-filter" class="fi w90" onchange="updateColumnCount(this.value)" title="Set number of columns">
+                    <option value="auto" selected>Col: Auto</option>
+                    <option value="1">Col: 1</option>
+                    <option value="2">Col: 2</option>
+                    <option value="3">Col: 3</option>
+                </select>
                 <input type="number" id="min-mcap" class="fi w90" placeholder="Min MCap" oninput="onSearchInput()">
                 <select id="index-filter" class="fi w110" onchange="doFilter()">
                     <option value="all">All Indices</option>
@@ -8124,6 +8134,16 @@
            chart (6M / 1Y / 2Y), reusing the same OHLCV data + drawing
            engine as the hover candlestick popup.
         ══════════════════════════════════════════════════════ */
+        window.updateColumnCount = function (val) {
+            const cards = document.getElementById('cards');
+            if (cards) {
+                cards.classList.remove('col-1', 'col-2', 'col-3');
+                if (val !== 'auto') {
+                    cards.classList.add('col-' + val);
+                }
+            }
+        };
+
         window.setViewMode = function (mode) {
             mode = (mode === 'chart') ? 'chart' : 'latest';
             if (window._cardViewMode === mode) return;
