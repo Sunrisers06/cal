@@ -2008,9 +2008,17 @@
             }
         }
 
-        #cards.col-1 { grid-template-columns: 1fr !important; }
-        #cards.col-2 { grid-template-columns: repeat(2, 1fr) !important; }
-        #cards.col-3 { grid-template-columns: repeat(3, 1fr) !important; }
+        #cards.col-1 {
+            grid-template-columns: 1fr !important;
+        }
+
+        #cards.col-2 {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+
+        #cards.col-3 {
+            grid-template-columns: repeat(3, 1fr) !important;
+        }
 
         /* ══════════════════════════════
    STOCK CARD & COLOR INDICATORS
@@ -6124,7 +6132,8 @@
                     <option value="latest" selected>Latest Result</option>
                     <option value="chart">Chart</option>
                 </select>
-                <select id="col-filter" class="fi w90" onchange="updateColumnCount(this.value)" title="Set number of columns">
+                <select id="col-filter" class="fi w90" onchange="updateColumnCount(this.value)"
+                    title="Set number of columns">
                     <option value="auto" selected>Col: Auto</option>
                     <option value="1">Col: 1</option>
                     <option value="2">Col: 2</option>
@@ -8123,7 +8132,7 @@
                                     el.title = name;
                                 }
                             }
-                        } catch(e) {}
+                        } catch (e) { }
 
                         active--;
                         next();
@@ -10074,7 +10083,7 @@
                 const fallingWedge = isFinite(lowA) && isFinite(lowB) && isFinite(lowC) && lowC < lowB && lowB < lowA && highC < highB && highB < highA && (lowA - lowC) < (highA - highC) && vol.ratio < 0.8;
                 const ascChannel = isFinite(highA) && isFinite(highB) && isFinite(highC) && highC > highB && highB > highA && lowC > lowB && lowB > lowA && Math.abs((highC - highA) - (lowC - lowA)) / (highC - highA) < 0.2;
                 const descChannel = isFinite(lowA) && isFinite(lowB) && isFinite(lowC) && lowC < lowB && lowB < lowA && highC < highB && highB < highA && Math.abs((lowA - lowC) - (highA - highC)) / (lowA - lowC) < 0.2;
-                
+
                 const isEq = (a, b) => Math.abs(a - b) / a < 0.035;
                 const ascTriangle = isFinite(highA) && isFinite(highB) && isFinite(highC) && isEq(highA, highB) && isEq(highB, highC) && lowC > lowB && lowB > lowA && vol.ratio < 0.9;
                 const descTriangle = isFinite(lowA) && isFinite(lowB) && isFinite(lowC) && isEq(lowA, lowB) && isEq(lowB, lowC) && highC < highB && highB < highA && vol.ratio < 0.9;
@@ -10629,13 +10638,13 @@
                 const obvSmaFull = sma(obvFull, 9);
 
                 const m = window.indexDataMap || {};
-                let benchTicker = 'Nifty_TOTAL';
+                let benchTicker = 'NIFTY_TOTAL';
                 if (m.Nifty_MIC && m.Nifty_MIC.has(UC)) benchTicker = 'MICROCAP';
                 else if (m.Nifty_MC && m.Nifty_MC.has(UC)) benchTicker = 'MIDCAP';
                 else if (m.Nifty_SC && m.Nifty_SC.has(UC)) benchTicker = 'SMALLCAP';
                 else if (m.Nifty_100 && m.Nifty_100.has(UC)) benchTicker = 'NIFTY50';
 
-                // Fallback to NIFTY50 if the chosen index (like Nifty_TOTAL) is missing from the OHLCV CSV
+                // Fallback to NIFTY50 if the chosen index (like NIFTY_TOTAL) is missing from the OHLCV CSV
                 if (_index && !_index.has(benchTicker) && _index.has('NIFTY50')) {
                     benchTicker = 'NIFTY50';
                 }
@@ -10654,19 +10663,19 @@
                         ...r,
                         benchClose: lastBenchClose,
                         ma10: s10full[startIdx + i],
-                    ma20: s20full[startIdx + i],
-                    ma30: s30full[startIdx + i],
-                    ma40: s40full[startIdx + i],
-                    ad: adFull[startIdx + i],
-                    obv: obvFull[startIdx + i],
-                    adSma: adSmaFull[startIdx + i],
-                    obvSma: obvSmaFull[startIdx + i],
-                    volSma50: volSma50full[startIdx + i],
-                    volSma9: volSma9full[startIdx + i],
-                    hUpV15: hUpV15full[startIdx + i],
-                    hDnV15: hDnV15full[startIdx + i],
-                    atr14: atr14full[startIdx + i]
-                };
+                        ma20: s20full[startIdx + i],
+                        ma30: s30full[startIdx + i],
+                        ma40: s40full[startIdx + i],
+                        ad: adFull[startIdx + i],
+                        obv: obvFull[startIdx + i],
+                        adSma: adSmaFull[startIdx + i],
+                        obvSma: obvSmaFull[startIdx + i],
+                        volSma50: volSma50full[startIdx + i],
+                        volSma9: volSma9full[startIdx + i],
+                        hUpV15: hUpV15full[startIdx + i],
+                        hDnV15: hDnV15full[startIdx + i],
+                        atr14: atr14full[startIdx + i]
+                    };
                 });
 
                 if (!raw.length) {
@@ -10724,16 +10733,16 @@
                 for (const r of raw) {
                     if (r.high > pMax) pMax = r.high;
                     if (r.low < pMin) pMin = r.low;
-                    
+
                     const iVal = (r.benchClose || 1) * benchScale;
-                    
+
                     if (iVal > pMax) pMax = iVal;
                     if (iVal < pMin) pMin = iVal;
                 }
                 const pad = (pMax - pMin) * 0.08;
                 pMin -= pad; pMax += pad * 1.5;
                 if (pMin <= 0.01) pMin = 0.01;
-                
+
                 const logMin = Math.log(pMin);
                 const logMax = Math.log(pMax);
                 const logR = logMax - logMin || 1;
