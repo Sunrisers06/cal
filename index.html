@@ -598,8 +598,8 @@
             z-index: 200;
             flex-shrink: 0;
             background: linear-gradient(180deg, rgba(8, 8, 12, 0.96) 0%, rgba(6, 6, 10, 0.94) 100%);
-            backdrop-filter: blur(20px) saturate(1.3);
-            -webkit-backdrop-filter: blur(20px) saturate(1.3);
+            backdrop-filter: blur(12px) saturate(1.3);
+            -webkit-backdrop-filter: blur(12px) saturate(1.3);
             border-bottom: 1px solid rgba(255, 255, 255, 0.04);
             box-shadow: 0 1px 0 rgba(255, 255, 255, 0.02), 0 4px 16px rgba(0, 0, 0, 0.3);
             height: 48px;
@@ -1755,6 +1755,7 @@
             padding: 10px 14px 28px;
             overflow-y: auto;
             overflow-x: hidden;
+            contain: content;
             /* Critical for Edge mobile: momentum scrolling + fullscreen trigger */
             -webkit-overflow-scrolling: touch;
             overscroll-behavior-y: contain;
@@ -2024,10 +2025,11 @@
             box-sizing: border-box;
             min-width: 0;
             height: auto;
-            animation: fadeUp .35s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-            transition: all .25s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform .25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow .25s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             cursor: pointer;
+            content-visibility: auto;
+            contain-intrinsic-size: 0 220px;
         }
 
         /* WIDER LEFT INDICATOR ONLY */
@@ -2050,7 +2052,6 @@
 
         .stock-card[data-score="4"]::before {
             background: var(--pop-green);
-            box-shadow: 0 0 12px rgba(0, 230, 118, 0.5);
         }
 
         .stock-card[data-score="3"] {
@@ -2060,7 +2061,6 @@
 
         .stock-card[data-score="3"]::before {
             background: var(--pop-blue);
-            box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
         }
 
         .stock-card[data-score="2"] {
@@ -2070,7 +2070,6 @@
 
         .stock-card[data-score="2"]::before {
             background: var(--pop-purple);
-            box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
         }
 
         .stock-card[data-score="1"] {
@@ -2080,7 +2079,6 @@
 
         .stock-card[data-score="1"]::before {
             background: var(--pop-orange);
-            box-shadow: 0 0 12px rgba(249, 115, 22, 0.4);
         }
 
         .stock-card[data-score="0"] {
@@ -2090,15 +2088,12 @@
 
         .stock-card[data-score="0"]::before {
             background: var(--pop-red);
-            box-shadow: 0 0 12px rgba(255, 77, 79, 0.5);
         }
 
         .stock-card:hover {
             box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04) inset, 0 12px 32px rgba(0, 0, 0, 0.5);
             transform: translateY(-2px);
             z-index: 2;
-            filter: brightness(1.08);
-            will-change: transform;
         }
 
         .stock-card.news-selected {
@@ -2118,7 +2113,6 @@
             .stock-card {
                 content-visibility: auto;
                 contain-intrinsic-size: 0 180px;
-                animation-duration: 0.2s !important;
             }
 
             .main-content {
@@ -6278,7 +6272,7 @@
             }
 
             // Use capture phase to listen to all scrolls globally
-            window.addEventListener('scroll', handleGlobalScroll, true);
+            window.addEventListener('scroll', handleGlobalScroll, { passive: true, capture: true });
         })();
 
         /* ══════════════════════════════════════════════════════
@@ -7005,17 +6999,8 @@
 
             // Trigger fetch if name is missing from static map and cache
             if (r._ticker && !officialName) {
-                setTimeout(() => {
-                    fetchNseName(r._ticker).then(name => {
-                        if (name) {
-                            const el = document.getElementById(`card-name-${r._ticker}`);
-                            if (el) {
-                                el.innerHTML = r['Link'] ? `<a href="${r['Link']}" target="_blank" rel="noopener">${name}</a>` : name;
-                                el.title = name;
-                            }
-                        }
-                    });
-                }, 200);
+                if (!window._pendingNameFetch) window._pendingNameFetch = new Set();
+                window._pendingNameFetch.add(r);
             }
 
             // SuperStar badge
@@ -8009,15 +7994,15 @@
                 if (!isNaN(minMcap) && (isNaN(r._mcap) || r._mcap < minMcap)) return false;
                 if (!isNaN(minEps) && (isNaN(r._eps) || r._eps < minEps)) return false;
                 if (!isNaN(minSmr) && (isNaN(r._smr) || r._smr < minSmr)) return false;
-                if (!isNaN(minDur) && (isNaN(parseFloat(r['Trendlyne Durability Score'])) || parseFloat(r['Trendlyne Durability Score']) < minDur)) return false;
-                if (!isNaN(minGwth) && (isNaN(parseFloat(r['Trendlyne Growth Score'])) || parseFloat(r['Trendlyne Growth Score']) < minGwth)) return false;
-                if (!isNaN(minProf) && (isNaN(parseFloat(r['Trendlyne Profitability Score'])) || parseFloat(r['Trendlyne Profitability Score']) < minProf)) return false;
-                if (!isNaN(minCons) && (isNaN(parseFloat(r['Trendlyne Consistency Score'])) || parseFloat(r['Trendlyne Consistency Score']) < minCons)) return false;
-                if (!isNaN(minBalsht) && (isNaN(parseFloat(r['Trendlyne Balance Sheet Score'])) || parseFloat(r['Trendlyne Balance Sheet Score']) < minBalsht)) return false;
-                if (!isNaN(minVal) && (isNaN(parseFloat(r['Trendlyne Valuation Score'])) || parseFloat(r['Trendlyne Valuation Score']) < minVal)) return false;
-                if (!isNaN(minEbitp) && (isNaN(parseFloat(r['EBITDA Performance'])) || parseFloat(r['EBITDA Performance']) < minEbitp)) return false;
-                if (!isNaN(minRevp) && (isNaN(parseFloat(r['Revenue Performance'])) || parseFloat(r['Revenue Performance']) < minRevp)) return false;
-                if (!isNaN(minNpp) && (isNaN(parseFloat(r['Net Profit Performance'])) || parseFloat(r['Net Profit Performance']) < minNpp)) return false;
+                if (!isNaN(minDur) && (isNaN(r._dur) || r._dur < minDur)) return false;
+                if (!isNaN(minGwth) && (isNaN(r._gwth) || r._gwth < minGwth)) return false;
+                if (!isNaN(minProf) && (isNaN(r._prof) || r._prof < minProf)) return false;
+                if (!isNaN(minCons) && (isNaN(r._cons) || r._cons < minCons)) return false;
+                if (!isNaN(minBalsht) && (isNaN(r._balsht) || r._balsht < minBalsht)) return false;
+                if (!isNaN(minVal) && (isNaN(r._val) || r._val < minVal)) return false;
+                if (!isNaN(minEbitp) && (isNaN(r._ebitp) || r._ebitp < minEbitp)) return false;
+                if (!isNaN(minRevp) && (isNaN(r._revp) || r._revp < minRevp)) return false;
+                if (!isNaN(minNpp) && (isNaN(r._npp) || r._npp < minNpp)) return false;
                 if (!isNaN(minCfopat) && (isNaN(parseFloat(r._cfoPat)) || parseFloat(r._cfoPat) < minCfopat)) return false;
                 // Investor / SuperStar filter
                 if (invQ !== 'all' && window.superStarMap) {
@@ -8031,15 +8016,15 @@
             let final = base;
             if (activeFilter !== 'all') { const ts = { best: 4, good: 3, mod: 2, weak: 1, vweak: 0 }[activeFilter]; final = base.filter(r => r._score === ts); }
             // Pre-compute sort key once per row — avoids repeated parseFloat() inside comparator
-            if (sortMode === 'dur') { final.forEach(r => { r._sk = parseFloat(r['Trendlyne Durability Score']); }); }
-            else if (sortMode === 'val') { final.forEach(r => { r._sk = parseFloat(r['Trendlyne Valuation Score']); }); }
-            else if (sortMode === 'gwth') { final.forEach(r => { r._sk = parseFloat(r['Trendlyne Growth Score']); }); }
-            else if (sortMode === 'prof') { final.forEach(r => { r._sk = parseFloat(r['Trendlyne Profitability Score']); }); }
-            else if (sortMode === 'cons') { final.forEach(r => { r._sk = parseFloat(r['Trendlyne Consistency Score']); }); }
-            else if (sortMode === 'balsht') { final.forEach(r => { r._sk = parseFloat(r['Trendlyne Balance Sheet Score']); }); }
-            else if (sortMode === 'revp') { final.forEach(r => { r._sk = parseFloat(r['Revenue Performance']); }); }
-            else if (sortMode === 'ebitp') { final.forEach(r => { r._sk = parseFloat(r['EBITDA Performance']); }); }
-            else if (sortMode === 'npp') { final.forEach(r => { r._sk = parseFloat(r['Net Profit Performance']); }); }
+            if (sortMode === 'dur') { final.forEach(r => { r._sk = r._dur; }); }
+            else if (sortMode === 'val') { final.forEach(r => { r._sk = r._val; }); }
+            else if (sortMode === 'gwth') { final.forEach(r => { r._sk = r._gwth; }); }
+            else if (sortMode === 'prof') { final.forEach(r => { r._sk = r._prof; }); }
+            else if (sortMode === 'cons') { final.forEach(r => { r._sk = r._cons; }); }
+            else if (sortMode === 'balsht') { final.forEach(r => { r._sk = r._balsht; }); }
+            else if (sortMode === 'revp') { final.forEach(r => { r._sk = r._revp; }); }
+            else if (sortMode === 'ebitp') { final.forEach(r => { r._sk = r._ebitp; }); }
+            else if (sortMode === 'npp') { final.forEach(r => { r._sk = r._npp; }); }
             else if (sortMode === 'techscore') { final.forEach(r => { r._sk = parseFloat(r._techScore); }); }
             else if (sortMode === 'techstdev') { final.forEach(r => { r._sk = parseFloat(r._techStDev); }); }
             else if (sortMode === 'techr2') { final.forEach(r => { r._sk = parseFloat(r._techR2); }); }
@@ -8111,6 +8096,44 @@
             cardsEl.innerHTML = html;
             updatePaginationUI();
             initCardCharts();
+
+            // Process batched name fetches sequentially to avoid network spam
+            if (window._pendingNameFetch && window._pendingNameFetch.size > 0) {
+                const pending = Array.from(window._pendingNameFetch);
+                window._pendingNameFetch.clear();
+
+                // Debounce slightly to allow UI to settle
+                setTimeout(() => {
+                    // Limit concurrency to 3
+                    const CONCURRENCY = 3;
+                    let active = 0;
+                    let idx = 0;
+
+                    const next = async () => {
+                        if (idx >= pending.length) return;
+                        const r = pending[idx++];
+                        active++;
+
+                        try {
+                            const name = await fetchNseName(r._ticker);
+                            if (name) {
+                                const el = document.getElementById(`card-name-${r._ticker}`);
+                                if (el) {
+                                    el.innerHTML = r['Link'] ? `<a href="${r['Link']}" target="_blank" rel="noopener">${name}</a>` : name;
+                                    el.title = name;
+                                }
+                            }
+                        } catch(e) {}
+
+                        active--;
+                        next();
+                    };
+
+                    for (let i = 0; i < Math.min(CONCURRENCY, pending.length); i++) {
+                        next();
+                    }
+                }, 300);
+            }
         }
         function updatePaginationUI() {
             const n = currentFilteredData.length;
@@ -8310,6 +8333,16 @@
                     merged['Trendlyne Balance Sheet Score'] = merged['Balance Sheet'] || merged['Trendlyne Balance Sheet Score'];
                     merged['Trendlyne Valuation Score'] = merged['Valuation Attractive'] || merged['Trendlyne Valuation Score'];
                     merged['Trendlyne Durability Score'] = merged['Durability'] || merged['Trendlyne Durability Score'];
+
+                    merged._dur = parseFloat(merged['Trendlyne Durability Score']);
+                    merged._gwth = parseFloat(merged['Trendlyne Growth Score']);
+                    merged._prof = parseFloat(merged['Trendlyne Profitability Score']);
+                    merged._cons = parseFloat(merged['Trendlyne Consistency Score']);
+                    merged._balsht = parseFloat(merged['Trendlyne Balance Sheet Score']);
+                    merged._val = parseFloat(merged['Trendlyne Valuation Score']);
+                    merged._ebitp = parseFloat(merged['EBITDA Performance']);
+                    merged._revp = parseFloat(merged['Revenue Performance']);
+                    merged._npp = parseFloat(merged['Net Profit Performance']);
 
                     merged._master = String(merged['Master Score'] || '').trim().toUpperCase().charAt(0);
                     merged._demand = String(merged['Buyer Demand'] || '').trim().toUpperCase().charAt(0);
