@@ -10595,10 +10595,32 @@
                 const adSmaFull = sma(adFull, 9);
                 const obvSmaFull = sma(obvFull, 9);
 
+                const m = window.indexDataMap || {};
+                let benchTicker = 'Nifty_TOTAL';
+                if (m.Nifty_MIC && m.Nifty_MIC.has(UC)) benchTicker = 'MICROCAP';
+                else if (m.Nifty_MC && m.Nifty_MC.has(UC)) benchTicker = 'MIDCAP';
+                else if (m.Nifty_SC && m.Nifty_SC.has(UC)) benchTicker = 'SMALLCAP';
+                else if (m.Nifty_100 && m.Nifty_100.has(UC)) benchTicker = 'NIFTY50';
+
+                // Fallback to NIFTY50 if the chosen index (like Nifty_TOTAL) is missing from the OHLCV CSV
+                if (_index && !_index.has(benchTicker) && _index.has('NIFTY50')) {
+                    benchTicker = 'NIFTY50';
+                }
+
+                const benchRawFull = _index ? (_index.get(benchTicker) || []) : [];
+                const benchByDate = new Map();
+                benchRawFull.forEach(br => benchByDate.set(br.date.getTime(), br.close));
+
+                let lastBenchClose = benchRawFull.length ? benchRawFull[0].close : 1;
+
                 // Display slice with attached MA, A/D, and OBV values
-                const raw = allRaw.slice(startIdx).map((r, i) => ({
-                    ...r,
-                    ma10: s10full[startIdx + i],
+                const raw = allRaw.slice(startIdx).map((r, i) => {
+                    const t = r.date.getTime();
+                    if (benchByDate.has(t)) lastBenchClose = benchByDate.get(t);
+                    return {
+                        ...r,
+                        benchClose: lastBenchClose,
+                        ma10: s10full[startIdx + i],
                     ma20: s20full[startIdx + i],
                     ma30: s30full[startIdx + i],
                     ma40: s40full[startIdx + i],
@@ -10611,7 +10633,8 @@
                     hUpV15: hUpV15full[startIdx + i],
                     hDnV15: hDnV15full[startIdx + i],
                     atr14: atr14full[startIdx + i]
-                }));
+                };
+                });
 
                 if (!raw.length) {
                     loadEl.innerHTML = '<span style="color:#f43f5e;font-size:11px;">No ' + period.toUpperCase() + ' data for ' + ticker + '</span>';
@@ -10660,9 +10683,19 @@
 
                 // Price range from 6M window only
                 let pMin = Infinity, pMax = -Infinity;
+
+                const firstStockC = raw.length ? raw[0].close : 1;
+                const firstBenchC = raw.length && raw[0].benchClose ? raw[0].benchClose : 1;
+                const benchScale = firstStockC / firstBenchC;
+
                 for (const r of raw) {
                     if (r.high > pMax) pMax = r.high;
                     if (r.low < pMin) pMin = r.low;
+                    
+                    const iVal = (r.benchClose || 1) * benchScale;
+                    
+                    if (iVal > pMax) pMax = iVal;
+                    if (iVal < pMin) pMin = iVal;
                 }
                 const pad = (pMax - pMin) * 0.08;
                 pMin -= pad; pMax += pad * 1.5;
@@ -10823,6 +10856,28 @@
                     const x = toX(i), y = toY(r.ma40);
                     st ? pc.lineTo(x, y) : (pc.moveTo(x, y), st = true);
                 }); pc.stroke();
+
+                // ── Index Line ──
+                if (raw.length > 0) {
+                    // Index Line (Low Opacity Gray/Blue)
+                    pc.strokeStyle = 'rgba(148, 163, 184, 0.4)'; pc.lineWidth = 1.2; pc.lineJoin = 'round'; pc.lineCap = 'round'; pc.setLineDash([]);
+                    pc.beginPath();
+                    raw.forEach((r, i) => {
+                        const val = (r.benchClose || 1) * benchScale;
+                        const x = toX(i), y = toY(val);
+                        i === 0 ? pc.moveTo(x, y) : pc.lineTo(x, y);
+                    });
+                    pc.stroke();
+
+                    // Index Label at the end of the line
+                    const lastR = raw[raw.length - 1];
+                    const lastVal = (lastR.benchClose || 1) * benchScale;
+                    pc.fillStyle = 'rgba(148, 163, 184, 0.7)';
+                    pc.font = 'bold 8px "Lexend",monospace';
+                    pc.textAlign = 'right';
+                    pc.textBaseline = 'bottom';
+                    pc.fillText(benchTicker, toX(raw.length - 1), toY(lastVal) - 2);
+                }
 
                 // ── Candles: all white, up hollow, down solid ──
                 raw.forEach((r, i) => {
