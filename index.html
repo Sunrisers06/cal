@@ -2632,18 +2632,13 @@
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            display: none;
-            /* Hidden by default */
+            display: flex;
+            /* Always visible */
             align-items: center;
             justify-content: center;
             gap: 4px;
             user-select: none;
             white-space: nowrap;
-        }
-
-        .stock-card.news-selected .fav-toggle-btn {
-            display: flex;
-            /* Show only when card is clicked/selected */
         }
 
         .fav-toggle-btn:hover {
