@@ -5768,6 +5768,7 @@
         }
 
         @media (prefers-reduced-motion: reduce) {
+
             *,
             *::before,
             *::after {
@@ -7181,6 +7182,7 @@
               ${ssBadge}
               ${topRankBadge}
               ${dealBadge}
+              ${(window._urDataMap && window._urDataMap[String(r._ticker).toUpperCase()]) ? `<span class="ur-chip" title="Upcoming Result Date">📅 ${window._urDataMap[String(r._ticker).toUpperCase()].toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>` : ''}
             </div>
           </div>
           ${(r._sec || r._ind) ? `
@@ -10694,119 +10696,119 @@
                     raw = _calcCached.raw;
                     benchTicker = _calcCached.benchTicker;
                 } else {
-                // ── Compute MAs, A/D, and OBV on FULL history, then slice to selected period for display ──
-                const closes = allRaw.map(r => r.close);
-                const vols = allRaw.map(r => r.vol);
-                const s10full = sma(closes, 10);
-                const s20full = sma(closes, 20);
-                const s30full = sma(closes, 30);
-                const s40full = sma(closes, 40);
-                const volSma50full = sma(vols, 50);
-                const volSma9full = sma(vols, 9);
+                    // ── Compute MAs, A/D, and OBV on FULL history, then slice to selected period for display ──
+                    const closes = allRaw.map(r => r.close);
+                    const vols = allRaw.map(r => r.vol);
+                    const s10full = sma(closes, 10);
+                    const s20full = sma(closes, 20);
+                    const s30full = sma(closes, 30);
+                    const s40full = sma(closes, 40);
+                    const volSma50full = sma(vols, 50);
+                    const volSma9full = sma(vols, 9);
 
-                const hUpV15full = new Array(allRaw.length).fill(0);
-                const hDnV15full = new Array(allRaw.length).fill(0);
+                    const hUpV15full = new Array(allRaw.length).fill(0);
+                    const hDnV15full = new Array(allRaw.length).fill(0);
 
-                let ad = 0;
-                let obv = 0;
-                const adFull = new Array(allRaw.length).fill(0);
-                const obvFull = new Array(allRaw.length).fill(0);
+                    let ad = 0;
+                    let obv = 0;
+                    const adFull = new Array(allRaw.length).fill(0);
+                    const obvFull = new Array(allRaw.length).fill(0);
 
-                for (let i = 0; i < allRaw.length; i++) {
-                    const r = allRaw[i];
+                    for (let i = 0; i < allRaw.length; i++) {
+                        const r = allRaw[i];
 
-                    let maxUp = 0, maxDn = 0;
-                    const start = Math.max(0, i - 15 + 1);
-                    for (let j = start; j <= i; j++) {
-                        const rj = allRaw[j];
-                        if (rj.close > rj.open) {
-                            if (rj.vol > maxUp) maxUp = rj.vol;
-                        } else if (rj.close < rj.open) {
-                            if (rj.vol > maxDn) maxDn = rj.vol;
+                        let maxUp = 0, maxDn = 0;
+                        const start = Math.max(0, i - 15 + 1);
+                        for (let j = start; j <= i; j++) {
+                            const rj = allRaw[j];
+                            if (rj.close > rj.open) {
+                                if (rj.vol > maxUp) maxUp = rj.vol;
+                            } else if (rj.close < rj.open) {
+                                if (rj.vol > maxDn) maxDn = rj.vol;
+                            }
+                        }
+                        hUpV15full[i] = maxUp;
+                        hDnV15full[i] = maxDn;
+                        let mfm = 0;
+                        const range = r.high - r.low;
+                        if (range > 0) {
+                            mfm = ((r.close - r.low) - (r.high - r.close)) / range;
+                        }
+                        ad += mfm * r.vol;
+                        adFull[i] = ad;
+
+                        if (i > 0) {
+                            const prevClose = allRaw[i - 1].close;
+                            if (r.close > prevClose) obv += r.vol;
+                            else if (r.close < prevClose) obv -= r.vol;
+                        } else {
+                            obv = r.vol;
+                        }
+                        obvFull[i] = obv;
+                    }
+
+                    const trFull = new Array(allRaw.length).fill(0);
+                    for (let i = 0; i < allRaw.length; i++) {
+                        const r = allRaw[i];
+                        if (i === 0) {
+                            trFull[i] = r.high - r.low;
+                        } else {
+                            const pc = allRaw[i - 1].close;
+                            trFull[i] = Math.max(r.high - r.low, Math.abs(r.high - pc), Math.abs(r.low - pc));
                         }
                     }
-                    hUpV15full[i] = maxUp;
-                    hDnV15full[i] = maxDn;
-                    let mfm = 0;
-                    const range = r.high - r.low;
-                    if (range > 0) {
-                        mfm = ((r.close - r.low) - (r.high - r.close)) / range;
+                    const atr14full = sma(trFull, 14);
+
+                    const months = period === '2y' ? 24 : period === '1y' ? 12 : 6;
+                    const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - months);
+                    const cutTs = cutoff.getTime();
+                    // Find first index inside window
+                    let startIdx = 0;
+                    while (startIdx < allRaw.length && allRaw[startIdx].date.getTime() < cutTs) startIdx++;
+
+                    const adSmaFull = sma(adFull, 9);
+                    const obvSmaFull = sma(obvFull, 9);
+
+                    const m = window.indexDataMap || {};
+                    benchTicker = 'NIFTY_TOTAL';
+                    if (m.Nifty_MIC && m.Nifty_MIC.has(UC)) benchTicker = 'MICROCAP';
+                    else if (m.Nifty_MC && m.Nifty_MC.has(UC)) benchTicker = 'MIDCAP';
+                    else if (m.Nifty_SC && m.Nifty_SC.has(UC)) benchTicker = 'SMALLCAP';
+                    else if (m.Nifty_100 && m.Nifty_100.has(UC)) benchTicker = 'NIFTY50';
+
+                    // Fallback to NIFTY50 if the chosen index (like NIFTY_TOTAL) is missing from the OHLCV CSV
+                    if (_index && !_index.has(benchTicker) && _index.has('NIFTY50')) {
+                        benchTicker = 'NIFTY50';
                     }
-                    ad += mfm * r.vol;
-                    adFull[i] = ad;
 
-                    if (i > 0) {
-                        const prevClose = allRaw[i - 1].close;
-                        if (r.close > prevClose) obv += r.vol;
-                        else if (r.close < prevClose) obv -= r.vol;
-                    } else {
-                        obv = r.vol;
-                    }
-                    obvFull[i] = obv;
-                }
+                    const benchRawFull = _index ? (_index.get(benchTicker) || []) : [];
+                    const benchByDate = new Map();
+                    benchRawFull.forEach(br => benchByDate.set(br.date.getTime(), br.close));
 
-                const trFull = new Array(allRaw.length).fill(0);
-                for (let i = 0; i < allRaw.length; i++) {
-                    const r = allRaw[i];
-                    if (i === 0) {
-                        trFull[i] = r.high - r.low;
-                    } else {
-                        const pc = allRaw[i - 1].close;
-                        trFull[i] = Math.max(r.high - r.low, Math.abs(r.high - pc), Math.abs(r.low - pc));
-                    }
-                }
-                const atr14full = sma(trFull, 14);
+                    let lastBenchClose = benchRawFull.length ? benchRawFull[0].close : 1;
 
-                const months = period === '2y' ? 24 : period === '1y' ? 12 : 6;
-                const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - months);
-                const cutTs = cutoff.getTime();
-                // Find first index inside window
-                let startIdx = 0;
-                while (startIdx < allRaw.length && allRaw[startIdx].date.getTime() < cutTs) startIdx++;
-
-                const adSmaFull = sma(adFull, 9);
-                const obvSmaFull = sma(obvFull, 9);
-
-                const m = window.indexDataMap || {};
-                benchTicker = 'NIFTY_TOTAL';
-                if (m.Nifty_MIC && m.Nifty_MIC.has(UC)) benchTicker = 'MICROCAP';
-                else if (m.Nifty_MC && m.Nifty_MC.has(UC)) benchTicker = 'MIDCAP';
-                else if (m.Nifty_SC && m.Nifty_SC.has(UC)) benchTicker = 'SMALLCAP';
-                else if (m.Nifty_100 && m.Nifty_100.has(UC)) benchTicker = 'NIFTY50';
-
-                // Fallback to NIFTY50 if the chosen index (like NIFTY_TOTAL) is missing from the OHLCV CSV
-                if (_index && !_index.has(benchTicker) && _index.has('NIFTY50')) {
-                    benchTicker = 'NIFTY50';
-                }
-
-                const benchRawFull = _index ? (_index.get(benchTicker) || []) : [];
-                const benchByDate = new Map();
-                benchRawFull.forEach(br => benchByDate.set(br.date.getTime(), br.close));
-
-                let lastBenchClose = benchRawFull.length ? benchRawFull[0].close : 1;
-
-                // Display slice with attached MA, A/D, and OBV values
-                raw = allRaw.slice(startIdx).map((r, i) => {
-                    const t = r.date.getTime();
-                    if (benchByDate.has(t)) lastBenchClose = benchByDate.get(t);
-                    return {
-                        ...r,
-                        benchClose: lastBenchClose,
-                        ma10: s10full[startIdx + i],
-                        ma20: s20full[startIdx + i],
-                        ma30: s30full[startIdx + i],
-                        ma40: s40full[startIdx + i],
-                        ad: adFull[startIdx + i],
-                        obv: obvFull[startIdx + i],
-                        adSma: adSmaFull[startIdx + i],
-                        obvSma: obvSmaFull[startIdx + i],
-                        volSma50: volSma50full[startIdx + i],
-                        volSma9: volSma9full[startIdx + i],
-                        hUpV15: hUpV15full[startIdx + i],
-                        hDnV15: hDnV15full[startIdx + i],
-                        atr14: atr14full[startIdx + i]
-                    };
-                });
+                    // Display slice with attached MA, A/D, and OBV values
+                    raw = allRaw.slice(startIdx).map((r, i) => {
+                        const t = r.date.getTime();
+                        if (benchByDate.has(t)) lastBenchClose = benchByDate.get(t);
+                        return {
+                            ...r,
+                            benchClose: lastBenchClose,
+                            ma10: s10full[startIdx + i],
+                            ma20: s20full[startIdx + i],
+                            ma30: s30full[startIdx + i],
+                            ma40: s40full[startIdx + i],
+                            ad: adFull[startIdx + i],
+                            obv: obvFull[startIdx + i],
+                            adSma: adSmaFull[startIdx + i],
+                            obvSma: obvSmaFull[startIdx + i],
+                            volSma50: volSma50full[startIdx + i],
+                            volSma9: volSma9full[startIdx + i],
+                            hUpV15: hUpV15full[startIdx + i],
+                            hDnV15: hDnV15full[startIdx + i],
+                            atr14: atr14full[startIdx + i]
+                        };
+                    });
 
                     window._chartCalcCache.set(_calcCacheKey, { raw, benchTicker });
                     if (window._chartCalcCache.size > 240) {
@@ -13883,12 +13885,21 @@
                 const fi = name => hdrs.findIndex(h => h.toLowerCase() === name.toLowerCase());
                 const iCo = fi('Company'), iTk = fi('Ticker'), iLk = fi('Link'), iDt = fi('Result Date');
                 const rows = [];
+                const tkMap = {};
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
                 for (let i = 1; i < lines.length; i++) {
                     const v = splitLine(lines[i]);
                     if (!v.some(x => x.trim())) continue;
                     const dateStr = (v[iDt] || '').trim();
                     const dateObj = parseDate(dateStr);
                     if (!dateObj) continue;
+
+                    const tk = (v[iTk] || '').trim().toUpperCase();
+                    if (tk && dateObj >= today) {
+                        tkMap[tk] = dateObj;
+                    }
+
                     rows.push({
                         dateObj,
                         company: (v[iCo] || '').trim(),
@@ -13897,6 +13908,13 @@
                     });
                 }
                 rows.sort((a, b) => a.dateObj - b.dateObj);
+                window._urDataMap = tkMap;
+                
+                // Refresh cards slightly after load if function exists
+                if (window.renderCards) {
+                    setTimeout(() => window.renderCards(true), 200);
+                }
+                
                 return rows;
             }
 
@@ -14393,6 +14411,29 @@
             flex-shrink: 0;
             cursor: default;
             user-select: none;
+        }
+
+        /* .ur-chip — upcoming result date chip */
+        .ur-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 16px;
+            padding: 0 4px;
+            font-size: 8.5px;
+            font-weight: 800;
+            font-family: 'Lexend', sans-serif;
+            background: rgba(204, 255, 0, 0.15);
+            border: 1px solid rgba(204, 255, 0, 0.60);
+            color: #ccff00;
+            border-radius: 3px;
+            letter-spacing: 0.02em;
+            line-height: 1;
+            flex-shrink: 0;
+            cursor: default;
+            user-select: none;
+            white-space: nowrap;
+            box-shadow: 0 0 8px rgba(204, 255, 0, 0.40);
         }
 
         /* .dsub-count — small count pill inside deal sub-tab buttons */
