@@ -7211,23 +7211,25 @@
 
                     const p52 = parseFloat(r._tech52w);
                     const p52Cls = isNaN(p52) ? 'gray' : (p52 >= 90 ? 'green' : (p52 >= 70 ? 'orange' : 'red'));
-                    const p52Disp = isNaN(p52) ? '-' : p52.toFixed(1);
+                    const p52Disp = isNaN(p52) ? '-' : Math.round(p52);
 
                     const sRnk = parseFloat(r._sectorRank);
                     const sRnkCls = isNaN(sRnk) ? 'gray' : (sRnk <= 5 ? 'green' : (sRnk <= 10 ? 'blue' : (sRnk <= 15 ? 'orange' : 'red')));
                     const sRnkDisp = isNaN(sRnk) ? '-' : Math.round(sRnk);
 
+                    // Dynamic font size: shrinks for longer values to stay within box
+                    const dynFs = (val, base) => { const l = String(val).length; return l <= 2 ? base : l === 3 ? Math.round(base * 0.82) : Math.round(base * 0.68); };
+
                     return `
         <div class="tech-score-box">
-          <div class="iscore ${scCls}" style="width: 64px; height: 64px; padding: 4px; box-sizing: border-box; margin: 0;">
-            <span class="iscore-label" style="font-size: 8.5px; margin-bottom: 2px;">Score</span>
-            <span class="iscore-val" style="font-size: 28px;">${scDisp}</span>
+          <div class="iscore ${scCls}" style="width: 34px; height: 34px; padding: 4px; box-sizing: border-box; margin: 0; overflow: hidden;">
+            <span class="iscore-val" style="font-size: ${dynFs(scDisp, 20)}px; font-weight: 800; line-height: 1;">${scDisp}</span>
           </div>
           <div class="ts-grid" style="position: relative;">
-            <div class="iscore ${anCls}" style="width: 30px; height: 30px; min-width: 0; padding: 2px 10px 10px 2px; box-sizing: border-box; margin: 0;"><span class="iscore-label" style="font-size: 6px; margin-bottom: 1px;">StDev</span><span class="iscore-val" style="font-size: 10.5px;">${anDisp}</span></div>
-            <div class="iscore ${r2Cls}" style="width: 30px; height: 30px; min-width: 0; padding: 2px 2px 10px 10px; box-sizing: border-box; margin: 0;"><span class="iscore-label" style="font-size: 6px; margin-bottom: 1px;">R2</span><span class="iscore-val" style="font-size: 10.5px;">${r2Disp}</span></div>
-            <div class="iscore ${volCls}" style="width: 30px; height: 30px; min-width: 0; padding: 10px 10px 2px 2px; box-sizing: border-box; margin: 0;"><span class="iscore-label" style="font-size: 6px; margin-bottom: 1px;">Vol</span><span class="iscore-val" style="font-size: 10.5px;">${volDisp}</span></div>
-            <div class="iscore ${p52Cls}" style="width: 30px; height: 30px; min-width: 0; padding: 10px 2px 2px 10px; box-sizing: border-box; margin: 0;"><span class="iscore-label" style="font-size: 6px; margin-bottom: 1px;">52w</span><span class="iscore-val" style="font-size: 10.5px;">${p52Disp}</span></div>
+            <div class="iscore ${anCls}" style="width: 34px; height: 34px; min-width: 0; padding: 3px 5px; box-sizing: border-box; margin: 0; justify-content: space-between; align-items: flex-start; overflow: hidden;"><span class="iscore-val" style="font-size: ${dynFs(anDisp, 13)}px; line-height: 1; font-weight: 700;">${anDisp}</span><span class="iscore-label" style="font-size: 16px; line-height: 1; text-transform: none;">&sigma;</span></div>
+            <div class="iscore ${r2Cls}" style="width: 34px; height: 34px; min-width: 0; padding: 3px 5px; box-sizing: border-box; margin: 0; justify-content: space-between; align-items: flex-end; overflow: hidden;"><span class="iscore-val" style="font-size: ${dynFs(r2Disp, 13)}px; line-height: 1; font-weight: 700;">${r2Disp}</span><span class="iscore-label" style="font-size: 14px; line-height: 1; text-transform: none;">R&sup2;</span></div>
+            <div class="iscore ${volCls}" style="width: 34px; height: 34px; min-width: 0; padding: 3px 5px; box-sizing: border-box; margin: 0; justify-content: space-between; align-items: flex-start; overflow: hidden;"><span class="iscore-label" style="font-size: 13px; line-height: 1;">V</span><span class="iscore-val" style="font-size: ${dynFs(volDisp, 13)}px; line-height: 1; font-weight: 700;">${volDisp}</span></div>
+            <div class="iscore ${p52Cls}" style="width: 34px; height: 34px; min-width: 0; padding: 3px 5px; box-sizing: border-box; margin: 0; justify-content: space-between; align-items: flex-end; overflow: hidden;"><span class="iscore-label" style="font-size: 11px; line-height: 1;">1Y</span><span class="iscore-val" style="font-size: ${dynFs(p52Disp, 13)}px; line-height: 1; font-weight: 700;">${p52Disp}</span></div>
             ${!isNaN(sRnk) ? `<div class="iscore ${sRnkCls}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 24px; height: 24px; min-width: 0; box-sizing: border-box; margin: 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 1.5px solid var(--bg-card); border-radius: 4px; z-index: 5; box-shadow: 0 1px 3px rgba(0,0,0,0.5);" title="Sector Rank">
               <span class="iscore-val" style="font-size: 14px; line-height: 1; margin: 0; font-weight: 800;">${sRnkDisp}</span>
             </div>` : ''}
@@ -8732,7 +8734,7 @@
                     parseCSV(epSalesT).forEach(row => {
                         const t = String(row['Ticker'] || row['ticker'] || '').trim().toUpperCase();
                         if (!t) return;
-                        
+
                         let sr = '';
                         for (let k in row) {
                             if (k.toLowerCase().replace(/_/g, '').replace(/\s+/g, '') === 'sectorrank') {
@@ -8740,7 +8742,7 @@
                                 break;
                             }
                         }
-                        
+
                         window._techScoreMap[t] = {
                             score: row['score'] || '',
                             downside_dev: row['downside_dev'] || '',
@@ -13927,12 +13929,12 @@
                 }
                 rows.sort((a, b) => a.dateObj - b.dateObj);
                 window._urDataMap = tkMap;
-                
+
                 // Refresh cards slightly after load if function exists
                 if (window.renderCards) {
                     setTimeout(() => window.renderCards(true), 200);
                 }
-                
+
                 return rows;
             }
 
