@@ -7213,17 +7213,24 @@
                     const p52Cls = isNaN(p52) ? 'gray' : (p52 >= 90 ? 'green' : (p52 >= 70 ? 'orange' : 'red'));
                     const p52Disp = isNaN(p52) ? '-' : p52.toFixed(1);
 
+                    const sRnk = parseFloat(r._sectorRank);
+                    const sRnkCls = isNaN(sRnk) ? 'gray' : (sRnk <= 5 ? 'green' : (sRnk <= 10 ? 'blue' : (sRnk <= 15 ? 'orange' : 'red')));
+                    const sRnkDisp = isNaN(sRnk) ? '-' : Math.round(sRnk);
+
                     return `
         <div class="tech-score-box">
           <div class="iscore ${scCls}" style="width: 64px; height: 64px; padding: 4px; box-sizing: border-box; margin: 0;">
             <span class="iscore-label" style="font-size: 8.5px; margin-bottom: 2px;">Score</span>
             <span class="iscore-val" style="font-size: 28px;">${scDisp}</span>
           </div>
-          <div class="ts-grid">
-            <div class="iscore ${anCls}" style="width: 30px; height: 30px; padding: 2px; box-sizing: border-box; margin: 0;"><span class="iscore-label" style="font-size: 6px; margin-bottom: 1px;">StDev</span><span class="iscore-val" style="font-size: 10.5px;">${anDisp}</span></div>
-            <div class="iscore ${r2Cls}" style="width: 30px; height: 30px; padding: 2px; box-sizing: border-box; margin: 0;"><span class="iscore-label" style="font-size: 6px; margin-bottom: 1px;">R2</span><span class="iscore-val" style="font-size: 10.5px;">${r2Disp}</span></div>
-            <div class="iscore ${volCls}" style="width: 30px; height: 30px; padding: 2px; box-sizing: border-box; margin: 0;"><span class="iscore-label" style="font-size: 6px; margin-bottom: 1px;">Vol</span><span class="iscore-val" style="font-size: 10.5px;">${volDisp}</span></div>
-            <div class="iscore ${p52Cls}" style="width: 30px; height: 30px; padding: 2px; box-sizing: border-box; margin: 0;"><span class="iscore-label" style="font-size: 6px; margin-bottom: 1px;">52w</span><span class="iscore-val" style="font-size: 10.5px;">${p52Disp}</span></div>
+          <div class="ts-grid" style="position: relative;">
+            <div class="iscore ${anCls}" style="width: 30px; height: 30px; padding: 1px 6px 5px 1px; box-sizing: border-box; margin: 0;"><span class="iscore-label" style="font-size: 6px; margin-bottom: 1px;">StDev</span><span class="iscore-val" style="font-size: 10.5px;">${anDisp}</span></div>
+            <div class="iscore ${r2Cls}" style="width: 30px; height: 30px; padding: 1px 1px 5px 6px; box-sizing: border-box; margin: 0;"><span class="iscore-label" style="font-size: 6px; margin-bottom: 1px;">R2</span><span class="iscore-val" style="font-size: 10.5px;">${r2Disp}</span></div>
+            <div class="iscore ${volCls}" style="width: 30px; height: 30px; padding: 5px 6px 1px 1px; box-sizing: border-box; margin: 0;"><span class="iscore-label" style="font-size: 6px; margin-bottom: 1px;">Vol</span><span class="iscore-val" style="font-size: 10.5px;">${volDisp}</span></div>
+            <div class="iscore ${p52Cls}" style="width: 30px; height: 30px; padding: 5px 1px 1px 6px; box-sizing: border-box; margin: 0;"><span class="iscore-label" style="font-size: 6px; margin-bottom: 1px;">52w</span><span class="iscore-val" style="font-size: 10.5px;">${p52Disp}</span></div>
+            ${!isNaN(sRnk) ? `<div class="iscore ${sRnkCls}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 18px; height: 18px; box-sizing: border-box; margin: 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 1.5px solid var(--bg-card); border-radius: 4px; z-index: 5; box-shadow: 0 1px 3px rgba(0,0,0,0.5);" title="Sector Rank">
+              <span class="iscore-val" style="font-size: 11px; line-height: 1; margin: 0; font-weight: 800;">${sRnkDisp}</span>
+            </div>` : ''}
           </div>
         </div>
         `;
@@ -8725,12 +8732,22 @@
                     parseCSV(epSalesT).forEach(row => {
                         const t = String(row['Ticker'] || row['ticker'] || '').trim().toUpperCase();
                         if (!t) return;
+                        
+                        let sr = '';
+                        for (let k in row) {
+                            if (k.toLowerCase().replace(/_/g, '').replace(/\s+/g, '') === 'sectorrank') {
+                                sr = row[k];
+                                break;
+                            }
+                        }
+                        
                         window._techScoreMap[t] = {
                             score: row['score'] || '',
                             downside_dev: row['downside_dev'] || '',
                             r2: row['r2'] || '',
                             vol_ratio: row['vol_ratio'] || '',
-                            pos_52w_pct: row['pos_52w_pct'] || ''
+                            pos_52w_pct: row['pos_52w_pct'] || '',
+                            sector_rank: sr
                         };
                     });
                 }
@@ -8743,6 +8760,7 @@
                         r._techR2 = d.r2;
                         r._techVol = d.vol_ratio;
                         r._tech52w = d.pos_52w_pct;
+                        r._sectorRank = d.sector_rank;
                     }
                 });
 
