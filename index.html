@@ -646,6 +646,8 @@
             filter: brightness(0) invert(1);
         }
 
+
+
         .search-wrap {
             position: relative;
             width: 240px;
@@ -1778,20 +1780,12 @@
             font-size: 14px;
         }
 
-        .spinner {
-            width: 32px;
-            height: 32px;
-            border: 3px solid var(--border2);
-            border-top-color: var(--blue);
-            border-radius: 50%;
-            animation: spin .8s linear infinite;
-            margin: 0 auto 16px;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
+        .loading-logo {
+            width: 120px;
+            height: 120px;
+            filter: brightness(0) invert(1);
+            margin: 0 auto 20px;
+            display: block;
         }
 
         @keyframes fadeUp {
@@ -2490,6 +2484,7 @@
             gap: 5px;
             flex-wrap: wrap;
             flex: 1;
+            justify-content: flex-end;
         }
 
         .cch-ret-badge {
@@ -6157,8 +6152,8 @@
         <div class="main-wrapper" style="width: calc(100% - 410px);">
             <div class="topbar">
                 <div class="top-left">
-                    <button id="nav-news-btn" class="icon-btn action-btn mobile-news-btn" onclick="toggleNewsPanel()">📰
-                        News</button>
+                    <button id="nav-news-btn" class="icon-btn action-btn mobile-news-btn" onclick="toggleNewsPanel()">
+                        🔔</button>
                 </div>
 
                 <div class="top-right">
@@ -6176,17 +6171,16 @@
                     <button class="fh-filter-btn" id="upcoming-results-btn" onclick="openUpcomingResults()"
                         title="Upcoming Results">U</button>
                     <button class="top-filter-btn" id="top-filter-btn" onclick="toggleTopPanel(event)"
-                        title="Top Performers by Return">🏆 Top</button>
+                        title="Top Performers by Return">🥇</button>
                     <div class="search-wrap" id="search-wrap">
-                        <span class="search-icon">⌕</span>
-                        <input class="search-box" id="search-input" type="text"
-                            placeholder="Search (e.g. TVSMOTOR | RELIANCE)…" oninput="onSearchInput()"
+                        <span class="search-icon"></span>
+                        <input class="search-box" id="search-input" type="text" placeholder="" oninput="onSearchInput()"
                             onblur="collapseMobileSearch()" onfocus="expandMobileSearch()">
                         <span class="clear-search-btn" id="clear-search-btn" onclick="clearMainSearch()"
                             style="display: none;">✕</span>
                     </div>
                     <button class="icon-btn action-btn" id="filter-toggle-btn" onclick="toggleFilters()"
-                        title="Filters">⚙<span class="filter-txt"> Filters</span></button>
+                        title="Filters"><span class="filter-txt"> 🔬</span></button>
                     <button class="icon-btn global-clear-btn" id="global-clear-btn" onclick="resetIndustryFilter()"
                         title="Clear Sector/Industry Filter" style="display: none;">✖</button>
                     <button id="refresh-data-btn" class="icon-btn" onclick="refreshDataFromNetwork()">↺</button>
@@ -6265,7 +6259,8 @@
 
             <main class="main-content">
                 <div id="loading" class="loading" style="display: none;">
-                    <div class="spinner"></div>Fetching live stock data…
+                    <img class="loading-logo" src="https://lh3.googleusercontent.com/d/1pPqrvLPPH2Mh9aqjQgG1eAnoziFAxtWg" alt="Loading...">
+                    <div>Fetching live stock data…</div>
                 </div>
                 <div id="sbox" class="sbox s-info" style="display: none;">⏳ Processing data…</div>
                 <div id="main" style="display: block;">
@@ -7061,12 +7056,12 @@
     <div class="card-chart-wrap" data-ticker="${escHtml(ticker)}" data-period="1y" onclick="event.stopPropagation()">
       <div class="card-chart-inner">
         <div class="card-chart-head">
-          <div class="card-chart-ret-strip">${retHtml}</div>
           <div class="card-chart-periods">
             <span class="ccp-pill" data-period="6m" onclick="setCardChartPeriod(event,this,'6m')">6M</span>
             <span class="ccp-pill active" data-period="1y" onclick="setCardChartPeriod(event,this,'1y')">1Y</span>
             <span class="ccp-pill" data-period="2y" onclick="setCardChartPeriod(event,this,'2y')">2Y</span>
           </div>
+          <div class="card-chart-ret-strip">${retHtml}</div>
         </div>
         <div class="card-chart-body">
           <div class="card-chart-loading"><div class="csph-spinner"></div><span>Loading…</span></div>
@@ -9299,6 +9294,19 @@
                         _filterNewsByFHTickers(active);
                     } else {
                         _prevDoFilter();
+                        // Reset news, insights, nse news if F/H deactivated
+                        if (typeof filterBothNews === 'function') {
+                            if (typeof selectedCardTicker !== 'undefined' && selectedCardTicker) {
+                                const selCard = allData.find(r => r._ticker === selectedCardTicker);
+                                const coName = selCard ? selCard._coName : '';
+                                filterBothNews(`${String(selectedCardTicker).trim()} | ${String(coName).trim()}`);
+                            } else {
+                                filterBothNews();
+                            }
+                        }
+                        if (typeof filterSuperstarBlock === 'function') {
+                            filterSuperstarBlock();
+                        }
                     }
                 };
 
@@ -9323,6 +9331,11 @@
                     filteredInsightsData = allInsightsData.filter(n => tickerSet.has(n.ticker.trim().toUpperCase()));
                     currentInsightsLimit = NEWS_CHUNK;
                     renderInsights();
+
+                    // NSE News: exact ticker Set lookup
+                    filteredNseNewsData = allNseNewsData.filter(n => tickerSet.has((n.ticker || '').trim().toUpperCase()));
+                    currentNseNewsLimit = NEWS_CHUNK;
+                    renderNseNews();
 
                     // News: build per-ticker token groups once using pre-computed row data
                     // Match news whose pre-computed _tok includes the ticker (or company name tokens)
@@ -9350,6 +9363,11 @@
                     });
                     currentNewsLimit = NEWS_CHUNK;
                     renderGeneralNews();
+
+                    // Also filter Superstar block
+                    if (typeof filterSuperstarBlock === 'function') {
+                        filterSuperstarBlock();
+                    }
                 }
             }, 100); // wait for top-filter wrap to complete
 
@@ -12032,20 +12050,20 @@
     </script>
 
     <script>
-        (function() {
+        (function () {
             let tooltip = null;
-            document.addEventListener('mouseover', function(e) {
+            document.addEventListener('mouseover', function (e) {
                 const flag = e.target.closest('.surv-flag');
                 if (!flag) return;
-                
+
                 const text = flag.getAttribute('title') || flag.getAttribute('data-title');
                 if (!text) return;
-                
+
                 if (flag.getAttribute('title')) {
                     flag.setAttribute('data-title', text);
                     flag.removeAttribute('title');
                 }
-                
+
                 if (!tooltip) {
                     tooltip = document.createElement('div');
                     tooltip.id = 'surv-flag-tooltip';
@@ -12062,23 +12080,23 @@
                     tooltip.style.boxShadow = '0 2px 5px rgba(0,0,0,0.3)';
                     document.body.appendChild(tooltip);
                 }
-                
+
                 tooltip.textContent = text;
                 tooltip.style.display = 'block';
-                
+
                 const rect = flag.getBoundingClientRect();
                 const tooltipRect = tooltip.getBoundingClientRect();
                 const left = rect.left + (rect.width - tooltipRect.width) / 2;
                 const top = rect.top - tooltipRect.height - 6;
-                
+
                 tooltip.style.left = Math.max(10, Math.min(window.innerWidth - tooltipRect.width - 10, left)) + 'px';
                 tooltip.style.top = Math.max(10, top) + 'px';
             });
-            
-            document.addEventListener('mouseout', function(e) {
+
+            document.addEventListener('mouseout', function (e) {
                 const flag = e.target.closest('.surv-flag');
                 if (!flag) return;
-                
+
                 const text = flag.getAttribute('data-title');
                 if (text) {
                     flag.setAttribute('title', text);
@@ -13435,6 +13453,23 @@
             const _origFBN = window.filterBothNews;
             if (typeof _origFBN === 'function') {
                 window.filterBothNews = function (forcedQuery) {
+                    // Check if F/H filter is active and should override standard behavior
+                    const isCardSelected = typeof selectedCardTicker !== 'undefined' && selectedCardTicker;
+                    const fhActive = window._fhState && window._fhState.active;
+
+                    if (!isCardSelected && fhActive && window._fhLoaded && window._fhTickers && window._fhTickers[fhActive] && window._fhTickers[fhActive].size) {
+                        // Keep deals in sync with F/H
+                        window._dealCardQ = [...window._fhTickers[fhActive]].join('|');
+                        // Update news, insights, nse panels
+                        if (typeof window._filterNewsByFHTickers === 'function') {
+                            window._filterNewsByFHTickers(fhActive);
+                        }
+                        if (_loaded && typeof window.filterDealBlock === 'function') {
+                            window.filterDealBlock();
+                        }
+                        return; // Skip normal filtering
+                    }
+
                     // Capture the forced query so applyFilters can use it instead of the search bar.
                     // A non-null forcedQuery comes from card clicks ("TICKER | Company Name") or clears (null).
                     // Extract only the first pipe-token (the ticker) — company name tokens would cause
@@ -14432,9 +14467,9 @@
             height: 30px;
             width: 30px;
             border-radius: 6px;
-            background: rgba(16, 185, 129, 0.10);
-            border: 1px solid rgba(16, 185, 129, 0.30);
-            color: #10b981;
+            background: var(--surface);
+            border: 1px solid var(--border2);
+            color: var(--text2);
             cursor: pointer;
             font-size: 15px;
             display: flex;
@@ -14446,9 +14481,9 @@
         }
 
         #refresh-data-btn:hover:not(:disabled) {
-            background: rgba(16, 185, 129, 0.22);
-            border-color: rgba(16, 185, 129, 0.6);
-            color: #fff;
+            background: var(--surface2);
+            border-color: var(--text3);
+            color: var(--text);
         }
 
         #refresh-data-btn:disabled {
@@ -14460,8 +14495,8 @@
             display: inline-block;
             width: 10px;
             height: 10px;
-            border: 1.5px solid rgba(16, 185, 129, 0.3);
-            border-top-color: #10b981;
+            border: 1.5px solid var(--border2);
+            border-top-color: var(--text2);
             border-radius: 50%;
             animation: rdbSpin 0.7s linear infinite;
         }
@@ -14716,6 +14751,18 @@
 
             let data = superStarData;
 
+            // Filter by active Favorite/Holding (F/H) tickers
+            if (window._fhState && window._fhState.active && window._fhTickers) {
+                const active = window._fhState.active;
+                const tickerSet = window._fhTickers[active];
+                if (tickerSet && tickerSet.size) {
+                    data = data.filter(r => {
+                        const rtk = String(r.Ticker || '').toUpperCase().trim().replace(/\.NS$/, '');
+                        return tickerSet.has(rtk);
+                    });
+                }
+            }
+
             if (typeof selectedCardTicker !== 'undefined' && selectedCardTicker) {
                 const tk = selectedCardTicker.toLowerCase().trim().replace(/\.ns$/, '');
                 data = data.filter(r => {
@@ -14778,17 +14825,18 @@
                 const r = data[i];
 
                 // formatting
-                const chgVal = parseFloat(r.Change.replace(/[^0-9.-]/g, '')) || 0;
+                const changeStr = String(r.Change || '');
+                const chgVal = parseFloat(changeStr.replace(/[^0-9.-]/g, '')) || 0;
                 let chgColor = 'var(--text2)';
-                if (r.Change.toLowerCase().includes('new')) chgColor = 'var(--pop-green)';
+                if (changeStr.toLowerCase().includes('new')) chgColor = 'var(--pop-green)';
                 else if (chgVal > 0) chgColor = 'var(--pop-green)';
                 else if (chgVal < 0) chgColor = 'var(--pop-red)';
 
                 html += `<tr>
-                <td class="dt-person">${r.Investor}</td>
-                <td class="dt-ticker" onclick="searchStock('${r.Ticker}')">${r.Ticker}</td>
-                <td>${r.Holding}</td>
-                <td style="color:${chgColor}; font-weight:600;">${r.Change}</td>
+                <td class="dt-person">${r.Investor || ''}</td>
+                <td class="dt-ticker" onclick="searchStock('${r.Ticker || ''}')">${r.Ticker || ''}</td>
+                <td>${r.Holding || ''}</td>
+                <td style="color:${chgColor}; font-weight:600;">${changeStr}</td>
             </tr>`;
             }
             tbody.innerHTML = html;
