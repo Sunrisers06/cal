@@ -7183,6 +7183,7 @@
               ${topRankBadge}
               ${dealBadge}
               ${(window._urDataMap && window._urDataMap[String(r._ticker).toUpperCase()]) ? `<span class="ur-chip" title="Upcoming Result Date">📅 ${window._urDataMap[String(r._ticker).toUpperCase()].toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>` : ''}
+
             </div>
           </div>
           ${(r._sec || r._ind) ? `
@@ -7192,6 +7193,7 @@
           </div>` : ''}
           ${(r['Base_Stage_Weekly'] || r['Base_Status_Weekly'] || r['Base_Type_Weekly']) ? `<div class="co-base-row">${r['Base_Stage_Weekly'] ? `<span class="base-tag base-stage">Stage ${escHtml(r['Base_Stage_Weekly'])}</span>` : ''} ${r['Base_Status_Weekly'] ? `<span class="base-tag base-status">${escHtml(r['Base_Status_Weekly'])}</span>` : ''} ${r['Base_Type_Weekly'] ? `<span class="base-tag base-type">${escHtml(r['Base_Type_Weekly'])}</span>` : ''}</div>` : ''}
         </div>
+        ${(() => { const _tk2 = String(r._ticker).toUpperCase(); const _sm2 = window._survMap && window._survMap[_tk2]; if (!_sm2) return ''; let _fb = ''; if (_sm2.asm) { const _isLT2 = _sm2.asm.toUpperCase().includes('LTASM'); _fb += `<span class="surv-flag ${_isLT2 ? 'surv-ltasm' : 'surv-stasm'}" title="${_sm2.asm}">⚑</span>`; } if (_sm2.esm) _fb += `<span class="surv-flag surv-esm" title="${_sm2.esm}">⚑</span>`; if (_sm2.gsm) _fb += `<span class="surv-flag surv-gsm" title="${_sm2.gsm}">⚑</span>`; return _fb ? `<div class="surv-flags-col">${_fb}</div>` : ''; })()}
         ${r._techScore ? (() => {
                     const sc = parseFloat(r._techScore);
                     const scCls = isNaN(sc) ? 'gray' : (sc >= 70 ? 'green' : (sc >= 40 ? 'orange' : 'red'));
@@ -12029,6 +12031,65 @@
         })();
     </script>
 
+    <script>
+        (function() {
+            let tooltip = null;
+            document.addEventListener('mouseover', function(e) {
+                const flag = e.target.closest('.surv-flag');
+                if (!flag) return;
+                
+                const text = flag.getAttribute('title') || flag.getAttribute('data-title');
+                if (!text) return;
+                
+                if (flag.getAttribute('title')) {
+                    flag.setAttribute('data-title', text);
+                    flag.removeAttribute('title');
+                }
+                
+                if (!tooltip) {
+                    tooltip = document.createElement('div');
+                    tooltip.id = 'surv-flag-tooltip';
+                    tooltip.style.position = 'fixed';
+                    tooltip.style.zIndex = '999999';
+                    tooltip.style.background = '#333';
+                    tooltip.style.color = '#fff';
+                    tooltip.style.padding = '4px 8px';
+                    tooltip.style.borderRadius = '4px';
+                    tooltip.style.fontSize = '12px';
+                    tooltip.style.pointerEvents = 'none';
+                    tooltip.style.whiteSpace = 'nowrap';
+                    tooltip.style.fontFamily = 'sans-serif';
+                    tooltip.style.boxShadow = '0 2px 5px rgba(0,0,0,0.3)';
+                    document.body.appendChild(tooltip);
+                }
+                
+                tooltip.textContent = text;
+                tooltip.style.display = 'block';
+                
+                const rect = flag.getBoundingClientRect();
+                const tooltipRect = tooltip.getBoundingClientRect();
+                const left = rect.left + (rect.width - tooltipRect.width) / 2;
+                const top = rect.top - tooltipRect.height - 6;
+                
+                tooltip.style.left = Math.max(10, Math.min(window.innerWidth - tooltipRect.width - 10, left)) + 'px';
+                tooltip.style.top = Math.max(10, top) + 'px';
+            });
+            
+            document.addEventListener('mouseout', function(e) {
+                const flag = e.target.closest('.surv-flag');
+                if (!flag) return;
+                
+                const text = flag.getAttribute('data-title');
+                if (text) {
+                    flag.setAttribute('title', text);
+                }
+                if (tooltip) {
+                    tooltip.style.display = 'none';
+                }
+            });
+        })();
+    </script>
+
     <!-- Superstar name tooltip — lives on body so overflow:hidden on cards can't clip it -->
 
     <!-- ══ PEER COMPARISON POPUP ══ -->
@@ -14456,6 +14517,76 @@
             box-shadow: 0 0 8px rgba(204, 255, 0, 0.40);
         }
 
+        /* ── Surveillance Flags column (right side, next to tech-score-box) ── */
+        .surv-flags-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            flex-shrink: 0;
+            margin-right: 4px;
+        }
+
+        /* bare icon — no box */
+        .surv-flag {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            font-size: 28px;
+            line-height: 1;
+            background: none;
+            border: none;
+            border-radius: 0;
+            flex-shrink: 0;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.15s, filter 0.15s;
+        }
+
+        .surv-flag:hover {
+            transform: scale(1.35);
+        }
+
+        /* STASM — blue */
+        .surv-stasm {
+            color: #60a5fa;
+        }
+
+        .surv-stasm:hover {
+            filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.9));
+        }
+
+        /* LTASM — purple */
+        .surv-ltasm {
+            color: #c084fc;
+        }
+
+        .surv-ltasm:hover {
+            filter: drop-shadow(0 0 5px rgba(168, 85, 247, 0.9));
+        }
+
+        /* ESM — orange */
+        .surv-esm {
+            color: #fb923c;
+        }
+
+        .surv-esm:hover {
+            filter: drop-shadow(0 0 5px rgba(249, 115, 22, 0.9));
+        }
+
+        /* GSM — red */
+        .surv-gsm {
+            color: #fb7185;
+        }
+
+        .surv-gsm:hover {
+            filter: drop-shadow(0 0 5px rgba(244, 63, 94, 0.9));
+        }
+
         /* .dsub-count — small count pill inside deal sub-tab buttons */
         .dsub-count {
             display: inline-block;
@@ -15172,5 +15303,83 @@
             }
         }
     </style>
+
+    <script>
+        /* ══════════════════════════════════════════════════════
+           SURVEILLANCE FLAGS ENGINE  (ASM / ESM / GSM)
+           Fetches the watchlist CSV once and builds window._survMap
+           keyed by TICKER (uppercase) → { asm, esm, gsm }
+        ══════════════════════════════════════════════════════ */
+        (function () {
+            'use strict';
+
+            const SURV_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS1dVVfb2izjTu5u7RVlDZf3TF64nERBs5W0UX7grs8HgDRU-lk61rhqMOex_a5rgOkyZUV7DwbYBQj/pub?gid=0&single=true&output=csv';
+
+            function splitCsvLine(line) {
+                if (line.indexOf('"') === -1) return line.split(',');
+                const out = []; let cur = '', q = false;
+                for (let i = 0; i < line.length; i++) {
+                    const c = line[i];
+                    if (c === '"') q = !q;
+                    else if (c === ',' && !q) { out.push(cur); cur = ''; }
+                    else cur += c;
+                }
+                out.push(cur); return out;
+            }
+
+            function parseSurvCsv(text) {
+                const lines = text.replace(/\r/g, '').trim().split('\n');
+                if (lines.length < 2) return {};
+                const hdrs = splitCsvLine(lines[0]).map(h => h.trim().replace(/^\uFEFF/, '').replace(/[\u200B\u00A0]/g, '').toUpperCase());
+                const iT = hdrs.findIndex(h => h === 'TICKER');
+                const iA = hdrs.findIndex(h => h === 'ASM STAGE');
+                const iE = hdrs.findIndex(h => h === 'ESM STAGE');
+                const iG = hdrs.findIndex(h => h === 'GSM STAGE');
+                if (iT === -1) return {};
+                const map = {};
+                for (let i = 1; i < lines.length; i++) {
+                    const v = splitCsvLine(lines[i]);
+                    const tk = (v[iT] || '').trim().toUpperCase();
+                    if (!tk) continue;
+                    const asm = iA >= 0 ? (v[iA] || '').trim() : '';
+                    const esm = iE >= 0 ? (v[iE] || '').trim() : '';
+                    const gsm = iG >= 0 ? (v[iG] || '').trim() : '';
+                    if (asm || esm || gsm) {
+                        map[tk] = { asm: asm || null, esm: esm || null, gsm: gsm || null };
+                    }
+                }
+                return map;
+            }
+
+            async function loadSurvData() {
+                try {
+                    let text;
+                    if (typeof window._smartFetch === 'function') {
+                        text = await window._smartFetch(SURV_CSV_URL);
+                    } else {
+                        const res = await fetch(SURV_CSV_URL);
+                        text = await res.text();
+                    }
+                    window._survMap = parseSurvCsv(text);
+                    // Re-render cards so flags appear immediately
+                    if (typeof window.renderCards === 'function') {
+                        setTimeout(() => window.renderCards(true), 100);
+                    }
+                } catch (e) {
+                    console.warn('[SurvFlags] Failed to load surveillance CSV:', e);
+                }
+            }
+
+            // Wait until _smartFetch is ready (main app initialises it async)
+            function waitAndLoad() {
+                if (typeof window._smartFetch === 'function') {
+                    loadSurvData();
+                } else {
+                    setTimeout(waitAndLoad, 500);
+                }
+            }
+            waitAndLoad();
+        })();
+    </script>
 
     </body>
