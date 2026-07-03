@@ -8338,30 +8338,31 @@
             }
         }
 
-        /* ── Lazily draw charts for cards as they enter the viewport ── */
+        /* ── Sequentially load charts for cards initially but smoothly ── */
         function initCardCharts() {
             if (window._cardViewMode !== 'chart') return;
             const wraps = document.querySelectorAll('.card-chart-wrap:not([data-drawn])');
             if (!wraps.length) return;
 
-            if (!('IntersectionObserver' in window)) {
-                wraps.forEach(w => { w.dataset.drawn = '1'; drawCardChart(w); });
-                return;
+            let i = 0;
+            function drawNextBatch() {
+                if (window._cardViewMode !== 'chart') return;
+                
+                // Draw up to 4 charts per frame to avoid blocking the main thread
+                for (let count = 0; count < 4 && i < wraps.length; count++, i++) {
+                    const w = wraps[i];
+                    if (!w.dataset.drawn) {
+                        w.dataset.drawn = '1';
+                        drawCardChart(w);
+                    }
+                }
+                
+                if (i < wraps.length) {
+                    requestAnimationFrame(drawNextBatch);
+                }
             }
-            if (!window._cardChartObserver) {
-                window._cardChartObserver = new IntersectionObserver((entries, obs) => {
-                    entries.forEach(entry => {
-                        if (!entry.isIntersecting) return;
-                        const w = entry.target;
-                        if (!w.dataset.drawn) {
-                            w.dataset.drawn = '1';
-                            drawCardChart(w);
-                        }
-                        obs.unobserve(w);
-                    });
-                }, { rootMargin: '300px 0px' });
-            }
-            wraps.forEach(w => window._cardChartObserver.observe(w));
+            
+            requestAnimationFrame(drawNextBatch);
         }
 
         /* ── Redraw already-visible charts on resize/orientation change (debounced) ── */
