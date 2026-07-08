@@ -11193,16 +11193,16 @@
                         const bearW = barW * (1 - bullFrac);
                         const bullW = barW * bullFrac;
 
-                        // Bear portion (rose)
+                        // Bear portion (gold)
                         if (bearW > 0.5) {
                             pc.globalAlpha = alpha;
-                            pc.fillStyle = '#f43f5e';
+                            pc.fillStyle = '#ffd700';
                             pc.fillRect(PP.l, yTop, bearW, binH);
                         }
-                        // Bull portion (teal), stacked right of bear
+                        // Bull portion (blue), stacked right of bear
                         if (bullW > 0.5) {
                             pc.globalAlpha = alpha;
-                            pc.fillStyle = '#14b8a6';
+                            pc.fillStyle = '#3b82f6';
                             pc.fillRect(PP.l + bearW, yTop, bullW, binH);
                         }
 
