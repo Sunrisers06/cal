@@ -11206,16 +11206,16 @@
                             pc.fillRect(PP.l + bearW, yTop, bullW, binH);
                         }
 
-                        // POC: amber dashed centre line
+                        // POC: amber dashed line spanning full chart width
                         if (isPoc) {
                             pc.globalAlpha = 0.70;
                             pc.strokeStyle = '#facc15';
-                            pc.lineWidth = 0.7;
-                            pc.setLineDash([2, 3]);
+                            pc.lineWidth = 0.8;
+                            pc.setLineDash([3, 4]);
                             pc.beginPath();
                             const midY = yTop + binH / 2;
                             pc.moveTo(PP.l, midY);
-                            pc.lineTo(PP.l + barW, midY);
+                            pc.lineTo(W - PP.r, midY);  // full chart width
                             pc.stroke();
                             pc.setLineDash([]);
                         }
