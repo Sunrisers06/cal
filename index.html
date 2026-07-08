@@ -8347,7 +8347,7 @@
             let i = 0;
             function drawNextBatch() {
                 if (window._cardViewMode !== 'chart') return;
-                
+
                 // Draw up to 4 charts per frame to avoid blocking the main thread
                 for (let count = 0; count < 4 && i < wraps.length; count++, i++) {
                     const w = wraps[i];
@@ -8356,12 +8356,12 @@
                         drawCardChart(w);
                     }
                 }
-                
+
                 if (i < wraps.length) {
                     requestAnimationFrame(drawNextBatch);
                 }
             }
-            
+
             requestAnimationFrame(drawNextBatch);
         }
 
@@ -11112,6 +11112,125 @@
                     pc.textAlign = 'right';
                     pc.textBaseline = 'bottom';
                     pc.fillText(benchTicker, toX(raw.length - 1), toY(lastVal) - 2);
+                }
+
+                // ── Dim Volume Profile — uses ALL available history, mapped onto visible price range ──
+                {
+                    const VP_BINS = 40;
+                    const VP_MAX_W = pW * 0.22; // max bar width = 22% of chart area
+                    const VP_ALPHA = 0.3;       // dim but visible behind candles
+                    const VP_POC_ALPHA = 0.6;   // Point of Control slightly brighter
+
+                    // ── Build a full-history price range for bin mapping (independent of visible window) ──
+                    let vpLogMin = Infinity, vpLogMax = -Infinity;
+                    allRaw.forEach(r => {
+                        if (r.low > 0 && Math.log(r.low) < vpLogMin) vpLogMin = Math.log(r.low);
+                        if (r.high > 0 && Math.log(r.high) > vpLogMax) vpLogMax = Math.log(r.high);
+                    });
+                    if (!isFinite(vpLogMin) || !isFinite(vpLogMax) || vpLogMax <= vpLogMin) {
+                        vpLogMin = logMin; vpLogMax = logMax; // fallback
+                    }
+                    const vpLogR = vpLogMax - vpLogMin;
+
+                    // Build bins from ALL available rows (full history)
+                    const bullBins = new Float64Array(VP_BINS);
+                    const bearBins = new Float64Array(VP_BINS);
+
+                    allRaw.forEach(r => {
+                        if (!r.vol || r.high <= r.low) return;
+                        const isBull = r.close >= r.open;
+                        const logLo = Math.log(Math.max(r.low, 0.01));
+                        const logHi = Math.log(Math.max(r.high, 0.01));
+                        const binLo = Math.floor((logLo - vpLogMin) / vpLogR * VP_BINS);
+                        const binHi = Math.floor((logHi - vpLogMin) / vpLogR * VP_BINS);
+                        const bStart = Math.max(0, Math.min(VP_BINS - 1, binLo));
+                        const bEnd = Math.max(0, Math.min(VP_BINS - 1, binHi));
+                        const spread = bEnd - bStart + 1;
+                        const volPerBin = r.vol / spread;
+                        for (let b = bStart; b <= bEnd; b++) {
+                            if (isBull) bullBins[b] += volPerBin;
+                            else bearBins[b] += volPerBin;
+                        }
+                    });
+
+                    // Find max total volume across bins for normalisation
+                    let maxBinVol = 1;
+                    for (let b = 0; b < VP_BINS; b++) {
+                        const tot = bullBins[b] + bearBins[b];
+                        if (tot > maxBinVol) maxBinVol = tot;
+                    }
+
+                    // Find Point of Control bin
+                    let pocBin = 0, pocVol = 0;
+                    for (let b = 0; b < VP_BINS; b++) {
+                        const tot = bullBins[b] + bearBins[b];
+                        if (tot > pocVol) { pocVol = tot; pocBin = b; }
+                    }
+
+                    // Map bins onto the VISIBLE price canvas using its logMin/logMax
+                    pc.save();
+                    for (let b = 0; b < VP_BINS; b++) {
+                        const totalVol = bullBins[b] + bearBins[b];
+                        if (totalVol <= 0) continue;
+
+                        // Price range this bin covers (in log space of full history)
+                        const binLogLo = vpLogMin + (b / VP_BINS) * vpLogR;
+                        const binLogHi = vpLogMin + ((b + 1) / VP_BINS) * vpLogR;
+
+                        // Map onto visible canvas Y coords (toY uses logMin/logMax)
+                        const yTop = PP.t + pH * (1 - (binLogHi - logMin) / logR);
+                        const yBot = PP.t + pH * (1 - (binLogLo - logMin) / logR);
+                        const binH = Math.max(1, yBot - yTop);
+
+                        // Skip bins that are entirely outside the visible window
+                        if (yTop > PP.t + pH || yBot < PP.t) continue;
+
+                        const barW = (totalVol / maxBinVol) * VP_MAX_W;
+                        const bullFrac = bullBins[b] / totalVol;
+                        const isPoc = (b === pocBin);
+                        const alpha = isPoc ? VP_POC_ALPHA : VP_ALPHA;
+
+                        const bearW = barW * (1 - bullFrac);
+                        const bullW = barW * bullFrac;
+
+                        // Bear portion (rose)
+                        if (bearW > 0.5) {
+                            pc.globalAlpha = alpha;
+                            pc.fillStyle = '#f43f5e';
+                            pc.fillRect(PP.l, yTop, bearW, binH);
+                        }
+                        // Bull portion (teal), stacked right of bear
+                        if (bullW > 0.5) {
+                            pc.globalAlpha = alpha;
+                            pc.fillStyle = '#14b8a6';
+                            pc.fillRect(PP.l + bearW, yTop, bullW, binH);
+                        }
+
+                        // POC: amber dashed centre line
+                        if (isPoc) {
+                            pc.globalAlpha = 0.70;
+                            pc.strokeStyle = '#facc15';
+                            pc.lineWidth = 0.7;
+                            pc.setLineDash([2, 3]);
+                            pc.beginPath();
+                            const midY = yTop + binH / 2;
+                            pc.moveTo(PP.l, midY);
+                            pc.lineTo(PP.l + barW, midY);
+                            pc.stroke();
+                            pc.setLineDash([]);
+                        }
+                    }
+
+                    // Micro "VOL PROFILE" label
+                    pc.globalAlpha = 0.35;
+                    pc.font = 'bold 6px "Lexend",monospace';
+                    pc.fillStyle = '#94a3b8';
+                    pc.textAlign = 'left';
+                    pc.textBaseline = 'top';
+                    pc.fillText('VOL PROFILE', PP.l + 2, PP.t + 2);
+
+                    pc.globalAlpha = 1;
+                    pc.restore();
                 }
 
                 // ── Candles: all white, up hollow, down solid ──
